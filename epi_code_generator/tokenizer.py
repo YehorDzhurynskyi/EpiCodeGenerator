@@ -278,7 +278,7 @@ class Tokenizer:
                     self._tokenize_string_literal()
                 elif self._try_tokenize_special_symbol():
                     pass
-                elif ch.isnumeric() or ch == '-':
+                elif ch.isnumeric() or ch == '-' or ch == '+':
                     self._tokenize_numeric_literal()
                 elif ch.isalpha():
                     self._tokenize_term()
@@ -393,7 +393,7 @@ class Tokenizer:
         self.tokens.append(token)
         begin = self.at
 
-        if self._ch() == '-':
+        if self._ch() == '-' or self._ch() == '+':
             self.at += 1
 
         while self._ch().isnumeric():

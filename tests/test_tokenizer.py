@@ -1,4 +1,7 @@
+import pytest
+
 from epi_code_generator.tokenizer import Tokenizer, TokenType
+
 
 TOKEN_SEQUENCE = [
     TokenType.OpenBrace,
@@ -83,7 +86,8 @@ TOKEN_SEQUENCE = [
     TokenType.ForceMax,
     TokenType.Transient,
     TokenType.Identifier,
-    TokenType.Identifier
+    TokenType.Identifier,
+    TokenType.EOF
 ]
 
 
@@ -97,4 +101,25 @@ class TestTokenizer:
         tokens = tokenizer.tokenize()
 
         for t1, t2 in zip(TOKEN_SEQUENCE, tokens):
+            assert t1 == t2.type
+
+    @pytest.mark.parametrize('text,expected', [
+        ('42', [TokenType.IntegerLiteral]),
+        ('+42', [TokenType.IntegerLiteral]),
+        ('-42', [TokenType.IntegerLiteral]),
+        ('0', [TokenType.IntegerLiteral]),
+        ('+0', [TokenType.IntegerLiteral]),
+        ('-0', [TokenType.IntegerLiteral])
+    ])
+    def test_token_literal(self, tmpdir, text, expected):
+
+        path = f'{tmpdir}/test.epi'
+
+        with open(path, 'w') as f:
+            f.write(text)
+
+        tokenizer = Tokenizer(path, path)
+        tokens = tokenizer.tokenize()
+
+        for t1, t2 in zip(expected, tokens):
             assert t1 == t2.type
