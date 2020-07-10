@@ -1,0 +1,1 @@
+void Set${PropertyName}(const ${PropertyType}& value) { Set${PropertyName}_Callback(value); } \

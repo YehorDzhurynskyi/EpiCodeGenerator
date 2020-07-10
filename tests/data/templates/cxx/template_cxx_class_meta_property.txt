@@ -1,0 +1,11 @@
+{
+    MetaProperty m = epiMetaProperty(
+        /* Name */ "${PropertyName}",
+        /* PtrRead */ (void*)offsetof(${ClassName}, m_${PropertyName}),
+        /* PtrWrite */ (void*)offsetof(${ClassName}, m_${PropertyName}),
+        /* Flags */ {},
+        /* typeID */ epiHashCompileTime(${PropertyType}),
+        /* nestedTypeID */ 0
+    );
+    data.AddProperty(epiHashCompileTime(${PropertyName}), std::move(m));
+}

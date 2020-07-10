@@ -1,0 +1,1 @@
+${PropertyType}& Get${PropertyName}() { return Get${PropertyName}_Callback(); } \

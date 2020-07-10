@@ -1,0 +1,1 @@
+void Set${PropertyName}(${PropertyType} value) { m_${PropertyName} = value; } \

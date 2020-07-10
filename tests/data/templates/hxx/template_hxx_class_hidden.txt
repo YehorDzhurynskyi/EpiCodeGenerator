@@ -1,0 +1,28 @@
+#define EPI_GENHIDDEN_${ClassName}() \
+public: \
+using super = ${ClassParentName}; \
+ \
+static MetaClass EmitMetaClass(); \
+ \
+const MetaClass& GetMetaClass() const override \
+{ \
+    super::GetMetaClass(); \
+    return ClassRegistry_GetMetaClass<${ClassName}>(); \
+} \
+ \
+epiBool Is(MetaTypeID rhs) const override \
+{ \
+    return rhs == ${ClassName}::TypeID || super::Is(rhs); \
+} \
+ \
+void Serialization(json_t& json) override; \
+void Deserialization(const json_t& json) override; \
+\
+${ClassAccessors}
+\
+enum ${ClassName}_PIDXs \
+{ \
+    ${ClassPIDXs}
+}; \
+ \
+${ClassFuncPtrs}
