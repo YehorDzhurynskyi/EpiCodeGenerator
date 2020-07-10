@@ -25,13 +25,16 @@ class TokenType(Enum):
     Semicolon = auto()
 
     CharLiteral = auto()
+    WCharLiteral = auto()
     StringLiteral = auto()
+    WStringLiteral = auto()
     IntegerLiteral = auto()
     FloatingLiteral = auto()
     TrueLiteral = auto()
     FalseLiteral = auto()
 
     CharType = auto()
+    WCharType = auto()
     BoolType = auto()
     ByteType = auto()
     SizeTType = auto()
@@ -39,6 +42,7 @@ class TokenType(Enum):
     UIntType = auto()
     IntType = auto()
     StringType = auto()
+    WStringType = auto()
     ArrayType = auto()
     PtrArrayType = auto()
     FloatingType = auto()
@@ -134,6 +138,7 @@ class Tokenizer:
 
     BUILTIN_PRIMITIVE_TYPES = {
         'epiChar': TokenType.CharType,
+        'epiWChar': TokenType.WCharType,
         'epiBool': TokenType.BoolType,
         'epiByte': TokenType.ByteType,
         'epiSize_t': TokenType.SizeTType,
@@ -152,6 +157,7 @@ class Tokenizer:
 
     BUILTIN_COMPOUND_TYPES = {
         'epiString': TokenType.StringType,
+        'epiWString': TokenType.WStringType,
         'epiArray': TokenType.ArrayType,
         'epiPtrArray': TokenType.PtrArrayType,
         'epiVec2f': TokenType.Vec2FType,
@@ -222,8 +228,8 @@ class Tokenizer:
         self.filepath = relpath
         self.tokens = []
 
-    def _ch(self):
-        return self.content[self.at]
+    def _ch(self, offset: int = 0):
+        return self.content[self.at + offset]
 
     @property
     def at(self):
@@ -266,9 +272,9 @@ class Tokenizer:
                     while self._ch() != '\n':
                         self.at += 1
 
-                elif ch == '\'':
+                elif ch == '\'' or (ch == 'L' and self._ch(1) == '\''):
                     self._tokenize_char_literal()
-                elif ch == '"':
+                elif ch == '"' or (ch == 'L' and self._ch(1) == '"'):
                     self._tokenize_string_literal()
                 elif self._try_tokenize_special_symbol():
                     pass
@@ -329,9 +335,15 @@ class Tokenizer:
     def _tokenize_string_literal(self):
 
         token = Token(TokenType.StringLiteral, self.line, self.column, self.filepath)
-        self.tokens.append(token)
         begin = self.at
+        if self._ch() == 'L':
+
+            token.type = TokenType.WStringLiteral
+            self.at += 1
+
         self.at += 1
+
+        self.tokens.append(token)
 
         while self._ch() != '"':
 
@@ -348,9 +360,15 @@ class Tokenizer:
         # TODO: add unicode support (like: '\u8080')
 
         token = Token(TokenType.CharLiteral, self.line, self.column, self.filepath)
-        self.tokens.append(token)
         begin = self.at
+        if self._ch() == 'L':
+
+            token.type = TokenType.WCharLiteral
+            self.at += 1
+
         self.at += 1
+
+        self.tokens.append(token)
 
         if self._ch() == '\\':
             self.at += 1
