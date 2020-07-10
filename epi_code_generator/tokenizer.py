@@ -29,7 +29,8 @@ class TokenType(Enum):
     StringLiteral = auto()
     WStringLiteral = auto()
     IntegerLiteral = auto()
-    FloatingLiteral = auto()
+    SingleFloatingLiteral = auto()
+    DoubleFloatingLiteral = auto()
     TrueLiteral = auto()
     FalseLiteral = auto()
 
@@ -45,7 +46,8 @@ class TokenType(Enum):
     WStringType = auto()
     ArrayType = auto()
     PtrArrayType = auto()
-    FloatingType = auto()
+    SingleFloatingType = auto()
+    DoubleFloatingType = auto()
     Vec2FType = auto()
     Vec2DType = auto()
     Vec2SType = auto()
@@ -151,8 +153,8 @@ class Tokenizer:
         'epiS16': TokenType.IntType,
         'epiS32': TokenType.IntType,
         'epiS64': TokenType.IntType,
-        'epiFloat': TokenType.FloatingType,
-        'epiDouble': TokenType.FloatingType
+        'epiFloat': TokenType.SingleFloatingType,
+        'epiDouble': TokenType.DoubleFloatingType
     }
 
     BUILTIN_COMPOUND_TYPES = {
@@ -343,8 +345,6 @@ class Tokenizer:
 
         self.at += 1
 
-        self.tokens.append(token)
-
         while self._ch() != '"':
 
             if self._ch() == '\\':
@@ -354,6 +354,7 @@ class Tokenizer:
 
         self.at += 1
         token.text = self.content[begin:self.at]
+        self.tokens.append(token)
 
     def _tokenize_char_literal(self):
 
@@ -368,29 +369,27 @@ class Tokenizer:
 
         self.at += 1
 
-        self.tokens.append(token)
-
         if self._ch() == '\\':
             self.at += 1
 
         self.at += 2
 
         token.text = self.content[begin:self.at]
+        self.tokens.append(token)
 
     def _tokenize_term(self):
 
         token = Token(TokenType.Identifier, self.line, self.column, self.filepath)
-        self.tokens.append(token)
         begin = self.at
         while self._ch().isalnum() or self._ch() == '_':
             self.at += 1
 
         token.text = self.content[begin:self.at]
+        self.tokens.append(token)
 
     def _tokenize_numeric_literal(self):
 
         token = Token(TokenType.IntegerLiteral, self.line, self.column, self.filepath)
-        self.tokens.append(token)
         begin = self.at
 
         if self._ch() == '-' or self._ch() == '+':
@@ -401,7 +400,13 @@ class Tokenizer:
             self.at += 1
             if self._ch() == '.':
 
-                token.type = TokenType.FloatingLiteral
+                token.type = TokenType.DoubleFloatingLiteral
                 self.at += 1
 
+        if self._ch() == 'f':
+
+            token.type = TokenType.SingleFloatingLiteral
+            self.at += 1
+
         token.text = self.content[begin:self.at]
+        self.tokens.append(token)
