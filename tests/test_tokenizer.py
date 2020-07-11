@@ -195,6 +195,19 @@ class TestTokenizer:
         ('L "String epiS32', [TokenType.Identifier, TokenType.Unknown], ['L', '"String epiS32']),
         ('L "String; epiS32', [TokenType.Identifier, TokenType.Unknown], ['L', '"String; epiS32']),
 
+        ('42.', [TokenType.Unknown], ['42.']),
+        ('+42.', [TokenType.Unknown], ['+42.']),
+        ('-42.', [TokenType.Unknown], ['-42.']),
+        ('--0', [TokenType.Unknown, TokenType.IntegerLiteral], ['-', '-0']),
+        ('++0', [TokenType.Unknown, TokenType.IntegerLiteral], ['+', '+0']),
+        ('42.0000.005', [TokenType.Unknown], ['42.0000.005']),
+        ('+42.000.005', [TokenType.Unknown], ['+42.000.005']),
+        ('-42.000.005', [TokenType.Unknown], ['-42.000.005']),
+
+        # Comments
+        ('# COMMENT epiS32; ;;; "As well as this is a comment"', [], []),
+        (' epiS32 Name   =   42  ;   # COMMENT epiS32; ;;; "As well as this is a comment"', [TokenType.IntType, TokenType.Identifier, TokenType.Assing, TokenType.IntegerLiteral, TokenType.Semicolon], ['epiS32', 'Name', '=', '42', ';']),
+
         # Special symbols
         (';', [TokenType.Semicolon], [';']),
         (';;;;', [TokenType.Semicolon], [';']),

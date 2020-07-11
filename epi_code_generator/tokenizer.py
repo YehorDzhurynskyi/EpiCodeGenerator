@@ -274,7 +274,7 @@ class Tokenizer:
                     self.at += 1
                 elif ch == '#':
 
-                    while self._ch() != '\n':
+                    while self._ch() not in ['\n', '\0']:
                         self.at += 1
 
                 elif ch == '\'' or (ch == 'L' and self._ch(1) == '\''):
@@ -407,7 +407,8 @@ class Tokenizer:
 
     def _tokenize_numeric_literal(self):
 
-        token = Token(TokenType.IntegerLiteral, self.line, self.column, self.filepath)
+        token = Token(TokenType.Unknown, self.line, self.column, self.filepath)
+        suspected_type = TokenType.IntegerLiteral
         begin = self.at
 
         if self._ch() == '-' or self._ch() == '+':
@@ -418,16 +419,20 @@ class Tokenizer:
             self.at += 1
             if self._ch() == '.':
 
-                token.type = TokenType.DoubleFloatingLiteral
                 self.at += 1
 
-        if self._ch() == 'f' and token.type == TokenType.DoubleFloatingLiteral:
+                if self._ch().isnumeric() and suspected_type == TokenType.IntegerLiteral:
+                    suspected_type = TokenType.DoubleFloatingLiteral
+                else:
+                    suspected_type = TokenType.Unknown
 
-            token.type = TokenType.SingleFloatingLiteral
+        if self._ch() == 'f' and suspected_type == TokenType.DoubleFloatingLiteral:
+
+            suspected_type = TokenType.SingleFloatingLiteral
             self.at += 1
 
-        if not self._ch().isspace() and self._ch() not in ['\0', ';']:
-            token.type = TokenType.Unknown
+        if self._ch().isspace() or self._ch() in ['\0', ';']:
+            token.type = suspected_type
 
         token.text = self._substring_until_at(begin)
         self.tokens.append(token)
