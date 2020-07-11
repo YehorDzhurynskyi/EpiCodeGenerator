@@ -29,7 +29,6 @@ SYNTAX_ERROR_MSGS = {
     IDLSyntaxErrorCode.NoMatchingClosingBracket: 'No matching closing bracket for',
     IDLSyntaxErrorCode.UnexpectedToken: 'Unexpected token',
     IDLSyntaxErrorCode.UnexpectedKeywordUsage: 'Unexpected keyword usage',
-    IDLSyntaxErrorCode.UnexpectedEOF: 'Unexpected end of file',
     IDLSyntaxErrorCode.IncorrectValueLiteral: 'Incorrect value literal',
     IDLSyntaxErrorCode.InvalidArgumentsNumber: 'Invalid number of arguments',
     IDLSyntaxErrorCode.InvalidAttribute: 'Invalid attribute'
@@ -61,12 +60,15 @@ class IDLParser:
         self.__at = 0
         self.syntax_errors = []
 
+    def _eof(self):
+        return self.__at >= len(self.tokens)
+
     def _curr(self):
         return self.tokens[self.__at]
 
-    def _next(self, next=1):
+    def _next(self, offset=1):
 
-        self.__at += next - 1
+        self.__at += offset - 1
         curr = self._curr()
         self.__at += 1
 
@@ -74,19 +76,12 @@ class IDLParser:
 
     def parse(self) -> dict:
 
-        if self.tokens[-1].type != TokenType.EOF:
-
-            self.syntax_errors.append(IDLSyntaxError(self.tokens[-1], IDLSyntaxErrorCode.UnexpectedEOF))
-            return self.syntax_errors
-
         registry = {}
         try:
 
-            while True:
+            while not self._eof():
 
                 t = self._curr()
-                if t.type == TokenType.EOF:
-                    break
 
                 # attrs = self._parse_attr_list() if t.type == TokenType.OpenSqBracket else []
 

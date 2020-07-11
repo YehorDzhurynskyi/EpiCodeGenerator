@@ -103,8 +103,14 @@ class Token:
         self.column = column
         self.filepath = filepath
 
+    def __eq__(self, rhs):
+        return self.type == rhs.type and self.text == rhs.text
+
     def __str__(self):
         return f'[{self.filepath}' '(l:{:4d}, c:{:4d})]: '.format(self.line, self.column) + f'"{self.text}" ({self.type})'
+
+    def __repr__(self):
+        return f'text={self.text}, type={self.type}'
 
 
 class Tokenizer:

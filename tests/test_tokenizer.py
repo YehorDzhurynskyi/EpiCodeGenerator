@@ -98,17 +98,7 @@ TOKEN_AVAILABLE = [
 
 class TestTokenizer:
 
-    def test_token_available(self):
-
-        path = 'tests/data/samples/tokens.epi'
-
-        tokenizer = Tokenizer(path, path)
-        tokens = tokenizer.tokenize()
-
-        for t1, t2 in zip(TOKEN_AVAILABLE, tokens):
-            assert t1 == t2.type
-
-    def test_token_empty(self, tmpdir):
+    def test_empty(self, tmpdir: str):
 
         path = f'{tmpdir}/test.epi'
 
@@ -119,6 +109,16 @@ class TestTokenizer:
         tokens = tokenizer.tokenize()
 
         assert len(tokens) == 0
+
+    def test_available(self):
+
+        path = 'tests/data/samples/tokens.epi'
+
+        tokenizer = Tokenizer(path, path)
+        tokens = tokenizer.tokenize()
+
+        for t1, t2 in zip(TOKEN_AVAILABLE, tokens):
+            assert t1 == t2.type
 
     @pytest.mark.parametrize('text,expected_type,expected_text', [
         # Identifiers
@@ -224,7 +224,7 @@ class TestTokenizer:
         ("'", [TokenType.Unknown], ["'"]),
         ('"', [TokenType.Unknown], ['"']),
     ])
-    def test_token_sequence(self, tmpdir, text, expected_type, expected_text):
+    def test_sequence(self, tmpdir: str, text: str, expected_type: list, expected_text: list):
 
         assert len(expected_type) == len(expected_text)
 
