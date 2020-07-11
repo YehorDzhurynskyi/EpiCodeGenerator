@@ -92,8 +92,7 @@ TOKEN_AVAILABLE = [
     TokenType.ForceMax,
     TokenType.Transient,
     TokenType.Identifier,
-    TokenType.Identifier,
-    TokenType.EOF
+    TokenType.Identifier
 ]
 
 
@@ -119,8 +118,7 @@ class TestTokenizer:
         tokenizer = Tokenizer(path, path)
         tokens = tokenizer.tokenize()
 
-        assert len(tokens) == 1
-        assert tokens[0].type == TokenType.EOF
+        assert len(tokens) == 0
 
     @pytest.mark.parametrize('text,expected_type,expected_text', [
         # Identifiers
@@ -226,19 +224,18 @@ class TestTokenizer:
     ])
     def test_token_sequence(self, tmpdir, text, expected_type, expected_text):
 
-        path = f'{tmpdir}/test.epi'
+        assert len(expected_type) == len(expected_text)
 
+        path = f'{tmpdir}/test.epi'
         with open(path, 'w') as f:
             f.write(text)
 
         tokenizer = Tokenizer(path, path)
         tokens = tokenizer.tokenize()
 
-        assert len(tokens) > 0
+        assert len(tokens) == len(expected_text)
 
         for exp_type, exp_text, token in zip(expected_type, expected_text, tokens):
 
             assert exp_type == token.type
             assert exp_text == token.text
-
-        assert tokens[-1].type == TokenType.EOF

@@ -6,8 +6,6 @@ class TokenType(Enum):
 
     Unknown = auto()
 
-    EOF = auto()
-
     OpenBrace = auto()
     CloseBrace = auto()
     OpenAngleBracket = auto()
@@ -264,37 +262,30 @@ class Tokenizer:
 
     def tokenize(self):
 
-        try:
+        while self.at < self.content_len:
 
-            while self.at < self.content_len:
+            ch = self._ch()
 
-                ch = self._ch()
+            if ch.isspace():
+                self.at += 1
+            elif ch == '#':
 
-                if ch.isspace():
-                    self.at += 1
-                elif ch == '#':
-
-                    while self._ch() not in ['\n', '\0']:
-                        self.at += 1
-
-                elif ch == '\'' or (ch == 'L' and self._ch(1) == '\''):
-                    self._tokenize_char_literal()
-                elif ch == '"' or (ch == 'L' and self._ch(1) == '"'):
-                    self._tokenize_string_literal()
-                elif self._try_tokenize_special_symbol():
-                    pass
-                elif ch.isnumeric() or ((ch == '-' or ch == '+') and self._ch(1).isnumeric()):
-                    self._tokenize_numeric_literal()
-                elif ch.isalpha():
-                    self._tokenize_term()
-                else:
-                    self.tokens.append(Token(TokenType.Unknown, self.line, self.column, self.filepath, ch))
+                while self._ch() not in ['\n', '\0']:
                     self.at += 1
 
-        except IndexError:
-            pass
-        else:
-            self.tokens.append(Token(TokenType.EOF, self.line, self.column, self.filepath, 'EOF'))
+            elif ch == '\'' or (ch == 'L' and self._ch(1) == '\''):
+                self._tokenize_char_literal()
+            elif ch == '"' or (ch == 'L' and self._ch(1) == '"'):
+                self._tokenize_string_literal()
+            elif self._try_tokenize_special_symbol():
+                pass
+            elif ch.isnumeric() or ((ch == '-' or ch == '+') and self._ch(1).isnumeric()):
+                self._tokenize_numeric_literal()
+            elif ch.isalpha():
+                self._tokenize_term()
+            else:
+                self.tokens.append(Token(TokenType.Unknown, self.line, self.column, self.filepath, ch))
+                self.at += 1
 
         for token in self.tokens:
 
@@ -318,11 +309,11 @@ class Tokenizer:
     def _try_tokenize_special_symbol(self):
 
         token = None
-        for text, type in Tokenizer.SPECIAL_SYMBOL_TOKEN_TYPES.items():
+        for text, tokentype in Tokenizer.SPECIAL_SYMBOL_TOKEN_TYPES.items():
 
             if self.content.startswith(text, self.at):
 
-                token = Token(type, self.line, self.column, self.filepath, text)
+                token = Token(tokentype, self.line, self.column, self.filepath, text)
                 break
 
         if not token:
@@ -331,7 +322,7 @@ class Tokenizer:
         self.at += len(token.text)
 
         if token.type == TokenType.Semicolon and len(self.tokens) > 0 and self.tokens[-1].type == TokenType.Semicolon:
-            return False
+            return True
 
         self.tokens.append(token)
 
