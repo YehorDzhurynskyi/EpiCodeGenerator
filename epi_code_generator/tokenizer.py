@@ -231,7 +231,7 @@ class Tokenizer:
         self.tokens = []
 
     def _ch(self, offset: int = 0):
-        return self.content[self.at + offset]
+        return self.content[self.at + offset] if self.at < self.content_len else '\0'
 
     @property
     def at(self):

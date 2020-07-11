@@ -3,7 +3,7 @@ import pytest
 from epi_code_generator.tokenizer import Tokenizer, TokenType
 
 
-TOKEN_SEQUENCE = [
+TOKEN_AVAILABLE = [
     TokenType.OpenBrace,
     TokenType.CloseBrace,
     TokenType.OpenAngleBracket,
@@ -99,21 +99,28 @@ TOKEN_SEQUENCE = [
 
 class TestTokenizer:
 
-    def test_token_sequence(self):
+    def test_token_available(self):
 
         path = 'tests/data/idl/tokens.epi'
 
         tokenizer = Tokenizer(path, path)
         tokens = tokenizer.tokenize()
 
-        i = 0
-        for t1, t2 in zip(TOKEN_SEQUENCE, tokens):
+        for t1, t2 in zip(TOKEN_AVAILABLE, tokens):
+            assert t1 == t2.type
 
-            t_prev = tokens[i - 1].text if i > 0 else ''
-            msg = f'`{t2.text}` (prev token=`{t_prev}`) expected to be <{t1}>, but it`s <{t2.type}>'
-            assert t1 == t2.type, msg
+    def test_token_empty(self, tmpdir):
 
-            i += 1
+        path = f'{tmpdir}/test.epi'
+
+        with open(path, 'w') as f:
+            f.write('')
+
+        tokenizer = Tokenizer(path, path)
+        tokens = tokenizer.tokenize()
+
+        assert len(tokens) == 1
+        assert tokens[0].type == TokenType.EOF
 
     @pytest.mark.parametrize('text,expected_type,expected_text', [
         ("'c'", [TokenType.CharLiteral], ["'c'"]),
@@ -157,7 +164,7 @@ class TestTokenizer:
         ('true', [TokenType.TrueLiteral], ['true']),
         ('false', [TokenType.FalseLiteral], ['false'])
     ])
-    def test_token_literal(self, tmpdir, text, expected_type, expected_text):
+    def test_token_sequence(self, tmpdir, text, expected_type, expected_text):
 
         path = f'{tmpdir}/test.epi'
 
@@ -167,13 +174,11 @@ class TestTokenizer:
         tokenizer = Tokenizer(path, path)
         tokens = tokenizer.tokenize()
 
-        i = 0
+        assert len(tokens) > 0
+
         for exp_type, exp_text, token in zip(expected_type, expected_text, tokens):
 
-            t_prev = tokens[i - 1].text if i > 0 else ''
-
-            msg = f'`{token.text}` (prev token=`{t_prev}`) expected to be <{exp_type}>, but it`s <{token.type}>'
-            assert exp_type == token.type, msg
+            assert exp_type == token.type
             assert exp_text == token.text
 
-            i += 1
+        assert tokens[-1].type == TokenType.EOF
