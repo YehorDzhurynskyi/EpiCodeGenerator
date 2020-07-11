@@ -123,14 +123,33 @@ class TestTokenizer:
         assert tokens[0].type == TokenType.EOF
 
     @pytest.mark.parametrize('text,expected_type,expected_text', [
+        # Identifiers
+        ('Name', [TokenType.Identifier], ['Name']),
+        ('name', [TokenType.Unknown], ['name']),
+        ('1name', [TokenType.Unknown, TokenType.Unknown], ['1', 'name']),
+        ('_Name', [TokenType.Unknown, TokenType.Identifier], ['_', 'Name']),
+        ('1Name', [TokenType.Unknown, TokenType.Identifier], ['1', 'Name']),
+        ('Name AnotherName', [TokenType.Identifier, TokenType.Identifier], ['Name', 'AnotherName']),
+        ('NameWithDigits12', [TokenType.Identifier], ['NameWithDigits12']),
+        ('12NameWithDigits12', [TokenType.Unknown, TokenType.Identifier], ['12', 'NameWithDigits12']),
+        ('NameWith_Underscore', [TokenType.Identifier], ['NameWith_Underscore']),
+        ('NameWith_UnderscoreOnEnd_', [TokenType.Identifier], ['NameWith_UnderscoreOnEnd_']),
+        ('NameWith12Digits_And_Undersc0reOnEnd_', [TokenType.Identifier], ['NameWith12Digits_And_Undersc0reOnEnd_']),
+        ('NameWith12And_Undersc0reDigitsOnEnd_071', [TokenType.Identifier], ['NameWith12And_Undersc0reDigitsOnEnd_071']),
+        ('Name 12NameWithDigits12', [TokenType.Identifier, TokenType.Unknown, TokenType.Identifier], ['Name', '12', 'NameWithDigits12']),
+        ('   12NameWithDigits12 12 ', [TokenType.Unknown, TokenType.Identifier, TokenType.IntegerLiteral], ['12', 'NameWithDigits12', '12']),
+
+        # Literals Valid
         ("'c'", [TokenType.CharLiteral], ["'c'"]),
         ("L'c'", [TokenType.WCharLiteral], ["L'c'"]),
         ("'\\0'", [TokenType.CharLiteral], ["'\\0'"]),
         ("L'\\0'", [TokenType.WCharLiteral], ["L'\\0'"]),
         ('"string"', [TokenType.StringLiteral], ['"string"']),
         ('L"string"', [TokenType.WStringLiteral], ['L"string"']),
-        ('"  string\t\n "', [TokenType.StringLiteral], ['"  string\t\n "']),
-        ('L"  string \t \n "', [TokenType.WStringLiteral], ['L"  string \t \n "']),
+        ('" \\ string\\t "', [TokenType.StringLiteral], ['" \\ string\\t "']),
+        ('"  string\\t "', [TokenType.StringLiteral], ['"  string\\t "']),
+        ('"  string\\t\\n "', [TokenType.StringLiteral], ['"  string\\t\\n "']),
+        ('L"  string \\t \\n "', [TokenType.WStringLiteral], ['L"  string \\t \\n "']),
         ('42', [TokenType.IntegerLiteral], ['42']),
         ('+42', [TokenType.IntegerLiteral], ['+42']),
         ('-42', [TokenType.IntegerLiteral], ['-42']),
@@ -162,7 +181,35 @@ class TestTokenizer:
         ('+0.00000005', [TokenType.DoubleFloatingLiteral], ['+0.00000005']),
         ('-0.00000005', [TokenType.DoubleFloatingLiteral], ['-0.00000005']),
         ('true', [TokenType.TrueLiteral], ['true']),
-        ('false', [TokenType.FalseLiteral], ['false'])
+        ('false', [TokenType.FalseLiteral], ['false']),
+
+        # Literals Invalid
+        ('42f', [TokenType.Unknown, TokenType.Unknown], ['42', 'f']),
+        ('42foo', [TokenType.Unknown, TokenType.Unknown], ['42', 'foo']),
+        ("L'", [TokenType.Unknown], ["L'"]),
+        ('L"', [TokenType.Unknown], ['L"']),
+        ("L'a epiString", [TokenType.Unknown, TokenType.StringType], ["L'a", 'epiString']),
+        ("L'a; epiString", [TokenType.Unknown, TokenType.Semicolon, TokenType.StringType], ["L'a", ';', 'epiString']),
+        ('L"String epiS32', [TokenType.Unknown], ['L"String epiS32']),
+        ('L"String; epiS32', [TokenType.Unknown], ['L"String; epiS32']),
+        ('L "String epiS32', [TokenType.Identifier, TokenType.Unknown], ['L', '"String epiS32']),
+        ('L "String; epiS32', [TokenType.Identifier, TokenType.Unknown], ['L', '"String; epiS32']),
+
+        # Special symbols
+        (';', [TokenType.Semicolon], [';']),
+        (';;;;', [TokenType.Semicolon], [';']),
+        ('  ; ; ; ; ;  ', [TokenType.Semicolon], [';']),
+        ('::', [TokenType.Colon, TokenType.Colon], [':', ':']),
+        ('**', [TokenType.Asterisk, TokenType.Asterisk], ['*', '*']),
+        ('&&', [TokenType.Ampersand, TokenType.Ampersand], ['&', '&']),
+        ('+', [TokenType.Unknown], ['+']),
+        ('++', [TokenType.Unknown, TokenType.Unknown], ['+', '+']),
+        ('-', [TokenType.Unknown], ['-']),
+        ('--', [TokenType.Unknown, TokenType.Unknown], ['-', '-']),
+        ('=', [TokenType.Assing], ['=']),
+        ('==', [TokenType.Assing, TokenType.Assing], ['=', '=']),
+        ("'", [TokenType.Unknown], ["'"]),
+        ('"', [TokenType.Unknown], ['"']),
     ])
     def test_token_sequence(self, tmpdir, text, expected_type, expected_text):
 

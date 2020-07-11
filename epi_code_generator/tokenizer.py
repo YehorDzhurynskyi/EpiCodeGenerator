@@ -230,8 +230,11 @@ class Tokenizer:
         self.filepath = relpath
         self.tokens = []
 
-    def _ch(self, offset: int = 0):
-        return self.content[self.at + offset] if self.at < self.content_len else '\0'
+    def _ch(self, offset: int = 0) -> chr:
+        return self.content[self.at + offset] if self.at + offset < self.content_len else '\0'
+
+    def _substring_until_at(self, start: int) -> str:
+        return self.content[start:min(self.at, self.content_len)]
 
     @property
     def at(self):
@@ -280,7 +283,7 @@ class Tokenizer:
                     self._tokenize_string_literal()
                 elif self._try_tokenize_special_symbol():
                     pass
-                elif ch.isnumeric() or ch == '-' or ch == '+':
+                elif ch.isnumeric() or ((ch == '-' or ch == '+') and self._ch(1).isnumeric()):
                     self._tokenize_numeric_literal()
                 elif ch.isalpha():
                     self._tokenize_term()
@@ -327,7 +330,7 @@ class Tokenizer:
 
         self.at += len(token.text)
 
-        if token.type == TokenType.Semicolon and self.tokens[-1].type == TokenType.Semicolon:
+        if token.type == TokenType.Semicolon and len(self.tokens) > 0 and self.tokens[-1].type == TokenType.Semicolon:
             return False
 
         self.tokens.append(token)
@@ -336,35 +339,42 @@ class Tokenizer:
 
     def _tokenize_string_literal(self):
 
-        token = Token(TokenType.StringLiteral, self.line, self.column, self.filepath)
+        token = Token(TokenType.Unknown, self.line, self.column, self.filepath)
+        suspected_type = TokenType.StringLiteral
         begin = self.at
         if self._ch() == 'L':
 
-            token.type = TokenType.WStringLiteral
+            suspected_type = TokenType.WStringLiteral
             self.at += 1
 
         self.at += 1
 
-        while self._ch() != '"':
+        while self._ch() not in ['"', '\0']:
 
             if self._ch() == '\\':
                 self.at += 1
 
             self.at += 1
 
-        self.at += 1
-        token.text = self.content[begin:self.at]
+        if self._ch() == '"' and self.line == token.line:
+
+            token.type = suspected_type
+            self.at += 1
+
+        token.text = self._substring_until_at(begin)
         self.tokens.append(token)
 
     def _tokenize_char_literal(self):
 
         # TODO: add unicode support (like: '\u8080')
+        # (see: https://docs.microsoft.com/en-us/cpp/cpp/string-and-character-literals-cpp?view=vs-2019)
 
-        token = Token(TokenType.CharLiteral, self.line, self.column, self.filepath)
+        token = Token(TokenType.Unknown, self.line, self.column, self.filepath)
+        suspected_type = TokenType.CharLiteral
         begin = self.at
         if self._ch() == 'L':
 
-            token.type = TokenType.WCharLiteral
+            suspected_type = TokenType.WCharLiteral
             self.at += 1
 
         self.at += 1
@@ -372,19 +382,27 @@ class Tokenizer:
         if self._ch() == '\\':
             self.at += 1
 
-        self.at += 2
+        self.at += 1
+        if self._ch() == "'":
 
-        token.text = self.content[begin:self.at]
+            token.type = suspected_type
+            self.at += 1
+
+        token.text = self._substring_until_at(begin)
         self.tokens.append(token)
 
     def _tokenize_term(self):
 
-        token = Token(TokenType.Identifier, self.line, self.column, self.filepath)
+        token = Token(TokenType.Unknown, self.line, self.column, self.filepath)
         begin = self.at
+
+        if self._ch().isalpha() and self._ch().isupper():
+            token.type = TokenType.Identifier
+
         while self._ch().isalnum() or self._ch() == '_':
             self.at += 1
 
-        token.text = self.content[begin:self.at]
+        token.text = self._substring_until_at(begin)
         self.tokens.append(token)
 
     def _tokenize_numeric_literal(self):
@@ -403,10 +421,13 @@ class Tokenizer:
                 token.type = TokenType.DoubleFloatingLiteral
                 self.at += 1
 
-        if self._ch() == 'f':
+        if self._ch() == 'f' and token.type == TokenType.DoubleFloatingLiteral:
 
             token.type = TokenType.SingleFloatingLiteral
             self.at += 1
 
-        token.text = self.content[begin:self.at]
+        if not self._ch().isspace() and self._ch() not in ['\0', ';']:
+            token.type = TokenType.Unknown
+
+        token.text = self._substring_until_at(begin)
         self.tokens.append(token)
