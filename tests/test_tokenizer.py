@@ -100,7 +100,7 @@ class TestTokenizer:
 
     def test_token_available(self):
 
-        path = 'tests/data/idl/tokens.epi'
+        path = 'tests/data/samples/tokens.epi'
 
         tokenizer = Tokenizer(path, path)
         tokens = tokenizer.tokenize()
@@ -169,6 +169,8 @@ class TestTokenizer:
         ('42.0', [TokenType.DoubleFloatingLiteral], ['42.0']),
         ('+42.0', [TokenType.DoubleFloatingLiteral], ['+42.0']),
         ('-42.0', [TokenType.DoubleFloatingLiteral], ['-42.0']),
+        ('+0042.0', [TokenType.DoubleFloatingLiteral], ['+0042.0']),
+        ('-0042.0', [TokenType.DoubleFloatingLiteral], ['-0042.0']),
         ('0.0', [TokenType.DoubleFloatingLiteral], ['0.0']),
         ('+0.0', [TokenType.DoubleFloatingLiteral], ['+0.0']),
         ('-0.0', [TokenType.DoubleFloatingLiteral], ['-0.0']),
