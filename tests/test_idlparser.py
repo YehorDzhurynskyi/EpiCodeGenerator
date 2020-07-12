@@ -122,6 +122,28 @@ class TestIDLParser:
             {},
             [IDLSyntaxErrorCode.NoSemicolonOnDeclaration]
         ),
+        (
+            '''
+            class A : B
+            {
+                epiS32 Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .parent('B')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.Int32Type)
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
     ])
     def test_sequence(self, tmpdir: str, text: str, expected_registry: dict, expected_errors: list):
 

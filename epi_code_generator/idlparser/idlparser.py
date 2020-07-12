@@ -349,8 +349,14 @@ class IDLParser:
             literals = {
                 TokenType.BoolType: [TokenType.FalseLiteral, TokenType.TrueLiteral],
                 TokenType.ByteType: [TokenType.IntegerLiteral],
-                TokenType.IntType: [TokenType.IntegerLiteral],
-                TokenType.UIntType: [TokenType.IntegerLiteral],
+                TokenType.Int8Type: [TokenType.IntegerLiteral],
+                TokenType.Int16Type: [TokenType.IntegerLiteral],
+                TokenType.Int32Type: [TokenType.IntegerLiteral],
+                TokenType.Int64Type: [TokenType.IntegerLiteral],
+                TokenType.UInt8Type: [TokenType.IntegerLiteral],
+                TokenType.UInt16Type: [TokenType.IntegerLiteral],
+                TokenType.UInt32Type: [TokenType.IntegerLiteral],
+                TokenType.UInt64Type: [TokenType.IntegerLiteral],
                 TokenType.SizeTType: [TokenType.IntegerLiteral],
                 TokenType.HashTType: [TokenType.IntegerLiteral],
                 TokenType.SingleFloatingType: [TokenType.SingleFloatingLiteral],
@@ -419,7 +425,7 @@ class IDLParser:
 
         if t is None:
             self.syntax_errors.append(IDLSyntaxError(t, IDLSyntaxErrorCode.UnexpectedEOF, tip))
-        elif Tokenizer.is_keyword(t):
+        elif t.is_keyword():
             self.syntax_errors.append(IDLSyntaxError(t, IDLSyntaxErrorCode.UnexpectedKeywordUsage, tip))
         else:
             self.syntax_errors.append(IDLSyntaxError(t, IDLSyntaxErrorCode.UnexpectedToken, tip))

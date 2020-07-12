@@ -38,8 +38,14 @@ class TokenType(Enum):
     ByteType = auto()
     SizeTType = auto()
     HashTType = auto()
-    UIntType = auto()
-    IntType = auto()
+    UInt8Type = auto()
+    UInt16Type = auto()
+    UInt32Type = auto()
+    UInt64Type = auto()
+    Int8Type = auto()
+    Int16Type = auto()
+    Int32Type = auto()
+    Int64Type = auto()
     StringType = auto()
     WStringType = auto()
     ArrayType = auto()
@@ -92,6 +98,31 @@ class TokenType(Enum):
 
     Identifier = auto()
 
+    @staticmethod
+    def is_integer(tokentype) -> bool:
+        return tokentype in [
+            TokenType.Int8Type,
+            TokenType.Int16Type,
+            TokenType.Int32Type,
+            TokenType.Int64Type,
+            TokenType.UInt8Type,
+            TokenType.UInt16Type,
+            TokenType.UInt32Type,
+            TokenType.UInt64Type,
+            TokenType.ByteType,
+            TokenType.SizeTType,
+            TokenType.HashTType
+        ]
+
+    @staticmethod
+    def repr_of(tokentype) -> str:
+
+        for k, v in Tokenizer.builtins().items():
+
+            if v == tokentype:
+                return k
+
+        return None
 
 class Token:
 
@@ -111,6 +142,9 @@ class Token:
 
     def __repr__(self):
         return f'text={self.text}, type={self.type}'
+
+    def is_keyword(self) -> bool:
+        return self.text in Tokenizer.builtins()
 
 
 class Tokenizer:
@@ -149,14 +183,14 @@ class Tokenizer:
         'epiByte': TokenType.ByteType,
         'epiSize_t': TokenType.SizeTType,
         'epiHash_t': TokenType.HashTType,
-        'epiU8': TokenType.UIntType,
-        'epiU16': TokenType.UIntType,
-        'epiU32': TokenType.UIntType,
-        'epiU64': TokenType.UIntType,
-        'epiS8': TokenType.IntType,
-        'epiS16': TokenType.IntType,
-        'epiS32': TokenType.IntType,
-        'epiS64': TokenType.IntType,
+        'epiU8': TokenType.UInt8Type,
+        'epiU16': TokenType.UInt16Type,
+        'epiU32': TokenType.UInt32Type,
+        'epiU64': TokenType.UInt64Type,
+        'epiS8': TokenType.Int8Type,
+        'epiS16': TokenType.Int16Type,
+        'epiS32': TokenType.Int32Type,
+        'epiS64': TokenType.Int64Type,
         'epiFloat': TokenType.SingleFloatingType,
         'epiDouble': TokenType.DoubleFloatingType
     }
@@ -254,17 +288,6 @@ class Tokenizer:
 
         self.column += at - self.__at
         self.__at = at
-
-    @staticmethod
-    def is_keyword(token: Token) -> bool:
-        return token.text in \
-            Tokenizer.BUILTIN_PRIMITIVE_TYPES.keys() | \
-            Tokenizer.BUILTIN_COMPOUND_TYPES.keys() | \
-            Tokenizer.BUILTIN_USER_TYPES.keys() | \
-            Tokenizer.BUILTIN_PRTY_ATTRS.keys() | \
-            Tokenizer.BUILTIN_CLSS_ATTRS.keys() | \
-            Tokenizer.BUILTIN_MODIFIERS.keys() | \
-            Tokenizer.BUILTIN_VALUES.keys()
 
     def tokenize(self):
 
@@ -433,3 +456,17 @@ class Tokenizer:
 
         token.text = self._substring_until_at(begin)
         self.tokens.append(token)
+
+    @staticmethod
+    def builtins() -> dict:
+         return {
+            **Tokenizer.BUILTIN_PRIMITIVE_TYPES,
+            **Tokenizer.BUILTIN_COMPOUND_TYPES,
+            **Tokenizer.BUILTIN_USER_TYPES,
+            **Tokenizer.BUILTIN_PRTY_ATTRS,
+            **Tokenizer.BUILTIN_CLSS_ATTRS,
+            **Tokenizer.BUILTIN_MODIFIERS,
+            **Tokenizer.BUILTIN_VALUES
+        }
+
+assert len(Tokenizer.builtins().values()) == len(set(Tokenizer.builtins().values())), 'Every builtin keyword should much a single TokenType'

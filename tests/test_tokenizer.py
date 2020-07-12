@@ -46,14 +46,14 @@ TOKEN_AVAILABLE = [
     TokenType.ByteType,
     TokenType.SizeTType,
     TokenType.HashTType,
-    TokenType.UIntType,
-    TokenType.UIntType,
-    TokenType.UIntType,
-    TokenType.UIntType,
-    TokenType.IntType,
-    TokenType.IntType,
-    TokenType.IntType,
-    TokenType.IntType,
+    TokenType.UInt8Type,
+    TokenType.UInt16Type,
+    TokenType.UInt32Type,
+    TokenType.UInt64Type,
+    TokenType.Int8Type,
+    TokenType.Int16Type,
+    TokenType.Int32Type,
+    TokenType.Int64Type,
     TokenType.StringType,
     TokenType.WStringType,
     TokenType.ArrayType,
@@ -206,7 +206,7 @@ class TestTokenizer:
 
         # Comments
         ('# COMMENT epiS32; ;;; "As well as this is a comment"', [], []),
-        (' epiS32 Name   =   42  ;   # COMMENT epiS32; ;;; "As well as this is a comment"', [TokenType.IntType, TokenType.Identifier, TokenType.Assing, TokenType.IntegerLiteral, TokenType.Semicolon], ['epiS32', 'Name', '=', '42', ';']),
+        (' epiS32 Name   =   42  ;   # COMMENT epiS32; ;;; "As well as this is a comment"', [TokenType.Int32Type, TokenType.Identifier, TokenType.Assing, TokenType.IntegerLiteral, TokenType.Semicolon], ['epiS32', 'Name', '=', '42', ';']),
 
         # Special symbols
         (';', [TokenType.Semicolon], [';']),

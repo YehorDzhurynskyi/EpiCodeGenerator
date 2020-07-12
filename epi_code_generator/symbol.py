@@ -116,37 +116,31 @@ class EpiVariable(EpiSymbol):
 
         self.tokentype = tokentype
         self.form = form
-        self.value = _default_value()
+        self.value = self._default_value()
 
-        def _default_value(self):
+    def _default_value(self):
 
-            value = None
-            if self.form == EpiVariable.Form.Pointer:
-                value = 'nullptr'
-            elif self.tokentype.type == TokenType.BoolType:
-                value = 'false'
-            elif self.tokentype.type in [
-                TokenType.IntType,
-                TokenType.UIntType,
-                TokenType.ByteType,
-                TokenType.SizeTType,
-                TokenType.HashTType
-            ]:
-                value = '0'
-            elif self.tokentype.type == TokenType.SingleFloatingType:
-                value = '0.0f'
-            elif self.tokentype.type == TokenType.DoubleFloatingType:
-                value = '0.0'
-            elif self.tokentype.type == TokenType.CharType:
-                value = "'\\0'"
-            elif self.tokentype.type == TokenType.WCharType:
-                value = "L'\\0'"
-            elif self.tokentype.type == TokenType.StringType:
-                value = 'epiDEBUG_ONLY("Empty")'
-            elif self.tokentype.type == TokenType.WStringType:
-                value = 'epiDEBUG_ONLY(L"Empty")'
+        value = None
+        if self.form == EpiVariable.Form.Pointer:
+            value = 'nullptr'
+        elif self.tokentype.type == TokenType.BoolType:
+            value = 'false'
+        elif TokenType.is_integer(self.tokentype.type):
+            value = '0'
+        elif self.tokentype.type == TokenType.SingleFloatingType:
+            value = '0.0f'
+        elif self.tokentype.type == TokenType.DoubleFloatingType:
+            value = '0.0'
+        elif self.tokentype.type == TokenType.CharType:
+            value = "'\\0'"
+        elif self.tokentype.type == TokenType.WCharType:
+            value = "L'\\0'"
+        elif self.tokentype.type == TokenType.StringType:
+            value = 'epiDEBUG_ONLY("Empty")'
+        elif self.tokentype.type == TokenType.WStringType:
+            value = 'epiDEBUG_ONLY(L"Empty")'
 
-            return value
+        return value
 
     def __eq__(self, rhs):
         return \
@@ -235,7 +229,7 @@ class EpiClass(EpiSymbol):
             self.properties == rhs.properties
 
     def __repr__(self):
-        return f'{super(EpiClass, self).__repr__()}, parent={self.parent}'
+        return f'{super(EpiClass, self).__repr__()}, parent={self.parent}, properties:len={len(self.properties)}'
 
     def _preprocess_attrs(self, attrs):
         super(EpiClass, self)._preprocess_attrs(attrs)
@@ -280,57 +274,50 @@ class EpiPropertyBuilder:
 
     def __init__(self):
 
-        self._name = None
-        self._tokentype_type = None
-        self._tokentype_value = None
-        self._form = EpiVariable.Form.Plain
-        self._value = None
-        self._attrs = []
+        self.__name = None
+        self.__tokentype_type = None
+        self.__form = EpiVariable.Form.Plain
+        self.__value = None
+        self.__attrs = []
 
     def name(self, name: str):
 
-        self._name = name
+        self.__name = name
         return self
 
     def tokentype_type(self, tokentype: TokenType):
 
-        self._tokentype_type = tokentype
-        return self
-
-    def tokentype_value(self, tokentype: TokenType):
-
-        self._tokentype_value = tokentype
+        self.__tokentype_type = tokentype
         return self
 
     def form(self, form: EpiVariable.Form):
 
-        self._form = form
+        self.__form = form
         return self
 
     def value(self, value: str):
 
-        self._value = value
+        self.__value = value
         return self
 
     def attr(self, attr: EpiAttribute):
 
-        self._attrs.append(attr)
+        self.__attrs.append(attr)
         return self
 
     def build(self):
 
-        assert self._name is not None
-        assert self._tokentype_type is not None
-        assert self._tokentype_value is not None
+        assert self.__name is not None
+        assert self.__tokentype_type is not None
 
-        tokentype = Token(self._tokentype_type, 0, 0, '', self._name)
-        tokenvalue = Token(self._tokentype_type, 0, 0, '', self._name)
+        token = Token(TokenType.Identifier, 0, 0, '', self.__name)
+        tokentype = Token(self.__tokentype_type, 0, 0, '', TokenType.repr_of(self.__tokentype_type))
 
-        prty = EpiVariable(tokenvalue, tokentype, self._form)
-        prty.attrs = self._attrs
+        prty = EpiVariable(token, tokentype, self.__form)
+        prty.attrs = self.__attrs
 
-        if self._value is not None:
-            prty.value = self._value
+        if self.__value is not None:
+            prty.value = self.__value
 
         return prty
 
