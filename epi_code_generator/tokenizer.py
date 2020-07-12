@@ -256,14 +256,14 @@ class Tokenizer:
         self.__at = at
 
     @staticmethod
-    def is_keyword(type):
-        return type in\
-            Tokenizer.BUILTIN_PRIMITIVE_TYPES.keys() |\
-            Tokenizer.BUILTIN_COMPOUND_TYPES.keys() |\
-            Tokenizer.BUILTIN_USER_TYPES.keys() |\
-            Tokenizer.BUILTIN_PRTY_ATTRS.keys() |\
-            Tokenizer.BUILTIN_CLSS_ATTRS.keys() |\
-            Tokenizer.BUILTIN_MODIFIERS.keys() |\
+    def is_keyword(token: Token) -> bool:
+        return token.text in \
+            Tokenizer.BUILTIN_PRIMITIVE_TYPES.keys() | \
+            Tokenizer.BUILTIN_COMPOUND_TYPES.keys() | \
+            Tokenizer.BUILTIN_USER_TYPES.keys() | \
+            Tokenizer.BUILTIN_PRTY_ATTRS.keys() | \
+            Tokenizer.BUILTIN_CLSS_ATTRS.keys() | \
+            Tokenizer.BUILTIN_MODIFIERS.keys() | \
             Tokenizer.BUILTIN_VALUES.keys()
 
     def tokenize(self):

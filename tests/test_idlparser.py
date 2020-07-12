@@ -32,9 +32,7 @@ class TestIDLParser:
 
     @pytest.mark.parametrize('text,expected_registry,expected_errors', [
         (
-            '''
-            class A {};
-            ''',
+            'class A {};',
             {
                 'A':
                 EpiClassBuilder()
@@ -42,6 +40,87 @@ class TestIDLParser:
                     .build()
             },
             []
+        ),
+        (
+            'class A : B {};',
+            {
+                'A':
+                EpiClassBuilder()
+                    .name('A')
+                    .parent('B')
+                    .build()
+            },
+            []
+        ),
+        (
+            'clas A {}',
+            {},
+            [IDLSyntaxErrorCode.MissingTypeDeclaration]
+        ),
+        (
+            'class A {}',
+            {},
+            [IDLSyntaxErrorCode.NoSemicolonOnDeclaration]
+        ),
+        (
+            'class',
+            {},
+            [IDLSyntaxErrorCode.UnexpectedEOF]
+        ),
+        (
+            'class A',
+            {},
+            [IDLSyntaxErrorCode.NoBodyOnDeclaration]
+        ),
+        (
+            'class A :',
+            {},
+            [IDLSyntaxErrorCode.UnexpectedEOF]
+        ),
+        (
+            'class A : B',
+            {},
+            [IDLSyntaxErrorCode.NoBodyOnDeclaration]
+        ),
+        (
+            'class A : B {',
+            {},
+            [IDLSyntaxErrorCode.UnexpectedEOF]
+        ),
+        (
+            'class A : B {}',
+            {},
+            [IDLSyntaxErrorCode.NoSemicolonOnDeclaration]
+        ),
+        (
+            'class A : B {;',
+            {},
+            [IDLSyntaxErrorCode.UnexpectedToken]
+        ),
+        (
+            'class A : B };',
+            {},
+            [IDLSyntaxErrorCode.NoBodyOnDeclaration]
+        ),
+        (
+            'class A : name {};',
+            {},
+            [IDLSyntaxErrorCode.UnexpectedToken]
+        ),
+        (
+            'class A : epiFloat {};',
+            {},
+            [IDLSyntaxErrorCode.UnexpectedKeywordUsage]
+        ),
+        (
+            'class A : Transient {};',
+            {},
+            [IDLSyntaxErrorCode.UnexpectedKeywordUsage]
+        ),
+        (
+            'class A {} : B;',
+            {},
+            [IDLSyntaxErrorCode.NoSemicolonOnDeclaration]
         ),
     ])
     def test_sequence(self, tmpdir: str, text: str, expected_registry: dict, expected_errors: list):
