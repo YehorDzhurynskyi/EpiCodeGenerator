@@ -117,7 +117,7 @@ class TokenType(Enum):
     @staticmethod
     def repr_of(tokentype) -> str:
 
-        for k, v in Tokenizer.builtins().items():
+        for k, v in Tokenizer.keywords().items():
 
             if v == tokentype:
                 return k
@@ -144,7 +144,10 @@ class Token:
         return f'text={self.text}, type={self.type}'
 
     def is_keyword(self) -> bool:
-        return self.text in Tokenizer.builtins()
+        return self.text in Tokenizer.keywords()
+
+    def is_fundamental(self) -> bool:
+        return self.text in Tokenizer.fundamentals()
 
 
 class Tokenizer:
@@ -458,7 +461,7 @@ class Tokenizer:
         self.tokens.append(token)
 
     @staticmethod
-    def builtins() -> dict:
+    def keywords() -> dict:
          return {
             **Tokenizer.BUILTIN_PRIMITIVE_TYPES,
             **Tokenizer.BUILTIN_COMPOUND_TYPES,
@@ -469,4 +472,11 @@ class Tokenizer:
             **Tokenizer.BUILTIN_VALUES
         }
 
-assert len(Tokenizer.builtins().values()) == len(set(Tokenizer.builtins().values())), 'Every builtin keyword should much a single TokenType'
+    @staticmethod
+    def fundamentals() -> dict:
+        return {
+            **Tokenizer.BUILTIN_PRIMITIVE_TYPES,
+            **Tokenizer.BUILTIN_COMPOUND_TYPES
+        }
+
+assert len(Tokenizer.keywords().values()) == len(set(Tokenizer.keywords().values())), 'Every builtin keyword should much a single TokenType'

@@ -363,6 +363,7 @@ class IDLParser:
                 TokenType.DoubleFloatingType: [TokenType.DoubleFloatingLiteral],
                 TokenType.CharType: [TokenType.CharLiteral],
                 TokenType.WCharType: [TokenType.WCharLiteral],
+                TokenType.StringType: [TokenType.StringLiteral],
                 TokenType.WStringType: [TokenType.WStringLiteral],
             }
             t = self._next()
