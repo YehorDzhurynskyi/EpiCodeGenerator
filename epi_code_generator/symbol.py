@@ -125,21 +125,21 @@ class EpiVariable(EpiSymbol):
         value = None
         if self.form == EpiVariable.Form.Pointer:
             value = 'nullptr'
-        elif self.tokentype.type == TokenType.BoolType:
+        elif self.tokentype.tokentype == TokenType.BoolType:
             value = 'false'
         elif self.tokentype.is_integer():
             value = '0'
-        elif self.tokentype.type == TokenType.SingleFloatingType:
+        elif self.tokentype.tokentype == TokenType.SingleFloatingType:
             value = '0.0f'
-        elif self.tokentype.type == TokenType.DoubleFloatingType:
+        elif self.tokentype.tokentype == TokenType.DoubleFloatingType:
             value = '0.0'
-        elif self.tokentype.type == TokenType.CharType:
+        elif self.tokentype.tokentype == TokenType.CharType:
             value = "'\\0'"
-        elif self.tokentype.type == TokenType.WCharType:
+        elif self.tokentype.tokentype == TokenType.WCharType:
             value = "L'\\0'"
-        elif self.tokentype.type == TokenType.StringType:
+        elif self.tokentype.tokentype == TokenType.StringType:
             value = 'epiDEBUG_ONLY("Empty")'
-        elif self.tokentype.type == TokenType.WStringType:
+        elif self.tokentype.tokentype == TokenType.WStringType:
             value = 'epiDEBUG_ONLY(L"Empty")'
 
         return value
@@ -209,7 +209,7 @@ class EpiVariable(EpiSymbol):
             ]:
                 raise EpiAttributeInvalidListError(f'Attribute type {attr.tokentype.name} for this variable')
 
-            if self.tokentype == TokenType.FloatingType and not all(p.type == TokenType.FloatingLiteral for p in attr.params):
+            if self.tokentype == TokenType.FloatingType and not all(p.tokentype == TokenType.FloatingLiteral for p in attr.params):
                 raise EpiAttributeInvalidListError(f'Attribute parameter type (Expected a float)')
 
             if self.tokentype in [
@@ -218,7 +218,7 @@ class EpiVariable(EpiSymbol):
                 TokenType.ByteType,
                 TokenType.SizeTType,
                 TokenType.HashTType
-            ] and not all(p.type == TokenType.IntegerLiteral for p in attr.params):
+            ] and not all(p.tokentype == TokenType.IntegerLiteral for p in attr.params):
                 raise EpiAttributeInvalidListError(f'Attribute parameter type (Expected an integer)')
 
 

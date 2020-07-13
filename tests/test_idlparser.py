@@ -53,9 +53,14 @@ class TestIDLParser:
             []
         ),
         (
-            'clas A {}',
+            'epiFloat Name;',
             {},
             [IDLSyntaxErrorCode.MissingTypeDeclaration]
+        ),
+        (
+            'clas A {}',
+            {},
+            [IDLSyntaxErrorCode.UnknownToken]
         ),
         (
             'class A {}',
@@ -105,7 +110,7 @@ class TestIDLParser:
         (
             'class A : name {};',
             {},
-            [IDLSyntaxErrorCode.UnexpectedToken]
+            [IDLSyntaxErrorCode.UnknownToken]
         ),
         (
             'class A : epiFloat {};',
@@ -181,6 +186,66 @@ class TestIDLParser:
             '''
             class A : B
             {
+                epiS32 Name = 42.0f;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiS32 Name = 42.0.0;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.UnknownToken]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiDouble Name = 420.05.00;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.UnknownToken]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiFloat Name = 420.05.00f;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.UnknownToken] * 2
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiDouble Name = 420.05.0000.60;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.UnknownToken]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiFloat Name = 420.05.0000.60f;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.UnknownToken] * 2
+        ),
+        (
+            '''
+            class A : B
+            {
                 epiFloat Name = 42.0;
             };
             ''',
@@ -231,6 +296,28 @@ class TestIDLParser:
             '''
             class A : B
             {
+                epiChar Name = 'U
+                ';
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.UnknownToken] * 2
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiWChar Name = L'U
+                ';
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.UnknownToken] * 2
+        ),
+        (
+            '''
+            class A : B
+            {
                 epiWChar Name = 'U';
             };
             ''',
@@ -265,7 +352,18 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [IDLSyntaxErrorCode.UnknownToken] * 3
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiString Name = "text
+                ";
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.UnknownToken] * 2
         ),
         (
             '''
@@ -275,7 +373,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [IDLSyntaxErrorCode.UnknownToken] * 3
         ),
         (
             '''
@@ -436,7 +534,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueAssignment]
+            [IDLSyntaxErrorCode.IncorrectValueAssignment] * 21
         ),
     ])
     def test_sequence(self, tmpdir: str, text: str, expected_registry: dict, expected_errors: list):

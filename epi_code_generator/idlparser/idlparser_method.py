@@ -7,13 +7,13 @@ def _parse_method(self):
         return None
 
     fn_t = self._next()
-    if fn_t.type != TokenType.Identifier:
+    if fn_t.tokentype != TokenType.Identifier:
         return None
 
     method = EpiMethod(fn_t.text)
 
     t = self._next()
-    if t.type != TokenType.OpenBracket:
+    if t.tokentype != TokenType.OpenBracket:
         return None
 
     while self._is_next_variable():
@@ -25,17 +25,17 @@ def _parse_method(self):
         method.params.append(param)
 
         t = self._curr()
-        if t.type != TokenType.Comma:
+        if t.tokentype != TokenType.Comma:
             break
 
         self._next()
 
     t = self._next()
-    if t.type != TokenType.CloseBracket:
+    if t.tokentype != TokenType.CloseBracket:
         return None
 
     t = self._next()
-    if t.type != TokenType.Semicolon:
+    if t.tokentype != TokenType.Semicolon:
         return None
 
     return method

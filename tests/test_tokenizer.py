@@ -118,7 +118,7 @@ class TestTokenizer:
         tokens = tokenizer.tokenize()
 
         for t1, t2 in zip(TOKEN_AVAILABLE, tokens):
-            assert t1 == t2.type
+            assert t1 == t2.tokentype
 
     @pytest.mark.parametrize('text,expected_type,expected_text', [
         # Identifiers
@@ -239,5 +239,5 @@ class TestTokenizer:
 
         for exp_type, exp_text, token in zip(expected_type, expected_text, tokens):
 
-            assert exp_type == token.type
+            assert exp_type == token.tokentype
             assert exp_text == token.text

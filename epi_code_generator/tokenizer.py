@@ -1,7 +1,8 @@
 import os
-from enum import Enum, auto
+from enum import Enum, auto, unique
 
 
+@unique
 class TokenType(Enum):
 
     Unknown = auto()
@@ -72,6 +73,8 @@ class TokenType(Enum):
     Rect2SType = auto()
     Rect2UType = auto()
 
+    Identifier = auto()
+
     ClassType = auto()
     # StructType = auto()
     # EnumType = auto()
@@ -96,8 +99,6 @@ class TokenType(Enum):
 
     # ConstModifier = auto()
 
-    Identifier = auto()
-
     @staticmethod
     def repr_of(tokentype) -> str:
 
@@ -110,22 +111,23 @@ class TokenType(Enum):
 
 class Token:
 
-    def __init__(self, type, line, column, filepath, text='???'):
+    def __init__(self, tokentype, line, column, filepath, text='???'):
 
-        self.type = type
+        self.tokentype = tokentype
+        self.tokentype_expected = []
         self.text = text
         self.line = line
         self.column = column
         self.filepath = filepath
 
     def __eq__(self, rhs):
-        return self.type == rhs.type and self.text == rhs.text
+        return self.tokentype == rhs.tokentype and self.text == rhs.text
 
     def __str__(self):
-        return f'[{self.filepath}' '(l:{:4d}, c:{:4d})]: '.format(self.line, self.column) + f'"{self.text}" ({self.type})'
+        return f'[{self.filepath}' '(l:{:4d}, c:{:4d})]: '.format(self.line, self.column) + f'"{self.text}" ({self.tokentype})'
 
     def __repr__(self):
-        return f'text={self.text}, type={self.type}'
+        return f'text={self.text}, tokentype={self.tokentype}'
 
     def is_keyword(self) -> bool:
         return self.text in Tokenizer.keywords()
@@ -133,8 +135,11 @@ class Token:
     def is_fundamental(self) -> bool:
         return self.text in Tokenizer.fundamentals()
 
+    def is_type(self) -> bool:
+        return self.tokentype == TokenType.Identifier or self.is_fundamental()
+
     def is_integer(self) -> bool:
-        return self.type in [
+        return self.tokentype in [
             TokenType.Int8Type,
             TokenType.Int16Type,
             TokenType.Int32Type,
@@ -150,6 +155,9 @@ class Token:
 
     def is_templated(self) -> bool:
         return self.text in Tokenizer.BUILTIN_TEMPLATED_TYPES
+
+    def is_usertype(self) -> bool:
+        return self.text in Tokenizer.BUILTIN_USER_TYPES
 
 
 class Tokenizer:
@@ -325,7 +333,7 @@ class Tokenizer:
 
             keywords = Tokenizer.keywords()
             if token.text in keywords:
-                token.type = keywords[token.text]
+                token.tokentype = keywords[token.text]
 
         return self.tokens
 
@@ -344,7 +352,7 @@ class Tokenizer:
 
         self.at += len(token.text)
 
-        if token.type == TokenType.Semicolon and len(self.tokens) > 0 and self.tokens[-1].type == TokenType.Semicolon:
+        if token.tokentype == TokenType.Semicolon and len(self.tokens) > 0 and self.tokens[-1].tokentype == TokenType.Semicolon:
             return True
 
         self.tokens.append(token)
@@ -354,11 +362,12 @@ class Tokenizer:
     def _tokenize_string_literal(self):
 
         token = Token(TokenType.Unknown, self.line, self.column, self.filepath)
-        suspected_type = TokenType.StringLiteral
+        tokentype_suspected = TokenType.StringLiteral
         begin = self.at
+
         if self._ch() == 'L':
 
-            suspected_type = TokenType.WStringLiteral
+            tokentype_suspected = TokenType.WStringLiteral
             self.at += 1
 
         self.at += 1
@@ -372,8 +381,11 @@ class Tokenizer:
 
         if self._ch() == '"' and self.line == token.line:
 
-            token.type = suspected_type
+            token.tokentype = tokentype_suspected
             self.at += 1
+
+        else:
+            token.tokentype_expected.append(tokentype_suspected)
 
         token.text = self._substring_until_at(begin)
         self.tokens.append(token)
@@ -384,11 +396,12 @@ class Tokenizer:
         # (see: https://docs.microsoft.com/en-us/cpp/cpp/string-and-character-literals-cpp?view=vs-2019)
 
         token = Token(TokenType.Unknown, self.line, self.column, self.filepath)
-        suspected_type = TokenType.CharLiteral
+        tokentype_suspected = TokenType.CharLiteral
         begin = self.at
+
         if self._ch() == 'L':
 
-            suspected_type = TokenType.WCharLiteral
+            tokentype_suspected = TokenType.WCharLiteral
             self.at += 1
 
         self.at += 1
@@ -397,10 +410,13 @@ class Tokenizer:
             self.at += 1
 
         self.at += 1
-        if self._ch() == "'":
+        if self._ch() == "'" and self.line == token.line:
 
-            token.type = suspected_type
+            token.tokentype = tokentype_suspected
             self.at += 1
+
+        else:
+            token.tokentype_expected.append(tokentype_suspected)
 
         token.text = self._substring_until_at(begin)
         self.tokens.append(token)
@@ -408,10 +424,13 @@ class Tokenizer:
     def _tokenize_term(self):
 
         token = Token(TokenType.Unknown, self.line, self.column, self.filepath)
+        tokentype_suspected = TokenType.Identifier
         begin = self.at
 
         if self._ch().isalpha() and self._ch().isupper():
-            token.type = TokenType.Identifier
+            token.tokentype = TokenType.Identifier
+        else:
+            token.tokentype_expected.append(tokentype_suspected)
 
         while self._ch().isalnum() or self._ch() == '_':
             self.at += 1
@@ -422,7 +441,8 @@ class Tokenizer:
     def _tokenize_numeric_literal(self):
 
         token = Token(TokenType.Unknown, self.line, self.column, self.filepath)
-        suspected_type = TokenType.IntegerLiteral
+        tokentype_expected = TokenType.IntegerLiteral
+        tokentype_suspected = TokenType.IntegerLiteral
         begin = self.at
 
         if self._ch() == '-' or self._ch() == '+':
@@ -435,18 +455,25 @@ class Tokenizer:
 
                 self.at += 1
 
-                if self._ch().isnumeric() and suspected_type == TokenType.IntegerLiteral:
-                    suspected_type = TokenType.DoubleFloatingLiteral
+                if self._ch().isnumeric() and tokentype_suspected == TokenType.IntegerLiteral:
+
+                    tokentype_expected = TokenType.DoubleFloatingLiteral
+                    tokentype_suspected = TokenType.DoubleFloatingLiteral
+
                 else:
-                    suspected_type = TokenType.Unknown
+                    tokentype_suspected = TokenType.Unknown
 
-        if self._ch() == 'f' and suspected_type == TokenType.DoubleFloatingLiteral:
+        if self._ch() == 'f' and tokentype_suspected == TokenType.DoubleFloatingLiteral:
 
-            suspected_type = TokenType.SingleFloatingLiteral
+            tokentype_expected = TokenType.SingleFloatingLiteral
+            tokentype_suspected = TokenType.SingleFloatingLiteral
             self.at += 1
 
         if self._ch().isspace() or self._ch() in ['\0', ';']:
-            token.type = suspected_type
+            token.tokentype = tokentype_suspected
+
+        if token.tokentype == TokenType.Unknown:
+            token.tokentype_expected.append(tokentype_expected)
 
         token.text = self._substring_until_at(begin)
         self.tokens.append(token)
@@ -469,5 +496,6 @@ class Tokenizer:
             **Tokenizer.BUILTIN_PRIMITIVE_TYPES,
             **Tokenizer.BUILTIN_TEMPLATED_TYPES
         }
+
 
 assert len(Tokenizer.keywords().values()) == len(set(Tokenizer.keywords().values())), 'Every builtin keyword should much a single TokenType'
