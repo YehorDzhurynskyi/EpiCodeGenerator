@@ -167,6 +167,277 @@ class TestIDLParser:
             },
             []
         ),
+        (
+            '''
+            class A : B
+            {
+                epiS32 Name = 42.0;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiFloat Name = 42.0;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiDouble Name = 42.0f;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiFloat Name = 42;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiDouble Name = 42;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiChar Name = L'U';
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiWChar Name = 'U';
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiChar Name = "U";
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiWChar Name = L"U";
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiString Name = 'text';
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiWString Name = L'text';
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiString Name = L"text";
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        
+        (
+            '''
+            class A : B
+            {
+                epiWString Name = "text";
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiArray<epiFloat> Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .parent('B')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.ArrayType)
+                                .form(EpiVariable.Form.Template)
+                                .tokentype_nested(TokenType.SingleFloatingType)
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiArray Name;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.MissingTemplateArguments]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiArray Name = 42;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.MissingTemplateArguments]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiArray<epiFloat> Name = 42;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiPtrArray<C> Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .parent('B')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.PtrArrayType)
+                                .form(EpiVariable.Form.Template)
+                                .tokentype_nested(TokenType.Identifier)
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class A : B
+            {
+                C Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .parent('B')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.Identifier, 'C')
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class A : B
+            {
+                C Name = 42;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiArray<epiFloat> Name18 = 42;
+                epiPtrArray<epiFloat> Name19 = 42;
+                epiVec2f Name20 = 42;
+                epiVec2d Name21 = 42;
+                epiVec2s Name22 = 42;
+                epiVec2u Name23 = 42;
+                epiVec3f Name24 = 42;
+                epiVec3d Name25 = 42;
+                epiVec3s Name26 = 42;
+                epiVec3u Name27 = 42;
+                epiVec4f Name28 = 42;
+                epiVec4d Name29 = 42;
+                epiVec4s Name30 = 42;
+                epiVec4u Name31 = 42;
+                epiMat2x2f Name32 = 42;
+                epiMat3x3f Name33 = 42;
+                epiMat4x4f Name34 = 42;
+                epiRect2f Name35 = 42;
+                epiRect2d Name36 = 42;
+                epiRect2s Name37 = 42;
+                epiRect2u Name38 = 42;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
     ])
     def test_sequence(self, tmpdir: str, text: str, expected_registry: dict, expected_errors: list):
 
@@ -218,8 +489,8 @@ class TestIDLParser:
                 epiDouble Name15;
                 epiString Name16;
                 epiWString Name17;
-                epiArray Name18;
-                epiPtrArray Name19;
+                epiArray<MyClassName> Name18;
+                epiPtrArray<epiFloat> Name19;
                 epiVec2f Name20;
                 epiVec2d Name21;
                 epiVec2s Name22;
@@ -264,8 +535,8 @@ class TestIDLParser:
                         .property(EpiPropertyBuilder().name('Name15').tokentype_type(TokenType.DoubleFloatingType).build())
                         .property(EpiPropertyBuilder().name('Name16').tokentype_type(TokenType.StringType).build())
                         .property(EpiPropertyBuilder().name('Name17').tokentype_type(TokenType.WStringType).build())
-                        .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).build())
-                        .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).build())
+                        .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiVariable.Form.Template).tokentype_nested(TokenType.Identifier).build())
+                        .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiVariable.Form.Template).tokentype_nested(TokenType.SingleFloatingType).build())
                         .property(EpiPropertyBuilder().name('Name20').tokentype_type(TokenType.Vec2FType).build())
                         .property(EpiPropertyBuilder().name('Name21').tokentype_type(TokenType.Vec2DType).build())
                         .property(EpiPropertyBuilder().name('Name22').tokentype_type(TokenType.Vec2SType).build())
@@ -311,8 +582,8 @@ class TestIDLParser:
                 epiDouble Name15 = +32.00007;
                 epiString Name16 = "TEXT";
                 epiWString Name17 = L"QwertY!";
-                epiArray Name18;
-                epiPtrArray Name19;
+                epiArray<MyClassName> Name18;
+                epiPtrArray<epiFloat> Name19;
                 epiVec2f Name20;
                 epiVec2d Name21;
                 epiVec2s Name22;
@@ -357,8 +628,8 @@ class TestIDLParser:
                         .property(EpiPropertyBuilder().name('Name15').tokentype_type(TokenType.DoubleFloatingType).value('+32.00007').build())
                         .property(EpiPropertyBuilder().name('Name16').tokentype_type(TokenType.StringType).value('"TEXT"').build())
                         .property(EpiPropertyBuilder().name('Name17').tokentype_type(TokenType.WStringType).value('L"QwertY!"').build())
-                        .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).build())
-                        .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).build())
+                        .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiVariable.Form.Template).tokentype_nested(TokenType.Identifier).build())
+                        .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiVariable.Form.Template).tokentype_nested(TokenType.SingleFloatingType).build())
                         .property(EpiPropertyBuilder().name('Name20').tokentype_type(TokenType.Vec2FType).build())
                         .property(EpiPropertyBuilder().name('Name21').tokentype_type(TokenType.Vec2DType).build())
                         .property(EpiPropertyBuilder().name('Name22').tokentype_type(TokenType.Vec2SType).build())

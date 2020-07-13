@@ -99,22 +99,6 @@ class TokenType(Enum):
     Identifier = auto()
 
     @staticmethod
-    def is_integer(tokentype) -> bool:
-        return tokentype in [
-            TokenType.Int8Type,
-            TokenType.Int16Type,
-            TokenType.Int32Type,
-            TokenType.Int64Type,
-            TokenType.UInt8Type,
-            TokenType.UInt16Type,
-            TokenType.UInt32Type,
-            TokenType.UInt64Type,
-            TokenType.ByteType,
-            TokenType.SizeTType,
-            TokenType.HashTType
-        ]
-
-    @staticmethod
     def repr_of(tokentype) -> str:
 
         for k, v in Tokenizer.keywords().items():
@@ -148,6 +132,24 @@ class Token:
 
     def is_fundamental(self) -> bool:
         return self.text in Tokenizer.fundamentals()
+
+    def is_integer(self) -> bool:
+        return self.type in [
+            TokenType.Int8Type,
+            TokenType.Int16Type,
+            TokenType.Int32Type,
+            TokenType.Int64Type,
+            TokenType.UInt8Type,
+            TokenType.UInt16Type,
+            TokenType.UInt32Type,
+            TokenType.UInt64Type,
+            TokenType.ByteType,
+            TokenType.SizeTType,
+            TokenType.HashTType
+        ]
+
+    def is_templated(self) -> bool:
+        return self.text in Tokenizer.BUILTIN_TEMPLATED_TYPES
 
 
 class Tokenizer:
@@ -195,14 +197,9 @@ class Tokenizer:
         'epiS32': TokenType.Int32Type,
         'epiS64': TokenType.Int64Type,
         'epiFloat': TokenType.SingleFloatingType,
-        'epiDouble': TokenType.DoubleFloatingType
-    }
-
-    BUILTIN_COMPOUND_TYPES = {
+        'epiDouble': TokenType.DoubleFloatingType,
         'epiString': TokenType.StringType,
         'epiWString': TokenType.WStringType,
-        'epiArray': TokenType.ArrayType,
-        'epiPtrArray': TokenType.PtrArrayType,
         'epiVec2f': TokenType.Vec2FType,
         'epiVec2d': TokenType.Vec2DType,
         'epiVec2s': TokenType.Vec2SType,
@@ -222,6 +219,11 @@ class Tokenizer:
         'epiRect2d': TokenType.Rect2DType,
         'epiRect2s': TokenType.Rect2SType,
         'epiRect2u': TokenType.Rect2UType
+    }
+
+    BUILTIN_TEMPLATED_TYPES = {
+        'epiArray': TokenType.ArrayType,
+        'epiPtrArray': TokenType.PtrArrayType
     }
 
     BUILTIN_USER_TYPES = {
@@ -321,20 +323,9 @@ class Tokenizer:
 
         for token in self.tokens:
 
-            if token.text in Tokenizer.BUILTIN_PRIMITIVE_TYPES:
-                token.type = Tokenizer.BUILTIN_PRIMITIVE_TYPES[token.text]
-            elif token.text in Tokenizer.BUILTIN_COMPOUND_TYPES:
-                token.type = Tokenizer.BUILTIN_COMPOUND_TYPES[token.text]
-            elif token.text in Tokenizer.BUILTIN_USER_TYPES:
-                token.type = Tokenizer.BUILTIN_USER_TYPES[token.text]
-            elif token.text in Tokenizer.BUILTIN_PRTY_ATTRS:
-                token.type = Tokenizer.BUILTIN_PRTY_ATTRS[token.text]
-            elif token.text in Tokenizer.BUILTIN_CLSS_ATTRS:
-                token.type = Tokenizer.BUILTIN_CLSS_ATTRS[token.text]
-            elif token.text in Tokenizer.BUILTIN_MODIFIERS:
-                token.type = Tokenizer.BUILTIN_MODIFIERS[token.text]
-            elif token.text in Tokenizer.BUILTIN_VALUES:
-                token.type = Tokenizer.BUILTIN_VALUES[token.text]
+            keywords = Tokenizer.keywords()
+            if token.text in keywords:
+                token.type = keywords[token.text]
 
         return self.tokens
 
@@ -464,7 +455,7 @@ class Tokenizer:
     def keywords() -> dict:
          return {
             **Tokenizer.BUILTIN_PRIMITIVE_TYPES,
-            **Tokenizer.BUILTIN_COMPOUND_TYPES,
+            **Tokenizer.BUILTIN_TEMPLATED_TYPES,
             **Tokenizer.BUILTIN_USER_TYPES,
             **Tokenizer.BUILTIN_PRTY_ATTRS,
             **Tokenizer.BUILTIN_CLSS_ATTRS,
@@ -476,7 +467,7 @@ class Tokenizer:
     def fundamentals() -> dict:
         return {
             **Tokenizer.BUILTIN_PRIMITIVE_TYPES,
-            **Tokenizer.BUILTIN_COMPOUND_TYPES
+            **Tokenizer.BUILTIN_TEMPLATED_TYPES
         }
 
 assert len(Tokenizer.keywords().values()) == len(set(Tokenizer.keywords().values())), 'Every builtin keyword should much a single TokenType'

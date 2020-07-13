@@ -18,10 +18,12 @@ class IDLSyntaxErrorCode(Enum):
     NoSemicolonOnDeclaration = auto()
     NoBodyOnDeclaration = auto()
     MissingTypeDeclaration = auto()
+    MissingTemplateArguments = auto()
     UnexpectedToken = auto()
     UnexpectedKeywordUsage = auto()
     UnexpectedEOF = auto()
     IncorrectValueLiteral = auto()
+    IncorrectValueAssignment = auto()
     InvalidArgumentsNumber = auto()
     InvalidAttribute = auto()
 
@@ -32,10 +34,12 @@ SYNTAX_ERROR_MSGS = {
     IDLSyntaxErrorCode.NoSemicolonOnDeclaration: 'No `;` on the end of the declaration',
     IDLSyntaxErrorCode.NoBodyOnDeclaration: 'The body of type declaration is absent',
     IDLSyntaxErrorCode.MissingTypeDeclaration: 'Missing an user type declaration',
+    IDLSyntaxErrorCode.MissingTemplateArguments: 'Template type should have template argument list',
     IDLSyntaxErrorCode.UnexpectedToken: 'Unexpected token',
     IDLSyntaxErrorCode.UnexpectedKeywordUsage: 'Unexpected keyword usage',
     IDLSyntaxErrorCode.UnexpectedEOF: 'Unexpected end of file',
     IDLSyntaxErrorCode.IncorrectValueLiteral: 'Incorrect value literal',
+    IDLSyntaxErrorCode.IncorrectValueAssignment: 'Incorrect value assignment',
     IDLSyntaxErrorCode.InvalidArgumentsNumber: 'Invalid number of arguments',
     IDLSyntaxErrorCode.InvalidAttribute: 'Invalid attribute'
 }
@@ -58,6 +62,10 @@ class IDLSyntaxError:
             s = f'{s} ({self.tip})'
 
         return s
+
+    def __repr__(self):
+        return f'{repr(self.err_code)}: {self.tip}'
+
 
 class IDLParser:
 
@@ -101,10 +109,12 @@ class IDLParser:
 
             clss = self._parse_class()
             if clss is None:
-                registry = {}
                 break
 
             registry[clss.name] = clss
+
+        if len(self.syntax_errors) > 0:
+            registry = {}
 
         return registry, self.syntax_errors
 
@@ -293,18 +303,24 @@ class IDLParser:
             return None
 
         tokentype = self._next()
+        tokentype_nested = []
         form = EpiVariable.Form.Plain
 
-        if self._test(self._curr(), TokenType.OpenAngleBracket):
+        if tokentype.is_templated():
 
-            self._next()
-            form = EpiVariable.Form.Array
+            if not self._test(self._next(), TokenType.OpenAngleBracket):
+
+                self.syntax_errors.append(IDLSyntaxError(tokentype, IDLSyntaxErrorCode.MissingTemplateArguments))
+                return None
+
+            form = EpiVariable.Form.Template
             if not self._is_next_type():
 
                 self._error_push_unexpected_token(self._curr(), 'Expected a <typename>')
                 return None
 
-            nestedtokentype = self._next()
+            # TODO: parse >1 number of template arguments
+            tokentype_nested.append(self._next())
 
             t = self._next()
             if not self._test(t, TokenType.CloseAngleBracket):
@@ -339,8 +355,8 @@ class IDLParser:
 
         var = EpiVariable(t, tokentype, form)
 
-        if var.form == EpiVariable.Form.Array:
-            var.nestedtokentype = nestedtokentype
+        if var.form == EpiVariable.Form.Template:
+            var.tokentype_nested = tokentype_nested
 
         # NOTE: if property is virtual an assignment is invalid
         t = self._next()
@@ -371,26 +387,21 @@ class IDLParser:
                 return None
 
             if var.tokentype.type == TokenType.Identifier:
-
-                self.syntax_errors.append(IDLSyntaxError(t, IDLSyntaxErrorCode.IncorrectValueLiteral, 'Only fundamental types are assingable'))
-                return None
+                self.syntax_errors.append(IDLSyntaxError(t, IDLSyntaxErrorCode.IncorrectValueAssignment, 'Only fundamental types are assingable'))
 
             if var.form == EpiVariable.Form.Pointer:
+                self.syntax_errors.append(IDLSyntaxError(t, IDLSyntaxErrorCode.IncorrectValueAssignment, 'Pointers are unassingable and are set with \'null\' by default'))
 
-                self.syntax_errors.append(IDLSyntaxError(t, IDLSyntaxErrorCode.IncorrectValueLiteral, 'Pointers are unassingable and are set with \'null\' by default'))
-                return None
-
-            if var.form == EpiVariable.Form.Array:
-
-                self.syntax_errors.append(IDLSyntaxError(t, IDLSyntaxErrorCode.IncorrectValueLiteral, 'Arrays are unassingable'))
-                return None
+            if var.form == EpiVariable.Form.Template:
+                self.syntax_errors.append(IDLSyntaxError(t, IDLSyntaxErrorCode.IncorrectValueAssignment, 'Template types are unassingable'))
 
             assert var.form == EpiVariable.Form.Plain, 'Add error message for a new Form'
 
-            if t.type not in literals[var.tokentype.type]:
+            if var.tokentype.type not in literals:
+                self.syntax_errors.append(IDLSyntaxError(t, IDLSyntaxErrorCode.IncorrectValueAssignment))
 
+            if t.type not in literals[var.tokentype.type]:
                 self.syntax_errors.append(IDLSyntaxError(t, IDLSyntaxErrorCode.IncorrectValueLiteral))
-                return None
 
             var.value = t.text
 
@@ -406,10 +417,7 @@ class IDLParser:
     def _is_next_type(self):
 
         t = self._curr()
-        return t is not None and (t.text in (
-            Tokenizer.BUILTIN_PRIMITIVE_TYPES.keys() |
-            Tokenizer.BUILTIN_COMPOUND_TYPES.keys()
-        ) or t.type == TokenType.Identifier)
+        return t is not None and (t.text in Tokenizer.fundamentals() or t.type == TokenType.Identifier)
 
     def _is_next_variable(self):
 
@@ -417,8 +425,7 @@ class IDLParser:
         t = self._curr()
         return  t is not None and ( \
             t.type == TokenType.Identifier or \
-            t.text in Tokenizer.BUILTIN_PRIMITIVE_TYPES or \
-            t.text in Tokenizer.BUILTIN_COMPOUND_TYPES or \
+            t.text in Tokenizer.fundamentals() or \
             t.text in Tokenizer.BUILTIN_MODIFIERS \
         )
 

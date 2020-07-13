@@ -106,9 +106,10 @@ class EpiVariable(EpiSymbol):
 
     class Form(Enum):
 
+        # NOTE: should be represented as a mask
         Plain = auto()
         Pointer = auto()
-        Array = auto()
+        Template = auto()
 
     def __init__(self, token: Token, tokentype: Token, form):
 
@@ -117,6 +118,7 @@ class EpiVariable(EpiSymbol):
         self.tokentype = tokentype
         self.form = form
         self.value = self._default_value()
+        self.tokentype_nested = []
 
     def _default_value(self):
 
@@ -125,7 +127,7 @@ class EpiVariable(EpiSymbol):
             value = 'nullptr'
         elif self.tokentype.type == TokenType.BoolType:
             value = 'false'
-        elif TokenType.is_integer(self.tokentype.type):
+        elif self.tokentype.is_integer():
             value = '0'
         elif self.tokentype.type == TokenType.SingleFloatingType:
             value = '0.0f'
@@ -148,6 +150,13 @@ class EpiVariable(EpiSymbol):
             self.form == rhs.form and \
             self.value == rhs.value and \
             self.tokentype == rhs.tokentype
+
+    def __repr__(self):
+
+        rtokentype_nested = ', '.join([repr(t) for t in self.tokentype_nested])
+        r = f'{super(EpiVariable, self).__repr__()}, tokentype=({repr(self.tokentype)}), form={self.form}, value={self.value}, tokentype_nested={rtokentype_nested}'
+
+        return r
 
     def _preprocess_attrs(self, attrs):
 
@@ -229,7 +238,12 @@ class EpiClass(EpiSymbol):
             self.properties == rhs.properties
 
     def __repr__(self):
-        return f'{super(EpiClass, self).__repr__()}, parent={self.parent}, properties:len={len(self.properties)}'
+
+        r = f'{super(EpiClass, self).__repr__()}, parent={self.parent}, properties-len={len(self.properties)}'
+        rproperties = '\n'.join([repr(p) for p in self.properties])
+        r = f'{r}:{rproperties}'
+
+        return r
 
     def _preprocess_attrs(self, attrs):
         super(EpiClass, self)._preprocess_attrs(attrs)
@@ -276,18 +290,24 @@ class EpiPropertyBuilder:
 
         self.__name = None
         self.__tokentype_type = None
+        self.__tokentype_text = None
         self.__form = EpiVariable.Form.Plain
         self.__value = None
         self.__attrs = []
+        self.__tokentype_nested = []
 
     def name(self, name: str):
 
         self.__name = name
         return self
 
-    def tokentype_type(self, tokentype: TokenType):
+    def tokentype_type(self, tokentype: TokenType, tokentext: str = None):
+
+        assert tokentype != TokenType.Identifier or tokentext is not None, '<identifier> should be provided with a text'
 
         self.__tokentype_type = tokentype
+        self.__tokentype_text = tokentext
+
         return self
 
     def form(self, form: EpiVariable.Form):
@@ -305,16 +325,24 @@ class EpiPropertyBuilder:
         self.__attrs.append(attr)
         return self
 
+    def tokentype_nested(self, tokentype: TokenType):
+
+        self.__tokentype_nested.append(tokentype)
+        return self
+
     def build(self):
 
         assert self.__name is not None
         assert self.__tokentype_type is not None
 
         token = Token(TokenType.Identifier, 0, 0, '', self.__name)
-        tokentype = Token(self.__tokentype_type, 0, 0, '', TokenType.repr_of(self.__tokentype_type))
+
+        tokentype_text = self.__tokentype_text if self.__tokentype_text is not None else TokenType.repr_of(self.__tokentype_type)
+        tokentype = Token(self.__tokentype_type, 0, 0, '', tokentype_text)
 
         prty = EpiVariable(token, tokentype, self.__form)
         prty.attrs = self.__attrs
+        prty.tokentype_nested = self.__tokentype_nested
 
         if self.__value is not None:
             prty.value = self.__value
