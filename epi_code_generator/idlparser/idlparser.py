@@ -55,7 +55,7 @@ class IDLSyntaxError:
 
             expected = ' or '.join([f'`{exp}`' for exp in token.tokentype_expected])
             if len(token.tokentype_expected) > 0:
-                tip = f'{expected} is expected... {tip}'
+                tip = f'{expected} is expected! {tip}'
 
             if err_code == IDLSyntaxErrorCode.UnexpectedToken and token.is_keyword():
                 err_code = IDLSyntaxErrorCode.UnexpectedKeywordUsage
@@ -82,7 +82,7 @@ class IDLSyntaxError:
         return s
 
     def __repr__(self):
-        return f'{repr(self.__err_code)}: {self.__tip}'
+        return f'{repr(self.__err_code)}: {self.__token} {self.__tip}'
 
 
 class IDLParser:

@@ -763,3 +763,157 @@ class TestIDLParser:
         exp_fundamentals.sort()
 
         assert fundamentals == exp_fundamentals, 'Some fundamental type is missing'
+
+    @pytest.mark.parametrize('text', [
+        (
+            '''
+            class ClassName : ParentClassName
+            {
+                epiChar Name0 = 'f';
+                epiWChar Name1 = L'F';
+                epiBool Name2 = true;
+                epiByte Name3;
+                epiSize_t Name4;
+                epiHash_t Name5;
+                epiU8 Name6;
+                epiU16 Name7;
+
+                epiU32 Name8 = -1;
+                epiU64 Name9;
+                epiS8 Name10;
+                epiS16 Name11 = 15;
+                epiS32 Name12;
+                epiS64 Name13;
+                epiFloat Name14;
+
+                epiDouble Name15; # comment
+                epiString Name16 = "Hello";
+                epiWString Name17;
+                epiArray<MyClassName> Name18;
+                epiPtrArray<epiFloat> Name19;
+                epiVec2f Name20;
+                epiVec2d Name_21;
+
+                epiVec2s Name22;
+                epiVec2u Name23;
+                epiVec3f Name24;
+                epiVec3d Name25;
+                epiVec3s Name26;
+                epiVec3u Name27;
+                epiVec4f Name28;
+                epiVec4d Name29;
+                epiVec4s Name30;
+                epiVec4u Name31;
+                epiMat2x2f Name32;
+                epiMat3x3f Name33;
+                epiMat4x4f Name34;
+                epiRect2f Name35;
+                epiRect2d Name36;
+
+                # comment
+                # comment
+
+                epiRect2s Name37;
+                epiRect2u Name38;
+            };
+            '''
+        ),
+        (
+            '''
+            class
+            ClassName
+                : ParentClassName { # comment
+                # comment
+                epiChar Name0 = 'f'; epiWChar Name1 = L'F'; epiBool Name2 = true; epiByte Name3;
+
+                epiSize_t Name4;
+                epiHash_t Name5;
+                epiU8 Name6;
+                epiU16 Name7;
+
+                epiU32 Name8 = -1;                  epiU64 Name9;
+                epiS8 Name10;
+                epiS16 Name11 = 15; epiS32 Name12;
+                epiS64 Name13;
+                epiFloat Name14;       
+
+                epiDouble Name15; # comment
+                epiString Name16 = "Hello"; epiWString Name17;
+                epiArray<MyClassName> Name18;       
+                epiPtrArray<epiFloat> Name19;
+                epiVec2f Name20;
+                epiVec2d Name_21;
+
+                epiVec2s Name22; epiVec2u Name23; epiVec3f Name24; epiVec3d Name25;
+                epiVec3s Name26;
+                epiVec3u Name27;
+                epiVec4f Name28;                         epiVec4d Name29;
+                epiVec4s Name30;
+                epiVec4u Name31;
+                epiMat2x2f Name32;
+                epiMat3x3f Name33;
+                epiMat4x4f Name34;
+                epiRect2f Name35;
+                epiRect2d Name36;
+
+                # comment
+                # comment
+
+                epiRect2s Name37;
+                epiRect2u Name38;
+            };
+            '''
+        ),
+    ])
+    def test_sequence_formatting(self, tmpdir: str, text: str):
+
+        expected_errors = []
+        expected_registry = {
+            'ClassName':
+                EpiClassBuilder()
+                    .name('ClassName')
+                    .parent('ParentClassName')
+                    .property(EpiPropertyBuilder().name('Name0').tokentype_type(TokenType.CharType).value("'f'").build())
+                    .property(EpiPropertyBuilder().name('Name1').tokentype_type(TokenType.WCharType).value("L'F'").build())
+                    .property(EpiPropertyBuilder().name('Name2').tokentype_type(TokenType.BoolType).value('true').build())
+                    .property(EpiPropertyBuilder().name('Name3').tokentype_type(TokenType.ByteType).build())
+                    .property(EpiPropertyBuilder().name('Name4').tokentype_type(TokenType.SizeTType).build())
+                    .property(EpiPropertyBuilder().name('Name5').tokentype_type(TokenType.HashTType).build())
+                    .property(EpiPropertyBuilder().name('Name6').tokentype_type(TokenType.UInt8Type).build())
+                    .property(EpiPropertyBuilder().name('Name7').tokentype_type(TokenType.UInt16Type).build())
+                    .property(EpiPropertyBuilder().name('Name8').tokentype_type(TokenType.UInt32Type).value('-1').build())
+                    .property(EpiPropertyBuilder().name('Name9').tokentype_type(TokenType.UInt64Type).build())
+                    .property(EpiPropertyBuilder().name('Name10').tokentype_type(TokenType.Int8Type).build())
+                    .property(EpiPropertyBuilder().name('Name11').tokentype_type(TokenType.Int16Type).value('15').build())
+                    .property(EpiPropertyBuilder().name('Name12').tokentype_type(TokenType.Int32Type).build())
+                    .property(EpiPropertyBuilder().name('Name13').tokentype_type(TokenType.Int64Type).build())
+                    .property(EpiPropertyBuilder().name('Name14').tokentype_type(TokenType.SingleFloatingType).build())
+                    .property(EpiPropertyBuilder().name('Name15').tokentype_type(TokenType.DoubleFloatingType).build())
+                    .property(EpiPropertyBuilder().name('Name16').tokentype_type(TokenType.StringType).value('"Hello"').build())
+                    .property(EpiPropertyBuilder().name('Name17').tokentype_type(TokenType.WStringType).build())
+                    .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiVariable.Form.Template).tokentype_nested(TokenType.Identifier).build())
+                    .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiVariable.Form.Template).tokentype_nested(TokenType.SingleFloatingType).build())
+                    .property(EpiPropertyBuilder().name('Name20').tokentype_type(TokenType.Vec2FType).build())
+                    .property(EpiPropertyBuilder().name('Name_21').tokentype_type(TokenType.Vec2DType).build())
+                    .property(EpiPropertyBuilder().name('Name22').tokentype_type(TokenType.Vec2SType).build())
+                    .property(EpiPropertyBuilder().name('Name23').tokentype_type(TokenType.Vec2UType).build())
+                    .property(EpiPropertyBuilder().name('Name24').tokentype_type(TokenType.Vec3FType).build())
+                    .property(EpiPropertyBuilder().name('Name25').tokentype_type(TokenType.Vec3DType).build())
+                    .property(EpiPropertyBuilder().name('Name26').tokentype_type(TokenType.Vec3SType).build())
+                    .property(EpiPropertyBuilder().name('Name27').tokentype_type(TokenType.Vec3UType).build())
+                    .property(EpiPropertyBuilder().name('Name28').tokentype_type(TokenType.Vec4FType).build())
+                    .property(EpiPropertyBuilder().name('Name29').tokentype_type(TokenType.Vec4DType).build())
+                    .property(EpiPropertyBuilder().name('Name30').tokentype_type(TokenType.Vec4SType).build())
+                    .property(EpiPropertyBuilder().name('Name31').tokentype_type(TokenType.Vec4UType).build())
+                    .property(EpiPropertyBuilder().name('Name32').tokentype_type(TokenType.Mat2x2FType).build())
+                    .property(EpiPropertyBuilder().name('Name33').tokentype_type(TokenType.Mat3x3FType).build())
+                    .property(EpiPropertyBuilder().name('Name34').tokentype_type(TokenType.Mat4x4FType).build())
+                    .property(EpiPropertyBuilder().name('Name35').tokentype_type(TokenType.Rect2FType).build())
+                    .property(EpiPropertyBuilder().name('Name36').tokentype_type(TokenType.Rect2DType).build())
+                    .property(EpiPropertyBuilder().name('Name37').tokentype_type(TokenType.Rect2SType).build())
+                    .property(EpiPropertyBuilder().name('Name38').tokentype_type(TokenType.Rect2UType).build())
+                    .build()
+        }
+
+        self.test_sequence(tmpdir, text, expected_registry, expected_errors)
+
