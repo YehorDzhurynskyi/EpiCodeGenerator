@@ -438,7 +438,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.MissingTemplateArguments]
+            [IDLSyntaxErrorCode.MissingTemplateArguments, IDLSyntaxErrorCode.IncorrectValueAssignment]
         ),
         (
             '''

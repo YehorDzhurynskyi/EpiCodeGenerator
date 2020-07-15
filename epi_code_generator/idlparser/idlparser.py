@@ -75,6 +75,10 @@ class IDLSyntaxError:
         return f'{repr(self.__err_code)}: {self.__token} {self.__tip}'
 
 
+class IDLParserFatalError(Exception):
+    pass
+
+
 class IDLParser:
 
     def __init__(self, tokens):
@@ -99,7 +103,7 @@ class IDLParser:
 
         return curr
 
-    def _push_error(self, token: Token, err_code: IDLSyntaxErrorCode, tip: str):
+    def _push_error(self, token: Token, err_code: IDLSyntaxErrorCode, tip: str, fatal: bool =True):
 
         if err_code == IDLSyntaxErrorCode.UnexpectedToken:
 
@@ -108,6 +112,9 @@ class IDLParser:
                 err_code = IDLSyntaxErrorCode.UnexpectedKeywordUsage if token.is_keyword() else IDLSyntaxErrorCode.UnexpectedToken
 
         self.syntax_errors.append(IDLSyntaxError(token, err_code, tip))
+
+        if fatal:
+            raise IDLParserFatalError()
 
 
     def _test(self, token: Token, expected: list, **kwargs) -> bool:
@@ -121,8 +128,10 @@ class IDLParser:
 
                 err_code = kwargs['err_code']
                 assert isinstance(err_code, IDLSyntaxErrorCode)
-                tip = kwargs['tip'] if 'tip' in kwargs else ''
+                tip = f"{kwargs['tip']}. " if 'tip' in kwargs else ''
                 assert isinstance(tip, str)
+                fatal = kwargs['fatal'] if 'fatal' in kwargs else True
+                assert isinstance(fatal, bool)
 
                 if token is not None:
 
@@ -130,9 +139,9 @@ class IDLParser:
                     expected = ' or '.join([f'`{exp}`' for exp in token.tokentype_expected])
 
                     if len(token.tokentype_expected) > 0:
-                        tip = f'{tip}. {expected} is expected!'
+                        tip = f'{tip}{expected} is expected!'
 
-                self._push_error(token, err_code, tip)
+                self._push_error(token, err_code, tip, fatal)
 
             return False
 
@@ -145,19 +154,22 @@ class IDLParser:
             return {}, self.syntax_errors
 
         registry = {}
-        while not self._eof():
 
-            t = self._curr()
-            if not self._test(t, list(Tokenizer.BUILTIN_USER_TYPES.values()), err_code=IDLSyntaxErrorCode.MissingTypeDeclaration):
-                break
+        try:
 
-            assert t.tokentype == TokenType.ClassType, 'Handle other usertypes'
+            while not self._eof():
 
-            clss = self._parse_class()
-            if clss is None:
-                break
+                t = self._curr()
+                self._test(t, list(Tokenizer.BUILTIN_USER_TYPES.values()), err_code=IDLSyntaxErrorCode.MissingTypeDeclaration)
 
-            registry[clss.name] = clss
+                assert t.tokentype == TokenType.ClassType, 'Handle other usertypes'
+
+                clss = self._parse_class()
+
+                registry[clss.name] = clss
+
+        except IDLParserFatalError:
+            pass
 
         if len(self.syntax_errors) > 0:
             registry = {}
@@ -169,8 +181,7 @@ class IDLParser:
         assert self._curr().tokentype == TokenType.ClassType, 'This method should be called on `class` token'
 
         t = self._next(2)
-        if not self._test(t, [TokenType.Identifier], err_code=IDLSyntaxErrorCode.UnexpectedToken):
-            return None
+        self._test(t, [TokenType.Identifier], err_code=IDLSyntaxErrorCode.UnexpectedToken)
 
         clss = EpiClass(t)
 
@@ -178,8 +189,7 @@ class IDLParser:
         if self._test(t, [TokenType.Colon]):
 
             t = self._next(2)
-            if not self._test(t, [TokenType.Identifier], err_code=IDLSyntaxErrorCode.UnexpectedToken):
-                return None
+            self._test(t, [TokenType.Identifier], err_code=IDLSyntaxErrorCode.UnexpectedToken)
 
             clss.parent = t.text
 
@@ -193,33 +203,26 @@ class IDLParser:
                     unpack_scope(e)
 
         scope = self._parse_scope()
-        if scope is None:
-            return None
-
         unpack_scope(scope)
 
         t = self._next()
-        if not self._test(t,
-                          [TokenType.Semicolon],
-                          err_code=IDLSyntaxErrorCode.NoSemicolonOnDeclaration,
-                          tip='`class` type should be followed by `;`'):
-            return None
+        self._test(t,
+                  [TokenType.Semicolon],
+                  err_code=IDLSyntaxErrorCode.NoSemicolonOnDeclaration,
+                  tip='`class` type should be followed by `;`')
 
         return clss
 
     def _parse_scope(self, attrs_inherited: list = []) -> list:
 
         t = self._next()
-        if not self._test(t, [TokenType.OpenBrace], err_code=IDLSyntaxErrorCode.NoBodyOnDeclaration):
-            return None
+        self._test(t, [TokenType.OpenBrace], err_code=IDLSyntaxErrorCode.NoBodyOnDeclaration)
 
         scope = []
         while True:
 
             t = self._curr()
             attrs_local = self._parse_attr_list(list(Tokenizer.BUILTIN_PRTY_ATTRS.values()))
-            if attrs_local is None:
-                return None
 
             attrs_merged = attrs_inherited + attrs_local
             # TODO: check if property isn't reference
@@ -231,24 +234,19 @@ class IDLParser:
             else:
 
                 var = self._parse_variable()
-                if var is None:
-                    return None
 
                 try:
                     var.attrs = attrs_merged
                 except EpiAttributeInvalidListError as e:
-
                     self._push_error(var.tokentype, IDLSyntaxErrorCode.InvalidAttribute, str(e))
-                    return None
 
                 scope.append(var)
 
         t = self._next()
-        if not self._test(t,
-                          [TokenType.CloseBrace],
-                          err_code=IDLSyntaxErrorCode.NoMatchingClosingBrace,
-                          tip='Expected \'}\''):
-            return None
+        self._test(t,
+                  [TokenType.CloseBrace],
+                  err_code=IDLSyntaxErrorCode.NoMatchingClosingBrace,
+                  tip='Expected \'}\'')
 
         return scope
 
@@ -264,15 +262,9 @@ class IDLParser:
             self._next()
             while True:
 
-                if not self._test(self._curr(),
-                                  attr_whitelist,
-                                  err_code=IDLSyntaxErrorCode.IncorrectAttribute):
-                    return None
+                self._test(self._curr(), attr_whitelist, err_code=IDLSyntaxErrorCode.IncorrectAttribute)
 
                 attr = self._parse_attr()
-                if attr is None:
-                    return None
-
                 attrs.append(attr)
 
                 if not self._test(self._curr(), [TokenType.Comma]):
@@ -281,11 +273,10 @@ class IDLParser:
                 self._next()
 
             t = self._next()
-            if not self._test(t,
-                              [TokenType.CloseSqBracket],
-                              err_code=IDLSyntaxErrorCode.NoMatchingClosingBracket,
-                              tip='Attribute list should be followed by `]`'):
-                return None
+            self._test(t,
+                      [TokenType.CloseSqBracket],
+                      err_code=IDLSyntaxErrorCode.NoMatchingClosingBracket,
+                      tip='Attribute list should be followed by `]`')
 
         return attrs
 
@@ -320,30 +311,24 @@ class IDLParser:
         if i > rbound:
 
             tip = f'Maximum number of args is {rbound} but {i} provided'
-            self._push_error(a_t, IDLSyntaxErrorCode.InvalidArgumentsNumber, tip)
-
-            return None
+            self._push_error(a_t, IDLSyntaxErrorCode.InvalidArgumentsNumber, tip, fatal=False)
 
         t = self._next()
-        if not self._test(t, [TokenType.CloseBracket], err_code=IDLSyntaxErrorCode.NoMatchingClosingBracket):
-            return None
+        self._test(t, [TokenType.CloseBracket], err_code=IDLSyntaxErrorCode.NoMatchingClosingBracket)
 
         if i < lbound:
 
             tip = f'Minimum number of args is {lbound} but {i} provided'
-            self._push_error(a_t, IDLSyntaxErrorCode.InvalidArgumentsNumber, tip)
-
-            return None
+            self._push_error(a_t, IDLSyntaxErrorCode.InvalidArgumentsNumber, tip, fatal=False)
 
         return attr
 
     def _parse_variable(self) -> EpiVariable:
 
         tokentype_types = [TokenType.Identifier]
-        tokentype_types.extend(list(Tokenizer.fundamentals().values()))
+        tokentype_types.extend(TokenType.fundamentals())
 
-        if not self._test(self._curr(), tokentype_types, err_code=IDLSyntaxErrorCode.UnexpectedToken):
-            return None
+        self._test(self._curr(), tokentype_types, err_code=IDLSyntaxErrorCode.UnexpectedToken)
 
         tokentype = self._next()
         tokentype_nested = []
@@ -351,19 +336,18 @@ class IDLParser:
 
         if tokentype is not None and tokentype.is_templated():
 
-            if not self._test(self._next(), [TokenType.OpenAngleBracket], err_code=IDLSyntaxErrorCode.MissingTemplateArguments):
-                return None
+            if self._test(self._curr(), [TokenType.OpenAngleBracket], err_code=IDLSyntaxErrorCode.MissingTemplateArguments, fatal=False):
 
-            form = EpiVariable.Form.Template
-            if not self._test(self._curr(), tokentype_types, err_code=IDLSyntaxErrorCode.UnexpectedToken):
-                return None
+                self._next()
 
-            # TODO: parse >1 number of template arguments
-            tokentype_nested.append(self._next())
+                form = EpiVariable.Form.Template
+                self._test(self._curr(), tokentype_types, err_code=IDLSyntaxErrorCode.UnexpectedToken, fatal=False)
 
-            t = self._next()
-            if not self._test(t, [TokenType.CloseAngleBracket], err_code=IDLSyntaxErrorCode.NoMatchingClosingBracket):
-                return None
+                # TODO: parse >1 number of template arguments
+                tokentype_nested.append(self._next())
+
+                t = self._next()
+                self._test(t, [TokenType.CloseAngleBracket], err_code=IDLSyntaxErrorCode.NoMatchingClosingBracket, fatal=False)
 
         while True:
 
@@ -385,8 +369,7 @@ class IDLParser:
                 # self._next()
 
         t = self._next()
-        if not self._test(t, [TokenType.Identifier], err_code=IDLSyntaxErrorCode.UnexpectedToken):
-            return None
+        self._test(t, [TokenType.Identifier], err_code=IDLSyntaxErrorCode.UnexpectedToken, fatal=False)
 
         var = EpiVariable(t, tokentype, form)
 
@@ -398,16 +381,19 @@ class IDLParser:
         if self._test(t, [TokenType.Assing]):
 
             t = self._next()
-            if t is None:
-                return None
+            self._test(t,
+                       TokenType.literals(),
+                       err_code=IDLSyntaxErrorCode.IncorrectValueAssignment,
+                       tip="The assigned value isn't a literal",
+                       fatal=False)
 
             # TODO: add suppress exception
             if var.tokentype.tokentype == TokenType.Identifier:
-                self._push_error(t, IDLSyntaxErrorCode.IncorrectValueAssignment, 'Only fundamental types are assingable')
+                self._push_error(t, IDLSyntaxErrorCode.IncorrectValueAssignment, 'Only fundamental types are assingable', fatal=False)
             elif var.form == EpiVariable.Form.Pointer:
-                self._push_error(t, IDLSyntaxErrorCode.IncorrectValueAssignment, 'Pointers are unassingable and are set with \'null\' by default')
+                self._push_error(t, IDLSyntaxErrorCode.IncorrectValueAssignment, 'Pointers are unassingable and are set with \'null\' by default', fatal=False)
             elif var.form == EpiVariable.Form.Template:
-                self._push_error(t, IDLSyntaxErrorCode.IncorrectValueAssignment, 'Template types are unassingable')
+                self._push_error(t, IDLSyntaxErrorCode.IncorrectValueAssignment, 'Template types are unassingable', fatal=False)
             else:
 
                 literals = {
@@ -431,15 +417,13 @@ class IDLParser:
                     TokenType.WStringType: [TokenType.WStringLiteral],
                 }
 
-                # TODO: add suppress exception
-                if self._test(var.tokentype, list(literals.keys()), err_code=IDLSyntaxErrorCode.IncorrectValueAssignment):
-                    self._test(t, literals[var.tokentype.tokentype], err_code=IDLSyntaxErrorCode.IncorrectValueLiteral)
+                if self._test(var.tokentype, list(literals.keys()), err_code=IDLSyntaxErrorCode.IncorrectValueAssignment, fatal=False):
+                    self._test(t, literals[var.tokentype.tokentype], err_code=IDLSyntaxErrorCode.IncorrectValueLiteral, fatal=False)
 
                 var.value = t.text
 
             t = self._next()
 
-        if not self._test(t, [TokenType.Semicolon], err_code=IDLSyntaxErrorCode.UnexpectedToken):
-            return None
+        self._test(t, [TokenType.Semicolon], err_code=IDLSyntaxErrorCode.UnexpectedToken)
 
         return var

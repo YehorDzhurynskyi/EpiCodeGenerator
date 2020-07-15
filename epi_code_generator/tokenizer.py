@@ -109,6 +109,25 @@ class TokenType(Enum):
 
         return None
 
+    @staticmethod
+    def fundamentals() -> list:
+        return list(Tokenizer.fundamentals().values())
+
+    @staticmethod
+    def literals() -> list:
+        return [
+            TokenType.CharLiteral,
+            TokenType.WCharLiteral,
+            TokenType.StringLiteral,
+            TokenType.WStringLiteral,
+            TokenType.IntegerLiteral,
+            TokenType.SingleFloatingLiteral,
+            TokenType.DoubleFloatingLiteral,
+            TokenType.TrueLiteral,
+            TokenType.FalseLiteral
+        ]
+
+
 class Token:
 
     def __init__(self, tokentype, line, column, filepath, text='???'):
