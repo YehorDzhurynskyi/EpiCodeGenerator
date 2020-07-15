@@ -103,7 +103,7 @@ class IDLParser:
 
         return curr
 
-    def _push_error(self, token: Token, err_code: IDLSyntaxErrorCode, tip: str, fatal: bool =True):
+    def _push_error(self, token: Token, err_code: IDLSyntaxErrorCode, tip: str='', fatal: bool=True):
 
         if err_code == IDLSyntaxErrorCode.UnexpectedToken:
 
@@ -341,13 +341,16 @@ class IDLParser:
                 self._next()
 
                 form = EpiVariable.Form.Template
-                self._test(self._curr(), tokentype_types, err_code=IDLSyntaxErrorCode.UnexpectedToken, fatal=False)
+                if self._test(self._curr(), tokentype_types, err_code=IDLSyntaxErrorCode.UnexpectedToken, fatal=False):
 
-                # TODO: parse >1 number of template arguments
-                tokentype_nested.append(self._next())
+                    # TODO: parse >1 number of template arguments
+                    tokentype_nested.append(self._next())
 
                 t = self._next()
-                self._test(t, [TokenType.CloseAngleBracket], err_code=IDLSyntaxErrorCode.NoMatchingClosingBracket, fatal=False)
+                self._test(t, [TokenType.CloseAngleBracket], err_code=IDLSyntaxErrorCode.NoMatchingClosingBracket)
+
+                if len(tokentype_nested) == 0:
+                    self._push_error(t, IDLSyntaxErrorCode.MissingTemplateArguments, fatal=False)
 
         while True:
 

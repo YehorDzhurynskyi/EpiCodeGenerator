@@ -454,6 +454,66 @@ class TestIDLParser:
             '''
             class A : B
             {
+                epiArray< Name;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.NoMatchingClosingBracket]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiArray<> Name;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.UnexpectedToken, IDLSyntaxErrorCode.MissingTemplateArguments]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiArray<epiFloat Name;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.NoMatchingClosingBracket]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiArray< Name = 42;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.NoMatchingClosingBracket]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiArray<> Name = 42;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.UnexpectedToken, IDLSyntaxErrorCode.MissingTemplateArguments, IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            '''
+            class A : B
+            {
+                epiArray<epiFloat Name = 42;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.NoMatchingClosingBracket]
+        ),
+        (
+            '''
+            class A : B
+            {
                 epiPtrArray<C> Name;
             };
             ''',
