@@ -86,7 +86,7 @@ epiRect2u
 class
 ReadOnly
 WriteOnly
-Private
+
 WriteCallback
 ReadCallback
 Virtual

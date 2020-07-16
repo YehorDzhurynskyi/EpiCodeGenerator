@@ -83,7 +83,7 @@ class TokenType(Enum):
     # Owner = auto()
     ReadOnly = auto()
     WriteOnly = auto()
-    Private = auto()
+    # Private = auto()
     WriteCallback = auto()
     ReadCallback = auto()
     Virtual = auto()
@@ -126,6 +126,58 @@ class TokenType(Enum):
             TokenType.TrueLiteral,
             TokenType.FalseLiteral
         ]
+
+    @staticmethod
+    def assignable() -> list:
+        return [
+            TokenType.BoolType,
+            TokenType.ByteType,
+            TokenType.Int8Type,
+            TokenType.Int16Type,
+            TokenType.Int32Type,
+            TokenType.Int64Type,
+            TokenType.UInt8Type,
+            TokenType.UInt16Type,
+            TokenType.UInt32Type,
+            TokenType.UInt64Type,
+            TokenType.SizeTType,
+            TokenType.HashTType,
+            TokenType.SingleFloatingType,
+            TokenType.DoubleFloatingType,
+            TokenType.CharType,
+            TokenType.WCharType,
+            TokenType.StringType,
+            TokenType.WStringType
+        ]
+
+    @staticmethod
+    def literals_of(tokentype) -> list:
+
+        literals = {
+            TokenType.BoolType: [TokenType.FalseLiteral, TokenType.TrueLiteral],
+            TokenType.ByteType: [TokenType.IntegerLiteral],
+            TokenType.Int8Type: [TokenType.IntegerLiteral],
+            TokenType.Int16Type: [TokenType.IntegerLiteral],
+            TokenType.Int32Type: [TokenType.IntegerLiteral],
+            TokenType.Int64Type: [TokenType.IntegerLiteral],
+            TokenType.UInt8Type: [TokenType.IntegerLiteral],
+            TokenType.UInt16Type: [TokenType.IntegerLiteral],
+            TokenType.UInt32Type: [TokenType.IntegerLiteral],
+            TokenType.UInt64Type: [TokenType.IntegerLiteral],
+            TokenType.SizeTType: [TokenType.IntegerLiteral],
+            TokenType.HashTType: [TokenType.IntegerLiteral],
+            TokenType.SingleFloatingType: [TokenType.SingleFloatingLiteral],
+            TokenType.DoubleFloatingType: [TokenType.DoubleFloatingLiteral],
+            TokenType.CharType: [TokenType.CharLiteral],
+            TokenType.WCharType: [TokenType.WCharLiteral],
+            TokenType.StringType: [TokenType.StringLiteral],
+            TokenType.WStringType: [TokenType.WStringLiteral],
+        }
+
+        assert len(literals) == len(TokenType.assignable())
+        assert tokentype in literals
+
+        return literals[tokentype]
 
 
 class Token:
@@ -270,7 +322,7 @@ class Tokenizer:
         # 'Owner': TokenType.Owner,
         'ReadOnly': TokenType.ReadOnly,
         'WriteOnly': TokenType.WriteOnly,
-        'Private': TokenType.Private,
+        # 'Private': TokenType.Private,
         'WriteCallback': TokenType.WriteCallback,
         'ReadCallback': TokenType.ReadCallback,
         'Virtual': TokenType.Virtual,

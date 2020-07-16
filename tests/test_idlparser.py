@@ -2,10 +2,10 @@ import pytest
 
 from epi_code_generator.tokenizer import Tokenizer, TokenType
 
-from epi_code_generator.symbol import EpiClass
-from epi_code_generator.symbol import EpiVariable
-from epi_code_generator.symbol import EpiClassBuilder
-from epi_code_generator.symbol import EpiPropertyBuilder
+from epi_code_generator.symbol.symbol import EpiClass
+from epi_code_generator.symbol.symbol import EpiVariable
+from epi_code_generator.symbol.symbol import EpiClassBuilder
+from epi_code_generator.symbol.symbol import EpiPropertyBuilder
 
 from epi_code_generator.idlparser.idlparser import IDLParser
 from epi_code_generator.idlparser.idlparser import IDLSyntaxErrorCode
@@ -171,6 +171,16 @@ class TestIDLParser:
                         .build()
             },
             []
+        ),
+        (
+            '''
+            class A : B
+            {
+                EpiS32 Name = 42;
+            };
+            ''',
+            {},
+            [IDLSyntaxErrorCode.IncorrectValueAssignment]
         ),
         (
             '''

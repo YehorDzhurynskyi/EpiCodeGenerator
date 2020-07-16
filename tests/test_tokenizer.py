@@ -82,7 +82,6 @@ TOKEN_AVAILABLE = [
     TokenType.ClassType,
     TokenType.ReadOnly,
     TokenType.WriteOnly,
-    TokenType.Private,
     TokenType.WriteCallback,
     TokenType.ReadCallback,
     TokenType.Virtual,

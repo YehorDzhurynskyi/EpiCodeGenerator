@@ -4,10 +4,10 @@ from epi_code_generator.tokenizer import Tokenizer
 from epi_code_generator.tokenizer import Token
 from epi_code_generator.tokenizer import TokenType
 
-from epi_code_generator.symbol import EpiAttributeInvalidListError
-from epi_code_generator.symbol import EpiAttribute
-from epi_code_generator.symbol import EpiVariable
-from epi_code_generator.symbol import EpiClass
+from epi_code_generator.symbol.symbol_attr import EpiAttribute
+from epi_code_generator.symbol.symbol_attr import EpiAttributeValidationError
+from epi_code_generator.symbol.symbol import EpiVariable
+from epi_code_generator.symbol.symbol import EpiClass
 
 
 class IDLSyntaxErrorCode(Enum):
@@ -399,29 +399,8 @@ class IDLParser:
                 self._push_error(t, IDLSyntaxErrorCode.IncorrectValueAssignment, 'Template types are unassingable', fatal=False)
             else:
 
-                literals = {
-                    TokenType.BoolType: [TokenType.FalseLiteral, TokenType.TrueLiteral],
-                    TokenType.ByteType: [TokenType.IntegerLiteral],
-                    TokenType.Int8Type: [TokenType.IntegerLiteral],
-                    TokenType.Int16Type: [TokenType.IntegerLiteral],
-                    TokenType.Int32Type: [TokenType.IntegerLiteral],
-                    TokenType.Int64Type: [TokenType.IntegerLiteral],
-                    TokenType.UInt8Type: [TokenType.IntegerLiteral],
-                    TokenType.UInt16Type: [TokenType.IntegerLiteral],
-                    TokenType.UInt32Type: [TokenType.IntegerLiteral],
-                    TokenType.UInt64Type: [TokenType.IntegerLiteral],
-                    TokenType.SizeTType: [TokenType.IntegerLiteral],
-                    TokenType.HashTType: [TokenType.IntegerLiteral],
-                    TokenType.SingleFloatingType: [TokenType.SingleFloatingLiteral],
-                    TokenType.DoubleFloatingType: [TokenType.DoubleFloatingLiteral],
-                    TokenType.CharType: [TokenType.CharLiteral],
-                    TokenType.WCharType: [TokenType.WCharLiteral],
-                    TokenType.StringType: [TokenType.StringLiteral],
-                    TokenType.WStringType: [TokenType.WStringLiteral],
-                }
-
-                if self._test(var.tokentype, list(literals.keys()), err_code=IDLSyntaxErrorCode.IncorrectValueAssignment, fatal=False):
-                    self._test(t, literals[var.tokentype.tokentype], err_code=IDLSyntaxErrorCode.IncorrectValueLiteral, fatal=False)
+                if self._test(var.tokentype, TokenType.assignable(), err_code=IDLSyntaxErrorCode.IncorrectValueAssignment, fatal=False):
+                    self._test(t, TokenType.literals_of(var.tokentype.tokentype), err_code=IDLSyntaxErrorCode.IncorrectValueLiteral, fatal=False)
 
                 var.value = t.text
 
