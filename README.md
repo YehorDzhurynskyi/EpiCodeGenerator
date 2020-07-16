@@ -1,6 +1,6 @@
 # CODE GENERATION TOOL
 
-Used for [EpiLib](https://github.com/YehorDzhurynskyi/EpiLib)
+Used by [EpiLib](https://github.com/YehorDzhurynskyi/EpiLib)
 
 ## Brief:
     This tool parses IDL (stands for Interface Declaration Language) files

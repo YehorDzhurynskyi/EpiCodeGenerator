@@ -7,20 +7,16 @@ from epi_code_generator.tokenizer import Token
 from epi_code_generator.tokenizer import TokenType
 
 
-class EpiAttributeValidationError(Exception):
-    pass
-
-
 class EpiAttribute:
 
-    def __init__(self, tokentype: TokenType):
+    def __init__(self, token: Token):
 
-        self.tokentype = tokentype
+        self.token = token
         self.__params_positional = []
         self.__params_named = {}
 
     def __eq__(self, rhs):
-        return self.tokentype == rhs.tokentype
+        return self.token == rhs.token
 
     @property
     def params(self):
@@ -30,7 +26,13 @@ class EpiAttribute:
 
         return params
 
-    def find_param(self, param: str):
+    def param_push_positional(self, token: Token):
+        self.__params_positional.append(token)
+
+    def param_push_named(self, name: str, tokenvalue: Token):
+        self.__params_named[name] = tokenvalue
+
+    def param_find(self, param: str):
 
         p = [p for p in self.params if p.text == param]
         p = p[0] if len(p) != 0 else None
@@ -72,9 +74,12 @@ class EpiSymbol(abc.ABC):
 
     def attr_push(self, attr: EpiAttribute):
 
-        import symbol_attr
-        getattr(symbol_attr, f'introduce_{str(attr.tokentype)}')(attr, self)
+        import epi_code_generator.idlparser.idlparser_attr
 
+        import pytest
+        pytest.set_trace()
+
+        getattr(epi_code_generator.idlparser.idlparser_attr, f'introduce_{str(attr.tokentype)}')(attr, self)
         self.__attrs.append(attr)
 
     def attr_find(self, tokentype: TokenType):

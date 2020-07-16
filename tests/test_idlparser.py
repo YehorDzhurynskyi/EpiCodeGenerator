@@ -1,5 +1,3 @@
-import pytest
-
 from epi_code_generator.tokenizer import Tokenizer, TokenType
 
 from epi_code_generator.symbol.symbol import EpiClass
@@ -7,8 +5,9 @@ from epi_code_generator.symbol.symbol import EpiVariable
 from epi_code_generator.symbol.symbol import EpiClassBuilder
 from epi_code_generator.symbol.symbol import EpiPropertyBuilder
 
-from epi_code_generator.idlparser.idlparser import IDLParser
-from epi_code_generator.idlparser.idlparser import IDLSyntaxErrorCode
+from epi_code_generator.idlparser import idlparser_base as idl
+
+import pytest
 
 
 class TestIDLParser:
@@ -25,7 +24,7 @@ class TestIDLParser:
 
         assert len(tokens) == 0
 
-        parser = IDLParser(tokens)
+        parser = idl.IDLParser(tokens)
         registry_local, errors_syntax = parser.parse()
 
         assert len(registry_local) == 0 and len(errors_syntax) == 0
@@ -55,77 +54,77 @@ class TestIDLParser:
         (
             'epiFloat Name;',
             {},
-            [IDLSyntaxErrorCode.MissingTypeDeclaration]
+            [idl.IDLSyntaxErrorCode.MissingTypeDeclaration]
         ),
         (
             'clas A {}',
             {},
-            [IDLSyntaxErrorCode.UnknownToken]
+            [idl.IDLSyntaxErrorCode.UnknownToken]
         ),
         (
             'class A {}',
             {},
-            [IDLSyntaxErrorCode.NoSemicolonOnDeclaration]
+            [idl.IDLSyntaxErrorCode.NoSemicolonOnDeclaration]
         ),
         (
             'class',
             {},
-            [IDLSyntaxErrorCode.UnexpectedEOF]
+            [idl.IDLSyntaxErrorCode.UnexpectedEOF]
         ),
         (
             'class A',
             {},
-            [IDLSyntaxErrorCode.NoBodyOnDeclaration]
+            [idl.IDLSyntaxErrorCode.NoBodyOnDeclaration]
         ),
         (
             'class A :',
             {},
-            [IDLSyntaxErrorCode.UnexpectedEOF]
+            [idl.IDLSyntaxErrorCode.UnexpectedEOF]
         ),
         (
             'class A : B',
             {},
-            [IDLSyntaxErrorCode.NoBodyOnDeclaration]
+            [idl.IDLSyntaxErrorCode.NoBodyOnDeclaration]
         ),
         (
             'class A : B {',
             {},
-            [IDLSyntaxErrorCode.UnexpectedEOF]
+            [idl.IDLSyntaxErrorCode.UnexpectedEOF]
         ),
         (
             'class A : B {}',
             {},
-            [IDLSyntaxErrorCode.NoSemicolonOnDeclaration]
+            [idl.IDLSyntaxErrorCode.NoSemicolonOnDeclaration]
         ),
         (
             'class A : B {;',
             {},
-            [IDLSyntaxErrorCode.UnexpectedToken]
+            [idl.IDLSyntaxErrorCode.UnexpectedToken]
         ),
         (
             'class A : B };',
             {},
-            [IDLSyntaxErrorCode.NoBodyOnDeclaration]
+            [idl.IDLSyntaxErrorCode.NoBodyOnDeclaration]
         ),
         (
             'class A : name {};',
             {},
-            [IDLSyntaxErrorCode.UnknownToken]
+            [idl.IDLSyntaxErrorCode.UnknownToken]
         ),
         (
             'class A : epiFloat {};',
             {},
-            [IDLSyntaxErrorCode.UnexpectedKeywordUsage]
+            [idl.IDLSyntaxErrorCode.UnexpectedKeywordUsage]
         ),
         (
             'class A : Transient {};',
             {},
-            [IDLSyntaxErrorCode.UnexpectedKeywordUsage]
+            [idl.IDLSyntaxErrorCode.UnexpectedKeywordUsage]
         ),
         (
             'class A {} : B;',
             {},
-            [IDLSyntaxErrorCode.NoSemicolonOnDeclaration]
+            [idl.IDLSyntaxErrorCode.NoSemicolonOnDeclaration]
         ),
         (
             '''
@@ -180,7 +179,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueAssignment]
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
         ),
         (
             '''
@@ -190,7 +189,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -200,7 +199,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -210,7 +209,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.UnknownToken]
+            [idl.IDLSyntaxErrorCode.UnknownToken]
         ),
         (
             '''
@@ -220,7 +219,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.UnknownToken]
+            [idl.IDLSyntaxErrorCode.UnknownToken]
         ),
         (
             '''
@@ -230,7 +229,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.UnknownToken] * 2
+            [idl.IDLSyntaxErrorCode.UnknownToken] * 2
         ),
         (
             '''
@@ -240,7 +239,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.UnknownToken]
+            [idl.IDLSyntaxErrorCode.UnknownToken]
         ),
         (
             '''
@@ -250,7 +249,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.UnknownToken] * 2
+            [idl.IDLSyntaxErrorCode.UnknownToken] * 2
         ),
         (
             '''
@@ -260,7 +259,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -270,7 +269,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -280,7 +279,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -290,7 +289,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -300,7 +299,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -311,7 +310,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.UnknownToken] * 2
+            [idl.IDLSyntaxErrorCode.UnknownToken] * 2
         ),
         (
             '''
@@ -322,7 +321,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.UnknownToken] * 2
+            [idl.IDLSyntaxErrorCode.UnknownToken] * 2
         ),
         (
             '''
@@ -332,7 +331,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -342,7 +341,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -352,7 +351,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -362,7 +361,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.UnknownToken] * 3
+            [idl.IDLSyntaxErrorCode.UnknownToken] * 3
         ),
         (
             '''
@@ -373,7 +372,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.UnknownToken] * 2
+            [idl.IDLSyntaxErrorCode.UnknownToken] * 2
         ),
         (
             '''
@@ -383,7 +382,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.UnknownToken] * 3
+            [idl.IDLSyntaxErrorCode.UnknownToken] * 3
         ),
         (
             '''
@@ -393,7 +392,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         
         (
@@ -404,7 +403,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueLiteral]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -438,7 +437,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.MissingTemplateArguments]
+            [idl.IDLSyntaxErrorCode.MissingTemplateArguments]
         ),
         (
             '''
@@ -448,7 +447,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.MissingTemplateArguments, IDLSyntaxErrorCode.IncorrectValueAssignment]
+            [idl.IDLSyntaxErrorCode.MissingTemplateArguments, idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
         ),
         (
             '''
@@ -458,7 +457,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueAssignment]
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
         ),
         (
             '''
@@ -468,7 +467,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.NoMatchingClosingBracket]
+            [idl.IDLSyntaxErrorCode.NoMatchingClosingBracket]
         ),
         (
             '''
@@ -478,7 +477,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.UnexpectedToken, IDLSyntaxErrorCode.MissingTemplateArguments]
+            [idl.IDLSyntaxErrorCode.UnexpectedToken, idl.IDLSyntaxErrorCode.MissingTemplateArguments]
         ),
         (
             '''
@@ -488,7 +487,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.NoMatchingClosingBracket]
+            [idl.IDLSyntaxErrorCode.NoMatchingClosingBracket]
         ),
         (
             '''
@@ -498,7 +497,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.NoMatchingClosingBracket]
+            [idl.IDLSyntaxErrorCode.NoMatchingClosingBracket]
         ),
         (
             '''
@@ -508,7 +507,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.UnexpectedToken, IDLSyntaxErrorCode.MissingTemplateArguments, IDLSyntaxErrorCode.IncorrectValueAssignment]
+            [idl.IDLSyntaxErrorCode.UnexpectedToken, idl.IDLSyntaxErrorCode.MissingTemplateArguments, idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
         ),
         (
             '''
@@ -518,7 +517,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.NoMatchingClosingBracket]
+            [idl.IDLSyntaxErrorCode.NoMatchingClosingBracket]
         ),
         (
             '''
@@ -574,7 +573,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueAssignment]
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
         ),
         (
             '''
@@ -604,7 +603,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [IDLSyntaxErrorCode.IncorrectValueAssignment] * 21
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment] * 21
         ),
     ])
     def test_sequence(self, tmpdir: str, text: str, expected_registry: dict, expected_errors: list):
@@ -618,7 +617,7 @@ class TestIDLParser:
         tokenizer = Tokenizer(path, path)
         tokens = tokenizer.tokenize()
 
-        parser = IDLParser(tokens)
+        parser = idl.IDLParser(tokens)
         registry_local, errors_syntax = parser.parse()
 
         assert len(registry_local) == len(expected_registry)

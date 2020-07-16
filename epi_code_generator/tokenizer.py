@@ -114,6 +114,13 @@ class TokenType(Enum):
         return list(Tokenizer.fundamentals().values())
 
     @staticmethod
+    def attributes() -> list:
+        return {
+            list(Tokenizer.BUILTIN_CLSS_ATTRS.values()) +
+            list(Tokenizer.BUILTIN_PRTY_ATTRS.values())
+        }
+
+    @staticmethod
     def literals() -> list:
         return [
             TokenType.CharLiteral,
