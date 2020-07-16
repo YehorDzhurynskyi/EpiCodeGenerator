@@ -1,7 +1,7 @@
 from epi_code_generator.tokenizer import Tokenizer, TokenType
 
 from epi_code_generator.symbol.symbol import EpiClass
-from epi_code_generator.symbol.symbol import EpiVariable
+from epi_code_generator.symbol.symbol import EpiProperty
 from epi_code_generator.symbol.symbol import EpiClassBuilder
 from epi_code_generator.symbol.symbol import EpiPropertyBuilder
 
@@ -421,7 +421,7 @@ class TestIDLParser:
                             EpiPropertyBuilder()
                                 .name('Name')
                                 .tokentype_type(TokenType.ArrayType)
-                                .form(EpiVariable.Form.Template)
+                                .form(EpiProperty.Form.Template)
                                 .tokentype_nested(TokenType.SingleFloatingType)
                                 .build()
                         )
@@ -535,7 +535,7 @@ class TestIDLParser:
                             EpiPropertyBuilder()
                                 .name('Name')
                                 .tokentype_type(TokenType.PtrArrayType)
-                                .form(EpiVariable.Form.Template)
+                                .form(EpiProperty.Form.Template)
                                 .tokentype_nested(TokenType.Identifier)
                                 .build()
                         )
@@ -702,8 +702,8 @@ class TestIDLParser:
                         .property(EpiPropertyBuilder().name('Name15').tokentype_type(TokenType.DoubleFloatingType).build())
                         .property(EpiPropertyBuilder().name('Name16').tokentype_type(TokenType.StringType).build())
                         .property(EpiPropertyBuilder().name('Name17').tokentype_type(TokenType.WStringType).build())
-                        .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiVariable.Form.Template).tokentype_nested(TokenType.Identifier).build())
-                        .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiVariable.Form.Template).tokentype_nested(TokenType.SingleFloatingType).build())
+                        .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiProperty.Form.Template).tokentype_nested(TokenType.Identifier).build())
+                        .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiProperty.Form.Template).tokentype_nested(TokenType.SingleFloatingType).build())
                         .property(EpiPropertyBuilder().name('Name20').tokentype_type(TokenType.Vec2FType).build())
                         .property(EpiPropertyBuilder().name('Name21').tokentype_type(TokenType.Vec2DType).build())
                         .property(EpiPropertyBuilder().name('Name22').tokentype_type(TokenType.Vec2SType).build())
@@ -795,8 +795,8 @@ class TestIDLParser:
                         .property(EpiPropertyBuilder().name('Name15').tokentype_type(TokenType.DoubleFloatingType).value('+32.00007').build())
                         .property(EpiPropertyBuilder().name('Name16').tokentype_type(TokenType.StringType).value('"TEXT"').build())
                         .property(EpiPropertyBuilder().name('Name17').tokentype_type(TokenType.WStringType).value('L"QwertY!"').build())
-                        .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiVariable.Form.Template).tokentype_nested(TokenType.Identifier).build())
-                        .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiVariable.Form.Template).tokentype_nested(TokenType.SingleFloatingType).build())
+                        .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiProperty.Form.Template).tokentype_nested(TokenType.Identifier).build())
+                        .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiProperty.Form.Template).tokentype_nested(TokenType.SingleFloatingType).build())
                         .property(EpiPropertyBuilder().name('Name20').tokentype_type(TokenType.Vec2FType).build())
                         .property(EpiPropertyBuilder().name('Name21').tokentype_type(TokenType.Vec2DType).build())
                         .property(EpiPropertyBuilder().name('Name22').tokentype_type(TokenType.Vec2SType).build())
@@ -960,8 +960,8 @@ class TestIDLParser:
                     .property(EpiPropertyBuilder().name('Name15').tokentype_type(TokenType.DoubleFloatingType).build())
                     .property(EpiPropertyBuilder().name('Name16').tokentype_type(TokenType.StringType).value('"Hello"').build())
                     .property(EpiPropertyBuilder().name('Name17').tokentype_type(TokenType.WStringType).build())
-                    .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiVariable.Form.Template).tokentype_nested(TokenType.Identifier).build())
-                    .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiVariable.Form.Template).tokentype_nested(TokenType.SingleFloatingType).build())
+                    .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiProperty.Form.Template).tokentype_nested(TokenType.Identifier).build())
+                    .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiProperty.Form.Template).tokentype_nested(TokenType.SingleFloatingType).build())
                     .property(EpiPropertyBuilder().name('Name20').tokentype_type(TokenType.Vec2FType).build())
                     .property(EpiPropertyBuilder().name('Name_21').tokentype_type(TokenType.Vec2DType).build())
                     .property(EpiPropertyBuilder().name('Name22').tokentype_type(TokenType.Vec2SType).build())

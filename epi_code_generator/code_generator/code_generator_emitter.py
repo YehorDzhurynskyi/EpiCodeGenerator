@@ -4,7 +4,7 @@ from ..tokenizer import TokenType
 from ..tokenizer import Tokenizer
 
 from ..symbol import EpiClass
-from ..symbol import EpiVariable
+from ..symbol import EpiProperty
 
 import zlib
 
@@ -21,7 +21,7 @@ def emit_properties(properties: list, accessor_modifier: str, builder: Builder =
     for p in properties:
 
         typename = f'{p.tokentype.text}'
-        if p.form == EpiVariable.Form.Array:
+        if p.form == EpiProperty.Form.Array:
             typename = f'{typename}<{p.nestedtokentype.text}>'
         value = f'{{{p.value}}}' if p.value is not None else ''
 
@@ -46,13 +46,13 @@ def emit_property_callbacks(properties: list, accessor_modifier: str, builder: B
         attr_writecallback = p.find_attr(TokenType.WriteCallback)
 
         ptype = p.tokentype.text
-        if p.form == EpiVariable.Form.Array:
+        if p.form == EpiProperty.Form.Array:
             ptype = f'{ptype}<{p.nestedtokentype.text}>'
 
         if attr_readcallback and not any(a.tokentype == TokenType.WriteOnly for a in p.attrs):
 
             pptype = ptype
-            if pptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiVariable.Form.Pointer:
+            if pptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiProperty.Form.Pointer:
 
                 if attr_readcallback.find_param('"SuppressRef"') is None:
                     pptype = f'const {pptype}&'
@@ -62,7 +62,7 @@ def emit_property_callbacks(properties: list, accessor_modifier: str, builder: B
         if attr_writecallback and not any(a.tokentype == TokenType.ReadOnly for a in p.attrs):
 
             pptype = ptype
-            if pptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiVariable.Form.Pointer:
+            if pptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiProperty.Form.Pointer:
 
                 if attr_writecallback.find_param('"SuppressRef"') is None:
                     pptype = f'const {pptype}&'
@@ -245,7 +245,7 @@ def emit_class_meta(clss: EpiClass, builder: Builder = Builder()) -> Builder:
     for p in clss.properties:
 
         hash_typenested = '0'
-        if p.form == EpiVariable.Form.Array:
+        if p.form == EpiProperty.Form.Array:
             hash_typenested = f'epiHashCompileTime({p.nestedtokentype.text})'
 
         # TODO: remove rstrip
@@ -350,7 +350,7 @@ void Deserialization(const json_t& json) override;
 
         ptype = p.tokentype.text
 
-        if p.form == EpiVariable.Form.Array:
+        if p.form == EpiProperty.Form.Array:
             ptype = f'{ptype}<{p.nestedtokentype.text}>'
 
         body_prologue_set = ''
@@ -394,7 +394,7 @@ void Deserialization(const json_t& json) override;
         if not any(a.tokentype == TokenType.WriteOnly for a in p.attrs):
 
             pptype = ptype
-            if pptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiVariable.Form.Pointer:
+            if pptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiProperty.Form.Pointer:
 
                 attr_readcallback = p.find_attr(TokenType.ReadCallback)
                 if not attr_readcallback or attr_readcallback.find_param('"SuppressRef"') is None:
@@ -409,7 +409,7 @@ void Deserialization(const json_t& json) override;
         if not any(a.tokentype == TokenType.ReadOnly for a in p.attrs):
 
             pptype = ptype
-            if ptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiVariable.Form.Pointer:
+            if ptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiProperty.Form.Pointer:
 
                 attr_writecallback = p.find_attr(TokenType.WriteCallback)
                 if not attr_writecallback or attr_writecallback.find_param('"SuppressRef"') is None:
@@ -440,7 +440,7 @@ void Deserialization(const json_t& json) override;
 
         ptype = p.tokentype.text
 
-        if p.form == EpiVariable.Form.Array:
+        if p.form == EpiProperty.Form.Array:
             ptype = f'{ptype}<{p.nestedtokentype.text}>'
 
         attr_readcallback = p.find_attr(TokenType.ReadCallback)
@@ -450,14 +450,14 @@ void Deserialization(const json_t& json) override;
 
         if attr_readcallback is not None and attr_writeonly is None:
 
-            if ptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiVariable.Form.Pointer and attr_readcallback.find_param('"SuppressRef"') is None:
+            if ptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiProperty.Form.Pointer and attr_readcallback.find_param('"SuppressRef"') is None:
                 builder.line(f'const {ptype}& ({clss.name}::*Get{p.name}_FuncPtr)() const {{ &{clss.name}::Get{p.name} }}; \\')
             else:
                 builder.line(f'{ptype} ({clss.name}::*Get{p.name}_FuncPtr)() const {{ &{clss.name}::Get{p.name} }}; \\')
 
         if attr_writecallback is not None and attr_readonly is None:
 
-            if ptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiVariable.Form.Pointer and attr_writecallback.find_param('"SuppressRef"') is None:
+            if ptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiProperty.Form.Pointer and attr_writecallback.find_param('"SuppressRef"') is None:
                 builder.line(f'void ({clss.name}::*Set{p.name}_FuncPtr)(const {ptype}&) {{ &{clss.name}::Set{p.name} }}; \\')
             else:
                 builder.line(f'void ({clss.name}::*Set{p.name}_FuncPtr)({ptype}) {{ &{clss.name}::Set{p.name} }}; \\')

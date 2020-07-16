@@ -90,20 +90,7 @@ class EpiSymbol(abc.ABC):
         return attr
 
 
-'''
-class EpiMethod(EpiSymbol):
-
-    def __init__(self, token):
-
-        super(EpiMethod, self).__init__(token)
-        self.params = []
-
-    def _is_valid_attrs(self, attrs):
-        return len(attrs) == 0
-'''
-
-
-class EpiVariable(EpiSymbol):
+class EpiProperty(EpiSymbol):
 
     class Form(Enum):
 
@@ -114,7 +101,7 @@ class EpiVariable(EpiSymbol):
 
     def __init__(self, token: Token, tokentype: Token, form):
 
-        super(EpiVariable, self).__init__(token)
+        super(EpiProperty, self).__init__(token)
 
         self.tokentype = tokentype
         self.form = form
@@ -124,7 +111,7 @@ class EpiVariable(EpiSymbol):
     def _default_value(self):
 
         value = None
-        if self.form == EpiVariable.Form.Pointer:
+        if self.form == EpiProperty.Form.Pointer:
             value = 'nullptr'
         elif self.tokentype.tokentype == TokenType.BoolType:
             value = 'false'
@@ -147,7 +134,7 @@ class EpiVariable(EpiSymbol):
 
     def __eq__(self, rhs):
         return \
-            super(EpiVariable, self).__eq__(rhs) and \
+            super(EpiProperty, self).__eq__(rhs) and \
             self.form == rhs.form and \
             self.value == rhs.value and \
             self.tokentype == rhs.tokentype
@@ -155,7 +142,7 @@ class EpiVariable(EpiSymbol):
     def __repr__(self):
 
         rtokentype_nested = ', '.join([repr(t) for t in self.tokentype_nested])
-        r = f'{super(EpiVariable, self).__repr__()}, tokentype=({repr(self.tokentype)}), form={self.form}, value={self.value}, tokentype_nested={rtokentype_nested}'
+        r = f'{super(EpiProperty, self).__repr__()}, tokentype=({repr(self.tokentype)}), form={self.form}, value={self.value}, tokentype_nested={rtokentype_nested}'
 
         return r
 
@@ -184,41 +171,6 @@ class EpiClass(EpiSymbol):
         return r
 
 
-'''
-class EpiInterface(EpiSymbol):
-
-    def __init__(self, name):
-
-        super(EpiInterface, self).__init__(name)
-
-        self.parent = None
-        self.methods = []
-
-    def _is_valid_attrs(self, attrs):
-        return True
-
-
-class EpiEnumEntry(EpiSymbol):
-
-    def __init__(self, name):
-        super(EpiEnumEntry, self).__init__(name)
-
-    def _is_valid_attrs(self, attrs):
-        return True
-
-
-class EpiEnum(EpiSymbol):
-
-    def __init__(self, name):
-
-        super(EpiEnum, self).__init__(name)
-
-        self.entries = []
-
-    def _is_valid_attrs(self, attrs):
-        return True
-'''
-
 class EpiPropertyBuilder:
 
     def __init__(self):
@@ -226,7 +178,7 @@ class EpiPropertyBuilder:
         self.__name = None
         self.__tokentype_type = None
         self.__tokentype_text = None
-        self.__form = EpiVariable.Form.Plain
+        self.__form = EpiProperty.Form.Plain
         self.__value = None
         self.__attrs = []
         self.__tokentype_nested = []
@@ -245,7 +197,7 @@ class EpiPropertyBuilder:
 
         return self
 
-    def form(self, form: EpiVariable.Form):
+    def form(self, form: EpiProperty.Form):
 
         self.__form = form
         return self
@@ -275,7 +227,7 @@ class EpiPropertyBuilder:
         tokentype_text = self.__tokentype_text if self.__tokentype_text is not None else TokenType.repr_of(self.__tokentype_type)
         tokentype = Token(self.__tokentype_type, 0, 0, '', tokentype_text)
 
-        prty = EpiVariable(token, tokentype, self.__form)
+        prty = EpiProperty(token, tokentype, self.__form)
         prty.attrs = self.__attrs
         prty.tokentype_nested = self.__tokentype_nested
 
@@ -303,7 +255,7 @@ class EpiClassBuilder:
         self.__parent = parent
         return self
 
-    def property(self, property: EpiVariable):
+    def property(self, property: EpiProperty):
 
         self.__properties.append(property)
         return self

@@ -3,7 +3,7 @@ from epi_code_generator.idlparser import idlparser_base as idl
 from epi_code_generator.tokenizer import TokenType
 
 from epi_code_generator.symbol.symbol import EpiClass
-from epi_code_generator.symbol.symbol import EpiVariable
+from epi_code_generator.symbol.symbol import EpiProperty
 
 
 def _parse_scope(parser: idl.IDLParser, attrs_inherited: list = []) -> list:
@@ -67,7 +67,7 @@ def parse_class(parser: idl.IDLParser) -> EpiClass:
 
         for e in s:
 
-            if isinstance(e, EpiVariable):
+            if isinstance(e, EpiProperty):
                 clss.properties.append(e)
             elif isinstance(e, list):
                 unpack_scope(e)

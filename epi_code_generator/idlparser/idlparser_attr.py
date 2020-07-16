@@ -1,6 +1,6 @@
 from epi_code_generator.symbol.symbol import EpiSymbol
 from epi_code_generator.symbol.symbol import EpiAttribute
-from epi_code_generator.symbol.symbol import EpiVariable
+from epi_code_generator.symbol.symbol import EpiProperty
 
 from epi_code_generator.tokenizer import Token
 from epi_code_generator.tokenizer import TokenType
@@ -87,7 +87,7 @@ def __validate_target(attr: EpiAttribute, target: EpiSymbol, acceptable_targets:
 
 def __validate_target_type(attr: EpiAttribute, target: EpiSymbol, acceptable_targets: list):
 
-    if isinstance(target, EpiVariable):
+    if isinstance(target, EpiProperty):
 
         if not any(target.tokentype for t in acceptable_targets):
 
@@ -109,7 +109,7 @@ def __implies(tokentype: TokenType, target: EpiSymbol):
 def introduce_WriteCallback(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
-    __validate_target(attr, target, [EpiVariable])
+    __validate_target(attr, target, [EpiProperty])
     __validate_parameters_positional(attr, [])
     __validate_parameters_named(attr, {
         'SuppressRef': [TokenType.TrueLiteral, TokenType.FalseLiteral]
@@ -120,7 +120,7 @@ def introduce_WriteCallback(attr: EpiAttribute, target: EpiSymbol):
 def introduce_ReadCallback(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
-    __validate_target(attr, target, [EpiVariable])
+    __validate_target(attr, target, [EpiProperty])
     __validate_parameters_positional(attr, [])
     __validate_parameters_named(attr, {
         'SuppressRef': [TokenType.TrueLiteral, TokenType.FalseLiteral]
@@ -130,7 +130,7 @@ def introduce_ReadCallback(attr: EpiAttribute, target: EpiSymbol):
 def introduce_Virtual(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
-    __validate_target(attr, target, [EpiVariable])
+    __validate_target(attr, target, [EpiProperty])
     __validate_parameters_positional(attr, [])
     __validate_parameters_named(attr, {})
 
@@ -142,7 +142,7 @@ def introduce_Virtual(attr: EpiAttribute, target: EpiSymbol):
 def introduce_ReadOnly(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
-    __validate_target(attr, target, [EpiVariable])
+    __validate_target(attr, target, [EpiProperty])
     __validate_parameters_positional(attr, [])
     __validate_parameters_named(attr, {})
 
@@ -150,7 +150,7 @@ def introduce_ReadOnly(attr: EpiAttribute, target: EpiSymbol):
 def introduce_WriteOnly(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
-    __validate_target(attr, target, [EpiVariable])
+    __validate_target(attr, target, [EpiProperty])
     __validate_parameters_positional(attr, [])
     __validate_parameters_named(attr, {})
 
@@ -158,7 +158,7 @@ def introduce_WriteOnly(attr: EpiAttribute, target: EpiSymbol):
 def introduce_Transient(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
-    __validate_target(attr, target, [EpiVariable])
+    __validate_target(attr, target, [EpiProperty])
     __validate_parameters_positional(attr, [])
     __validate_parameters_named(attr, {})
 
@@ -166,7 +166,7 @@ def introduce_Transient(attr: EpiAttribute, target: EpiSymbol):
 def introduce_ExpectMin(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
-    __validate_target(attr, target, [EpiVariable])
+    __validate_target(attr, target, [EpiProperty])
     __validate_target_type(attr, target, [TokenType.SingleFloatingType,
                                           TokenType.DoubleFloatingType,
                                           TokenType.Int8Type,
@@ -186,7 +186,7 @@ def introduce_ExpectMin(attr: EpiAttribute, target: EpiSymbol):
 def introduce_ExpectMax(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
-    __validate_target(attr, target, [EpiVariable])
+    __validate_target(attr, target, [EpiProperty])
     __validate_target_type(attr, target, [TokenType.SingleFloatingType,
                                           TokenType.DoubleFloatingType,
                                           TokenType.Int8Type,
@@ -206,7 +206,7 @@ def introduce_ExpectMax(attr: EpiAttribute, target: EpiSymbol):
 def introduce_ForceMin(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
-    __validate_target(attr, target, [EpiVariable])
+    __validate_target(attr, target, [EpiProperty])
     __validate_target_type(attr, target, [TokenType.SingleFloatingType,
                                           TokenType.DoubleFloatingType,
                                           TokenType.Int8Type,
@@ -226,7 +226,7 @@ def introduce_ForceMin(attr: EpiAttribute, target: EpiSymbol):
 def introduce_ForceMax(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
-    __validate_target(attr, target, [EpiVariable])
+    __validate_target(attr, target, [EpiProperty])
     __validate_target_type(attr, target, [TokenType.SingleFloatingType,
                                           TokenType.DoubleFloatingType,
                                           TokenType.Int8Type,
