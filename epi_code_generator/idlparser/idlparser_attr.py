@@ -1,6 +1,6 @@
-from epi_code_generator.symbol.symbol import EpiSymbol
-from epi_code_generator.symbol.symbol import EpiAttribute
-from epi_code_generator.symbol.symbol import EpiProperty
+from epi_code_generator.symbol import EpiSymbol
+from epi_code_generator.symbol import EpiAttribute
+from epi_code_generator.symbol import EpiProperty
 
 from epi_code_generator.tokenizer import Token
 from epi_code_generator.tokenizer import TokenType

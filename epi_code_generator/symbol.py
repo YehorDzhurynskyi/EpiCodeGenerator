@@ -139,6 +139,9 @@ class EpiProperty(EpiSymbol):
         self.tokens_nested = []
         self.__tokenvalue = None
 
+    def tokentype_basename(self):
+        return self.tokentype.text.rstrip('*&')
+
     @property
     def tokenvalue(self) -> Token:
         return self.__tokenvalue if self.value_is_assigned() else self.__value_default()
@@ -152,6 +155,9 @@ class EpiProperty(EpiSymbol):
 
     def value_of(self):
         return Token(self.tokenvalue.tokentype, self.tokenvalue.text).value()
+
+    def is_polymorphic(self) -> bool:
+        return self.tokentype.tokentype == TokenType.PtrArrayType or self.form == EpiProperty.Form.Pointer
 
     def __value_default(self) -> Token:
 

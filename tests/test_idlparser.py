@@ -1,11 +1,11 @@
 from epi_code_generator.tokenizer import Tokenizer, TokenType
 
-from epi_code_generator.symbol.symbol import EpiClass
-from epi_code_generator.symbol.symbol import EpiClassBuilder
-from epi_code_generator.symbol.symbol import EpiProperty
-from epi_code_generator.symbol.symbol import EpiPropertyBuilder
-from epi_code_generator.symbol.symbol import EpiAttribute
-from epi_code_generator.symbol.symbol import EpiAttributeBuilder
+from epi_code_generator.symbol import EpiClass
+from epi_code_generator.symbol import EpiClassBuilder
+from epi_code_generator.symbol import EpiProperty
+from epi_code_generator.symbol import EpiPropertyBuilder
+from epi_code_generator.symbol import EpiAttribute
+from epi_code_generator.symbol import EpiAttributeBuilder
 
 from epi_code_generator.idlparser import idlparser_base as idl
 
@@ -925,6 +925,21 @@ class TestIDLParser:
                         .build()
             },
             []
+        ),
+        (
+            '''
+            class ClassName
+            {
+                epiFloat Name2;
+            };
+
+            class ClassName
+            {
+                epiFloat Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.DuplicatingSymbol]
         ),
     ])
     def test_sequence(self, tmpdir: str, text: str, expected_registry: dict, expected_errors: list):

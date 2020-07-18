@@ -2,7 +2,7 @@ from epi_code_generator.idlparser import idlparser_base as idl
 
 from epi_code_generator.tokenizer import TokenType
 
-from epi_code_generator.symbol.symbol import EpiProperty
+from epi_code_generator.symbol import EpiProperty
 
 
 def parse_property(parser: idl.IDLParser) -> EpiProperty:

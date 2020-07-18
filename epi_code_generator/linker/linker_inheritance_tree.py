@@ -1,9 +1,7 @@
 from epi_code_generator.linker import linker as ln
 
-from epi_code_generator.tokenizer import TokenType
-
-from epi_code_generator.symbol.symbol import EpiSymbol
-from epi_code_generator.symbol.symbol import EpiClass
+from epi_code_generator.symbol import EpiSymbol
+from epi_code_generator.symbol import EpiClass
 
 import zlib
 
@@ -36,9 +34,10 @@ class InheritanceTree:
 
                     tip = f'Invalid parent name: {sym.parent}'
                     linker._push_error(sym, ln.LinkerErrorCode.NoSuchSymbol, tip)
+                else:
 
-                parent = self.nodes[sym.parent] if sym.parent in self.nodes else _insert(sym.parent, self.__registry[sym.parent])
-                parent.is_leaf = False
+                    parent = self.nodes[sym.parent] if sym.parent in self.nodes else _insert(sym.parent, self.__registry[sym.parent])
+                    parent.is_leaf = False
 
             node = InheritanceTree.Node(sym, parent)
             self.nodes[name] = node
@@ -67,34 +66,39 @@ class InheritanceTree:
 
             def _validate_properties(node: InheritanceTree.Node, prts: list):
 
-                if node.parent is None:
+                def _validate_duplicates(pid_pairs: list):
 
-                    memo[key] = True
-                    return memo[key]
+                    for lhs, rhs in pid_pairs:
 
-                pids = _pids(prts)
-                pids_parent = _pids(node.parent.clss.properties)
-
-                import itertools
-
-                generator_pids_pids = ((lhs, rhs) for lhs, rhs in itertools.product(pids))
-                generator_pids_pids_parent = ((lhs, rhs) for lhs in pids for rhs in pids_parent)
-
-                def _validate_duplicates(node: InheritanceTree.Node, generator):
-
-                    for lhs, rhs in generator:
                         if lhs[0].name == rhs[0].name:
 
                             tip = f'The symbol duplicates {rhs[0].name}'
                             linker._push_error(lhs[0], ln.LinkerErrorCode.DuplicatingSymbol, tip)
 
-                        if lhs[1] == rhs[1]:
+                        elif lhs[1] == rhs[1]:
 
                             tip = f'Hash collision with {rhs[0].name}'
                             linker._push_error(lhs[0], ln.LinkerErrorCode.HashCollision, tip)
 
-                _validate_duplicates(node, generator_pids_pids)
-                _validate_duplicates(node, generator_pids_pids_parent)
+                pids = _pids(prts)
+                pids_pids = [(lhs, rhs) for lhs in pids for rhs in pids]
+
+                # NOTE: `pids_pids` is cartesian product A * A, so we need exclude (a0, a0), (a1, a1) pairs
+                pids_len = len(pids)
+                for i in range(pids_len):
+                    del pids_pids[i * pids_len]
+
+                _validate_duplicates(pids_pids)
+
+                if node.parent is None:
+
+                    memo[key] = True
+                    return memo[key]
+
+                pids_parent = _pids(node.parent.clss.properties)
+                pids_pids_parent = [(lhs, rhs) for lhs in pids for rhs in pids_parent]
+
+                _validate_duplicates(pids_pids_parent)
 
                 prts = prts[:]
                 prts.extend(node.parent.clss.properties[:])
@@ -111,12 +115,3 @@ class InheritanceTree:
 
         for k, v in leafs.items():
             _validate(k, v)
-
-        for node in self.nodes.values():
-
-            for p in (p for p in node.sym.properties if p.tokentype == TokenType.Identifier):
-                if p.tokentype.text not in self.nodes:
-
-                    tip = f'No such symbol exists with a name {p.tokentype.text}'
-                    linker._push_error(p, ln.LinkerErrorCode.NoSuchSymbol, tip)
-

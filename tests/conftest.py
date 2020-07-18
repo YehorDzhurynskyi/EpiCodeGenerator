@@ -1,4 +1,4 @@
-from epi_code_generator.symbol.symbol import EpiSymbol
+from epi_code_generator.symbol import EpiSymbol
 
 
 def pytest_assertrepr_compare(op, left, right):

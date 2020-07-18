@@ -23,6 +23,9 @@ class IDLSyntaxErrorCode(Enum):
     AttributeConflict = auto()
     AttributeInvalidParameters = auto()
     AttributeInvalidTarget = auto()
+    DuplicatingSymbol = auto()
+
+    # TODO: move here incomplete type error checking from linking stage
 
 
 class IDLSyntaxError:
@@ -42,7 +45,8 @@ class IDLSyntaxError:
         IDLSyntaxErrorCode.IncorrectValueAssignment: 'Incorrect value assignment',
         IDLSyntaxErrorCode.AttributeConflict: 'Provided attribute conflicts with the other attribute',
         IDLSyntaxErrorCode.AttributeInvalidParameters: 'Invalid attribute parameters',
-        IDLSyntaxErrorCode.AttributeInvalidTarget: 'An attribute was applied to the wrong target'
+        IDLSyntaxErrorCode.AttributeInvalidTarget: 'An attribute was applied to the wrong target',
+        IDLSyntaxErrorCode.DuplicatingSymbol: "The symbol's name duplicates other symbol's name"
     }
 
     def __init__(self, token: Token, err_code: IDLSyntaxErrorCode, tip: str):
@@ -161,6 +165,11 @@ class IDLParser:
                 assert t.tokentype == TokenType.ClassType, 'Handle other usertypes'
 
                 clss = idlclass.parse_class(self)
+
+                if clss.name in registry:
+
+                    tip = f'The symbol `{clss.name}` has already been defined in the current file!'
+                    self._push_error(clss.token, IDLSyntaxErrorCode.DuplicatingSymbol, tip, fatal=False)
 
                 registry[clss.name] = clss
 

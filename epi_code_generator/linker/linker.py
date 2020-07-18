@@ -1,4 +1,7 @@
-from epi_code_generator.symbol.symbol import EpiSymbol
+from epi_code_generator.tokenizer import TokenType
+
+from epi_code_generator.symbol import EpiSymbol
+from epi_code_generator.symbol import EpiProperty
 
 from enum import Enum, auto
 
@@ -8,6 +11,7 @@ class LinkerErrorCode(Enum):
     DuplicatingSymbol = auto()
     NoSuchSymbol = auto()
     HashCollision = auto()
+    IncompleteTypeUsage = auto()
 
 
 class LinkerError:
@@ -15,7 +19,8 @@ class LinkerError:
     __LINKER_ERROR_MSGS = {
         LinkerErrorCode.DuplicatingSymbol: 'The symbol with such a name has been already defined!',
         LinkerErrorCode.NoSuchSymbol: "The symbol doesn't exists!",
-        LinkerErrorCode.HashCollision: "Hash collision has been occured!"
+        LinkerErrorCode.HashCollision: 'Hash collision has been occured!',
+        LinkerErrorCode.IncompleteTypeUsage: "This incomplete type couldn't be used in this context!"
     }
 
     def __init__(self, symbol: EpiSymbol, err_code: LinkerErrorCode, tip: str):
@@ -74,5 +79,36 @@ class Linker:
         inheritance_tree = lntree.InheritanceTree(self.__registry)
         inheritance_tree.build(self)
         inheritance_tree.validate(self)
+
+        for sym in self.__registry.values():
+
+            for p in (p for p in sym.properties if p.tokentype.tokentype == TokenType.Identifier):
+
+                if p.tokentype_basename() not in self.__registry:
+
+                    tip = f'No such symbol exists with a name {p.tokentype.text}'
+                    self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
+
+                elif p.tokentype_basename() == sym.name and not p.is_polymorphic():
+
+                    tip = f'The symbol should be a complete type, but not: `{p.tokentype.text}`'
+                    self._push_error(p, LinkerErrorCode.IncompleteTypeUsage, tip)
+
+            for p in (p for p in sym.properties if p.form == EpiProperty.Form.Template):
+
+                for n in p.tokens_nested:
+
+                    if n.tokentype != TokenType.Identifier:
+                        continue
+
+                    if n.text == sym.name and not p.is_polymorphic():
+
+                        tip = f'Template argument symbol should be a complete type, but not: `{n.text}`'
+                        self._push_error(p, LinkerErrorCode.IncompleteTypeUsage, tip)
+
+                    elif n.text not in self.__registry:
+
+                        tip = f"Template argument symbol doesn't exist: `{n.text}`"
+                        self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
 
         return self.__linker_errors

@@ -2,8 +2,8 @@ from epi_code_generator.idlparser import idlparser_base as idl
 
 from epi_code_generator.tokenizer import TokenType
 
-from epi_code_generator.symbol.symbol import EpiClass
-from epi_code_generator.symbol.symbol import EpiProperty
+from epi_code_generator.symbol import EpiClass
+from epi_code_generator.symbol import EpiProperty
 
 
 def _parse_scope(parser: idl.IDLParser, attrs_inherited: list = []) -> list:
