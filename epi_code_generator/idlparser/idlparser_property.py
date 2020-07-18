@@ -8,7 +8,7 @@ from epi_code_generator.symbol.symbol import EpiProperty
 def parse_property(parser: idl.IDLParser) -> EpiProperty:
 
     tokentype_types = [TokenType.Identifier]
-    tokentype_types.extend(TokenType.fundamentals())
+    tokentype_types.extend(TokenType.builtin_types())
 
     parser._test(parser._curr(), tokentype_types, err_code=idl.IDLSyntaxErrorCode.UnexpectedToken)
 

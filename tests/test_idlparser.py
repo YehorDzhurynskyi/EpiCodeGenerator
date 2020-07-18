@@ -690,6 +690,115 @@ class TestIDLParser:
             '''
             class A : B
             {
+                [ExpectMax(-1.043)]
+                epiFloat Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.AttributeInvalidParameters]
+        ),
+        (
+            '''
+            class A : B
+            {
+                [ExpectMax(-1)]
+                C Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.AttributeInvalidTarget]
+        ),
+        (
+            '''
+            class A : B
+            {
+                [ReadCallback(SuppressRef=true)]
+                C Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .parent('B')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.Identifier, 'C')
+                                .attr(
+                                    EpiAttributeBuilder()
+                                    .tokentype(TokenType.ReadCallback)
+                                    .param_named('SuppressRef', TokenType.TrueLiteral, 'true')
+                                .build())
+                            .build())
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class A : B
+            {
+                [ReadCallback(SuppressRef=True)]
+                C Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.AttributeInvalidParameters]
+        ),
+        (
+            '''
+            class A : B
+            {
+                [ReadCallback(SupressRef=true)]
+                C Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.AttributeInvalidParameters]
+        ),
+        (
+            '''
+            class A : B
+            {
+                [WriteCallback(SuppressRef=false)]
+                C Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .parent('B')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.Identifier, 'C')
+                                .attr(
+                                    EpiAttributeBuilder()
+                                    .tokentype(TokenType.WriteCallback)
+                                    .param_named('SuppressRef', TokenType.FalseLiteral, 'false')
+                                .build())
+                            .build())
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class A : B
+            {
+                [ReadCallback(SuppressRef=true)]
+                epiFloat Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.AttributeInvalidParameters]
+        ),
+        (
+            '''
+            class A : B
+            {
                 [Virtual]
                 epiFloat Name;
             };
@@ -926,17 +1035,17 @@ class TestIDLParser:
             []
         ),
     ])
-    def test_sequence_fundamental(self, tmpdir: str, text: str, expected_registry: dict, expected_errors: list):
+    def test_sequence_builtin(self, tmpdir: str, text: str, expected_registry: dict, expected_errors: list):
 
         registry_local, _ = self.test_sequence(tmpdir, text, expected_registry, expected_errors)
 
-        fundamentals = [property.tokentype.text for property in list(registry_local.values())[0].properties]
-        fundamentals.sort()
+        builtins = [property.tokentype.text for property in list(registry_local.values())[0].properties]
+        builtins.sort()
 
-        exp_fundamentals = list(Tokenizer.fundamentals().keys())
-        exp_fundamentals.sort()
+        exp_builtins = list(Tokenizer.builtin_types().keys())
+        exp_builtins.sort()
 
-        assert fundamentals == exp_fundamentals, 'Some fundamental type is missing'
+        assert builtins == exp_builtins, 'Some builtin type is missing'
 
     @pytest.mark.parametrize('text', [
         (

@@ -110,8 +110,16 @@ class TokenType(Enum):
         return None
 
     @staticmethod
+    def builtin_types() -> list:
+        return list(Tokenizer.builtin_types().values())
+
+    @staticmethod
     def fundamentals() -> list:
         return list(Tokenizer.fundamentals().values())
+
+    @staticmethod
+    def compounds() -> list:
+        return list(Tokenizer.compounds().values())
 
     @staticmethod
     def attributes() -> list:
@@ -232,11 +240,17 @@ class Token:
     def is_keyword(self) -> bool:
         return self.text in Tokenizer.keywords()
 
+    def is_builtin_type(self) -> bool:
+        return self.text in Tokenizer.builtin_types()
+
     def is_fundamental(self) -> bool:
         return self.text in Tokenizer.fundamentals()
 
+    def is_compound(self) -> bool:
+        return self.text in Tokenizer.compounds()
+
     def is_type(self) -> bool:
-        return self.tokentype == TokenType.Identifier or self.is_fundamental()
+        return self.tokentype == TokenType.Identifier or self.is_builtin_type()
 
     def is_integer(self) -> bool:
         return self.tokentype in [
@@ -289,7 +303,7 @@ class Tokenizer:
         # 'const': TokenType.ConstModifier
     }
 
-    BUILTIN_PRIMITIVE_TYPES = {
+    BUILTIN_FUNDAMENTAL_TYPES = {
         'epiChar': TokenType.CharType,
         'epiWChar': TokenType.WCharType,
         'epiBool': TokenType.BoolType,
@@ -305,7 +319,10 @@ class Tokenizer:
         'epiS32': TokenType.Int32Type,
         'epiS64': TokenType.Int64Type,
         'epiFloat': TokenType.SingleFloatingType,
-        'epiDouble': TokenType.DoubleFloatingType,
+        'epiDouble': TokenType.DoubleFloatingType
+    }
+
+    BUILTIN_COMPOUND_TYPES = {
         'epiString': TokenType.StringType,
         'epiWString': TokenType.WStringType,
         'epiVec2f': TokenType.Vec2FType,
@@ -607,7 +624,8 @@ class Tokenizer:
     @staticmethod
     def keywords() -> dict:
          return {
-            **Tokenizer.BUILTIN_PRIMITIVE_TYPES,
+            **Tokenizer.BUILTIN_FUNDAMENTAL_TYPES,
+            **Tokenizer.BUILTIN_COMPOUND_TYPES,
             **Tokenizer.BUILTIN_TEMPLATED_TYPES,
             **Tokenizer.BUILTIN_USER_TYPES,
             **Tokenizer.BUILTIN_PRTY_ATTRS,
@@ -617,10 +635,23 @@ class Tokenizer:
         }
 
     @staticmethod
+    def builtin_types() -> dict:
+        return {
+            **Tokenizer.BUILTIN_FUNDAMENTAL_TYPES,
+            **Tokenizer.BUILTIN_COMPOUND_TYPES,
+            **Tokenizer.BUILTIN_TEMPLATED_TYPES
+        }
+
+    @staticmethod
     def fundamentals() -> dict:
         return {
-            **Tokenizer.BUILTIN_PRIMITIVE_TYPES,
-            **Tokenizer.BUILTIN_TEMPLATED_TYPES
+            **Tokenizer.BUILTIN_FUNDAMENTAL_TYPES
+        }
+
+    @staticmethod
+    def compounds() -> dict:
+        return {
+            **Tokenizer.BUILTIN_COMPOUND_TYPES
         }
 
 

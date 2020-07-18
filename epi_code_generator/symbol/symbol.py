@@ -29,7 +29,8 @@ class EpiAttribute:
     def __repr__(self):
 
         params_positional = '\n'.join([repr(p) for p in self.__params_positional])
-        return f'tokentype=({repr(self.tokentype)}):{params_positional}'
+        params_named = '\n'.join([f'{k} => {repr(p)}' for k, p in self.__params_named.items()])
+        return f'tokentype=({repr(self.tokentype)}), params positional: {params_positional}, params named: {params_named}'
 
     @property
     def params(self):
@@ -56,8 +57,8 @@ class EpiAttribute:
     def params_named(self):
         return self.__params_named
 
-    def param_named_push(self, name: str, tokenvalue: Token):
-        self.__params_named[name] = tokenvalue
+    def param_named_push(self, name: str, token: Token):
+        self.__params_named[name] = token
 
     def param_find(self, param: str):
 
@@ -239,6 +240,7 @@ class EpiAttributeBuilder:
 
         self.__tokentype = None
         self.__params_positional = []
+        self.__params_named = {}
 
     def tokentype(self, tokentype: TokenType):
 
@@ -250,6 +252,13 @@ class EpiAttributeBuilder:
         self.__params_positional.append(Token(tokentype, tokentext))
         return self
 
+    def param_named(self, name: str, tokentype: TokenType, tokentext: str):
+
+        assert name not in self.__params_named
+
+        self.__params_named[name] = Token(tokentype, tokentext)
+        return self
+
     def build(self):
 
         assert self.__tokentype is not None
@@ -258,6 +267,9 @@ class EpiAttributeBuilder:
 
         for p in self.__params_positional:
             attr.param_positional_push(p)
+
+        for k, p in self.__params_named.items():
+            attr.param_named_push(k, p)
 
         return attr
 

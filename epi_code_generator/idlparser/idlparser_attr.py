@@ -55,13 +55,13 @@ def __validate_parameters_positional(attr: EpiAttribute, positional: list):
 
         if tokenparam.tokentype not in ptypes:
 
-            msg = f'{tokenparam.text} positional parameter has a wrong type (the type should be {" or ".join(ptypes)})'
+            msg = f'{tokenparam.text} positional parameter has a wrong type (the type should be {" or ".join(p.name for p in ptypes)})'
             raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
 
 
 def __validate_parameters_named(attr: EpiAttribute, named: dict):
 
-    for name, tokenparam in attr.params_named:
+    for name, tokenparam in attr.params_named.items():
 
         if name not in named:
 
@@ -71,7 +71,22 @@ def __validate_parameters_named(attr: EpiAttribute, named: dict):
         ptypes = named[name]
         if tokenparam.tokentype not in ptypes:
 
-            msg = f'Invalid named parameter type {tokenparam.tokentype} was provided (but should be {" or ".join(ptypes)})'
+            msg = f'Invalid named parameter type {tokenparam.tokentype} was provided (but should be {" or ".join(p.name for p in ptypes)})'
+            raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
+
+
+def __validate_parameters_named_target_type(attr: EpiAttribute, target: EpiSymbol, named: dict):
+
+    assert isinstance(target, EpiProperty)
+
+    for name in attr.params_named:
+
+        assert name in named, 'check with `__validate_parameters_named` before'
+
+        ptypes = named[name]
+        if target.tokentype.tokentype not in ptypes:
+
+            msg = f"An attribute couldn't be applied to the following target={target.tokentype.tokentype.name}"
             raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
 
 
@@ -99,9 +114,9 @@ def __validate_target_type(attr: EpiAttribute, target: EpiSymbol, acceptable_tar
 
     if isinstance(target, EpiProperty):
 
-        if not any(target.tokentype for t in acceptable_targets):
+        if target.tokentype.tokentype not in acceptable_targets:
 
-            msg = f'An attribute applied to the wrong target-type (should be applied to: { " or ".join(acceptable_targets) })'
+            msg = f'An attribute applied to the wrong target-type (should be applied to: { " or ".join(t.name for t in acceptable_targets) })'
             raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidTarget)
 
     else:
@@ -145,7 +160,13 @@ def introduce_WriteCallback(attr: EpiAttribute, target: EpiSymbol):
     __validate_parameters_named(attr, {
         'SuppressRef': [TokenType.TrueLiteral, TokenType.FalseLiteral]
     })
-    __validate_parameters_named(attr, {})
+
+    types = [TokenType.Identifier]
+    types.extend(TokenType.compounds())
+
+    __validate_parameters_named_target_type(attr, target, {
+        'SuppressRef': types
+    })
 
 
 def introduce_ReadCallback(attr: EpiAttribute, target: EpiSymbol):
@@ -155,6 +176,13 @@ def introduce_ReadCallback(attr: EpiAttribute, target: EpiSymbol):
     __validate_parameters_positional(attr, [])
     __validate_parameters_named(attr, {
         'SuppressRef': [TokenType.TrueLiteral, TokenType.FalseLiteral]
+    })
+
+    types = [TokenType.Identifier]
+    types.extend(TokenType.compounds())
+
+    __validate_parameters_named_target_type(attr, target, {
+        'SuppressRef': types
     })
 
 
