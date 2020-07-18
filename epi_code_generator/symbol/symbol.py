@@ -150,7 +150,7 @@ class EpiProperty(EpiSymbol):
         return self.__tokenvalue is not None
 
     def value_of(self):
-        return Token(self.tokenvalue.tokentype, 0, 0, '', self.tokenvalue.text).value()
+        return Token(self.tokenvalue.tokentype, self.tokenvalue.text).value()
 
     def __value_default(self) -> Token:
 
@@ -183,7 +183,7 @@ class EpiProperty(EpiSymbol):
             value = 'epiDEBUG_ONLY(L"Empty")'
             tokentype = TokenType.WStringLiteral
 
-        return Token(tokentype, 0, 0, '', value)
+        return Token(tokentype, value)
 
     def __eq__(self, rhs):
 
@@ -247,7 +247,7 @@ class EpiAttributeBuilder:
 
     def param_positional(self, tokentype: TokenType, tokentext: str):
 
-        self.__params_positional.append(Token(tokentype, 0, 0, '', tokentext))
+        self.__params_positional.append(Token(tokentype, tokentext))
         return self
 
     def build(self):
@@ -283,7 +283,7 @@ class EpiPropertyBuilder:
         assert tokentype != TokenType.Identifier or tokentext is not None, '<identifier> should be provided with a text'
 
         tokentext = tokentext if tokentext is not None else TokenType.repr_of(tokentype)
-        self.__tokentype = Token(tokentype, 0, 0, '', tokentext)
+        self.__tokentype = Token(tokentype, tokentext)
 
         return self
 
@@ -304,7 +304,7 @@ class EpiPropertyBuilder:
 
             assert False, '`tokentype` or `self.__tokentype_type` should be provided'
 
-        self.__value = Token(tokentype, 0, 0, '', value)
+        self.__value = Token(tokentype, value)
         return self
 
     def attr(self, attr: EpiAttribute):
@@ -317,7 +317,7 @@ class EpiPropertyBuilder:
         assert tokentype != TokenType.Identifier or tokentext is not None, '<identifier> should be provided with a text'
 
         tokentext = tokentext if tokentext is not None else TokenType.repr_of(tokentype)
-        self.__tokens_nested.append(Token(tokentype, 0, 0, '', tokentext))
+        self.__tokens_nested.append(Token(tokentype, tokentext))
 
         return self
 
@@ -326,7 +326,7 @@ class EpiPropertyBuilder:
         assert self.__name is not None
         assert self.__tokentype is not None
 
-        token = Token(TokenType.Identifier, 0, 0, '', self.__name)
+        token = Token(TokenType.Identifier, self.__name)
 
         prty = EpiProperty(token, self.__tokentype, self.__form)
         prty.attrs = self.__attrs
@@ -365,7 +365,7 @@ class EpiClassBuilder:
 
         assert self.__name is not None
 
-        token = Token(TokenType.Identifier, 0, 0, '', self.__name)
+        token = Token(TokenType.Identifier, self.__name)
 
         clss = EpiClass(token)
         clss.parent = self.__parent
