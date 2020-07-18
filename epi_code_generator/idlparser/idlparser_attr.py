@@ -35,23 +35,23 @@ def __validate_conflicts(attr: EpiAttribute, target: EpiSymbol):
 
     for a in target.attrs:
 
-        if a.token.tokentype == attr.token.tokentype:
+        if a.tokentype == attr.tokentype:
             raise EpiAttributeValidationError(f'It duplicates {a.token}', attr.token, idl.IDLSyntaxErrorCode.AttributeConflict)
 
-        assert attr.token.tokentype in __EPI_ATTRIBUTE_CONFLICT_TABLE
+        assert attr.tokentype in __EPI_ATTRIBUTE_CONFLICT_TABLE
 
-        if a.token.tokentype in __EPI_ATTRIBUTE_CONFLICT_TABLE[attr.token.tokentype]:
+        if a.tokentype in __EPI_ATTRIBUTE_CONFLICT_TABLE[attr.tokentype]:
             raise EpiAttributeValidationError(f'It conflicts with {a.token}', attr.token, idl.IDLSyntaxErrorCode.AttributeConflict)
 
 
 def __validate_parameters_positional(attr: EpiAttribute, positional: list):
 
-    if len(positional) != len(attr.__params_positional):
+    if len(positional) != len(attr.params_positional):
 
-        msg = f'Number of arguments should be {len(positional)} but were {len(attr.__params_positional)} provided'
+        msg = f'Number of arguments should be {len(positional)} but {len(attr.params_positional)} was provided'
         raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
 
-    for tokenparam, ptypes in zip(attr.__params_positional, positional):
+    for tokenparam, ptypes in zip(attr.params_positional, positional):
 
         if tokenparam.tokentype not in ptypes:
 
@@ -61,7 +61,7 @@ def __validate_parameters_positional(attr: EpiAttribute, positional: list):
 
 def __validate_parameters_named(attr: EpiAttribute, named: dict):
 
-    for name, tokenparam in attr.__params_named:
+    for name, tokenparam in attr.params_named:
 
         if name not in named:
 
@@ -85,6 +85,16 @@ def __validate_target(attr: EpiAttribute, target: EpiSymbol, acceptable_targets:
         raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidTarget)
 
 
+def __validate_target_unassigned(attr: EpiAttribute, target: EpiSymbol):
+
+    assert isinstance(target, EpiProperty)
+
+    if target.value_is_assigned():
+
+        msg = f'`{attr.tokentype.name}` attribute target is unassignable'
+        raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.IncorrectValueAssignment)
+
+
 def __validate_target_type(attr: EpiAttribute, target: EpiSymbol, acceptable_targets: list):
 
     if isinstance(target, EpiProperty):
@@ -96,6 +106,26 @@ def __validate_target_type(attr: EpiAttribute, target: EpiSymbol, acceptable_tar
 
     else:
         assert False, 'Unhandled case!'
+
+
+def __validate_target_value_greater_eq(attr: EpiAttribute, target: EpiSymbol, value):
+
+    assert isinstance(target, EpiProperty)
+
+    if target.value_of() < value:
+
+        msg = f"{attr.token} restricts target's value to be >= {value}"
+        raise EpiAttributeValidationError(msg, target.token, idl.IDLSyntaxErrorCode.IncorrectValueAssignment)
+
+
+def __validate_target_value_less_eq(attr: EpiAttribute, target: EpiSymbol, value):
+
+    assert isinstance(target, EpiProperty)
+
+    if target.value_of() > value:
+
+        msg = f"{attr.token} restricts target's value to be <= {value}"
+        raise EpiAttributeValidationError(msg, target.token, idl.IDLSyntaxErrorCode.IncorrectValueAssignment)
 
 
 def __implies(tokentype: TokenType, target: EpiSymbol):
@@ -110,6 +140,7 @@ def introduce_WriteCallback(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
     __validate_target(attr, target, [EpiProperty])
+    __validate_target_unassigned(attr, target)
     __validate_parameters_positional(attr, [])
     __validate_parameters_named(attr, {
         'SuppressRef': [TokenType.TrueLiteral, TokenType.FalseLiteral]
@@ -131,6 +162,7 @@ def introduce_Virtual(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
     __validate_target(attr, target, [EpiProperty])
+    __validate_target_unassigned(attr, target)
     __validate_parameters_positional(attr, [])
     __validate_parameters_named(attr, {})
 
@@ -179,8 +211,9 @@ def introduce_ExpectMin(attr: EpiAttribute, target: EpiSymbol):
                                           TokenType.UInt64Type,
                                           TokenType.ByteType,
                                           TokenType.SizeTType])
-    __validate_parameters_positional(attr, [TokenType.literals_of(target.token.tokentype)])
+    __validate_parameters_positional(attr, [TokenType.literals_of(target.tokentype.tokentype)])
     __validate_parameters_named(attr, {})
+    __validate_target_value_greater_eq(attr, target, attr.param_positional_at(0).value())
 
 
 def introduce_ExpectMax(attr: EpiAttribute, target: EpiSymbol):
@@ -199,8 +232,9 @@ def introduce_ExpectMax(attr: EpiAttribute, target: EpiSymbol):
                                           TokenType.UInt64Type,
                                           TokenType.ByteType,
                                           TokenType.SizeTType])
-    __validate_parameters_positional(attr, [TokenType.literals_of(target.token.tokentype)])
+    __validate_parameters_positional(attr, [TokenType.literals_of(target.tokentype.tokentype)])
     __validate_parameters_named(attr, {})
+    __validate_target_value_less_eq(attr, target, attr.param_positional_at(0).value())
 
 
 def introduce_ForceMin(attr: EpiAttribute, target: EpiSymbol):
@@ -219,8 +253,9 @@ def introduce_ForceMin(attr: EpiAttribute, target: EpiSymbol):
                                           TokenType.UInt64Type,
                                           TokenType.ByteType,
                                           TokenType.SizeTType])
-    __validate_parameters_positional(attr, [TokenType.literals_of(target.token.tokentype)])
+    __validate_parameters_positional(attr, [TokenType.literals_of(target.tokentype.tokentype)])
     __validate_parameters_named(attr, {})
+    __validate_target_value_greater_eq(attr, target, attr.param_positional_at(0).value())
 
 
 def introduce_ForceMax(attr: EpiAttribute, target: EpiSymbol):
@@ -239,22 +274,23 @@ def introduce_ForceMax(attr: EpiAttribute, target: EpiSymbol):
                                           TokenType.UInt64Type,
                                           TokenType.ByteType,
                                           TokenType.SizeTType])
-    __validate_parameters_positional(attr, [TokenType.literals_of(target.token.tokentype)])
+    __validate_parameters_positional(attr, [TokenType.literals_of(target.tokentype.tokentype)])
     __validate_parameters_named(attr, {})
+    __validate_target_value_less_eq(attr, target, attr.param_positional_at(0).value())
 
 
 def __parse_attr(parser: idl.IDLParser) -> EpiAttribute:
 
     a_t = parser._next()
 
-    attr = EpiAttribute(a_t.tokentype)
+    attr = EpiAttribute(a_t.tokentype, a_t)
 
     if not parser._test(parser._curr(), [TokenType.OpenBracket]):
         return attr
 
     has_named_params = False
 
-    parser._next(2)
+    parser._next()
     while True:
 
         if parser._test(parser._curr(), [TokenType.CloseBracket]):
@@ -268,13 +304,13 @@ def __parse_attr(parser: idl.IDLParser) -> EpiAttribute:
                 tip = 'Named parameters should come after positional parameters'
                 parser._push_error(param, idl.IDLSyntaxErrorCode.AttributeInvalidParameters, tip)
 
-            attr.param_push_positional(param)
+            attr.param_positional_push(param)
         else:
 
             has_named_params = True
-            attr.param_push_named(param.text, parser._next(2))
+            attr.param_named_push(param.text, parser._next(2))
 
-        if not parser._test(parser._curr().tokentype, [TokenType.Comma]):
+        if not parser._test(parser._curr(), [TokenType.Comma]):
             break
 
         parser._next()

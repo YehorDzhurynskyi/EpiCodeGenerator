@@ -115,10 +115,9 @@ class TokenType(Enum):
 
     @staticmethod
     def attributes() -> list:
-        return {
-            list(Tokenizer.BUILTIN_CLSS_ATTRS.values()) +
+        return \
+            list(Tokenizer.BUILTIN_CLSS_ATTRS.values()) + \
             list(Tokenizer.BUILTIN_PRTY_ATTRS.values())
-        }
 
     @staticmethod
     def literals() -> list:
@@ -199,6 +198,10 @@ class Token:
         self.filepath = filepath
 
     def __eq__(self, rhs):
+
+        if type(rhs) is not Token:
+            return False
+
         return self.tokentype == rhs.tokentype and self.text == rhs.text
 
     def __str__(self):
@@ -206,6 +209,25 @@ class Token:
 
     def __repr__(self):
         return f'text={self.text}, tokentype={self.tokentype}'
+
+    def value(self):
+
+        assert self.tokentype in TokenType.literals()
+
+        if self.tokentype in [TokenType.CharLiteral, TokenType.WCharLiteral]:
+            return chr(self.text)
+        elif self.tokentype in [TokenType.StringLiteral, TokenType.WStringLiteral]:
+            return str(self.text)
+        elif self.tokentype == TokenType.IntegerLiteral:
+            return int(self.text)
+        elif self.tokentype in [TokenType.SingleFloatingLiteral, TokenType.DoubleFloatingLiteral]:
+            return float(self.text)
+        elif self.tokentype == TokenType.TrueLiteral:
+            return True
+        elif self.tokentype == TokenType.FalseLiteral:
+            return False
+        else:
+            assert False, 'Unhandled case!'
 
     def is_keyword(self) -> bool:
         return self.text in Tokenizer.keywords()
@@ -547,7 +569,7 @@ class Tokenizer:
             tokentype_suspected = TokenType.SingleFloatingLiteral
             self.at += 1
 
-        if self._ch().isspace() or self._ch() in ['\0', ';']:
+        if self._ch().isspace() or self._ch() in ['\0', ';', ')']:
             token.tokentype = tokentype_suspected
 
         if token.tokentype == TokenType.Unknown:

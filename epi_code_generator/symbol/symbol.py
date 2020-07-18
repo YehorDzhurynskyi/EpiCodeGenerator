@@ -9,14 +9,19 @@ from epi_code_generator.tokenizer import TokenType
 
 class EpiAttribute:
 
-    def __init__(self, token: Token):
+    def __init__(self, tokentype: TokenType, token: Token = None):
 
+        self.tokentype = tokentype
         self.token = token
         self.__params_positional = []
         self.__params_named = {}
 
     def __eq__(self, rhs):
-        return self.token == rhs.token
+
+        if type(rhs) is not EpiAttribute:
+            return False
+
+        return self.tokentype == rhs.tokentype
 
     @property
     def params(self):
@@ -26,10 +31,24 @@ class EpiAttribute:
 
         return params
 
-    def param_push_positional(self, token: Token):
+    @property
+    def params_positional(self):
+        return self.__params_positional
+
+    def param_positional_at(self, index: int) -> Token:
+        return self.__params_positional[index]
+
+    def param_positional_of(self, tokentype: TokenType) -> Token:
+        return next(p for p in self.__params_positional if p.tokentype == tokentype)
+
+    def param_positional_push(self, token: Token):
         self.__params_positional.append(token)
 
-    def param_push_named(self, name: str, tokenvalue: Token):
+    @property
+    def params_named(self):
+        return self.__params_named
+
+    def param_named_push(self, name: str, tokenvalue: Token):
         self.__params_named[name] = tokenvalue
 
     def param_find(self, param: str):
@@ -74,12 +93,9 @@ class EpiSymbol(abc.ABC):
 
     def attr_push(self, attr: EpiAttribute):
 
-        import epi_code_generator.idlparser.idlparser_attr
+        from epi_code_generator.idlparser import idlparser_attr as idlattr
 
-        import pytest
-        pytest.set_trace()
-
-        getattr(epi_code_generator.idlparser.idlparser_attr, f'introduce_{str(attr.tokentype)}')(attr, self)
+        getattr(idlattr, f'introduce_{attr.tokentype.name}')(attr, self)
         self.__attrs.append(attr)
 
     def attr_find(self, tokentype: TokenType):
@@ -105,44 +121,71 @@ class EpiProperty(EpiSymbol):
 
         self.tokentype = tokentype
         self.form = form
-        self.value = self._default_value()
         self.tokentype_nested = []
+        self.__tokenvalue = None
 
-    def _default_value(self):
+    @property
+    def tokenvalue(self) -> Token:
+        return self.__tokenvalue if self.value_is_assigned() else self.__value_default()
+
+    @tokenvalue.setter
+    def tokenvalue(self, token: Token):
+        self.__tokenvalue = token
+
+    def value_is_assigned(self) -> bool:
+        return self.__tokenvalue is not None
+
+    def value_of(self):
+        return Token(self.tokenvalue.tokentype, 0, 0, '', self.tokenvalue.text).value()
+
+    def __value_default(self) -> Token:
 
         value = None
+        tokentype = None
         if self.form == EpiProperty.Form.Pointer:
             value = 'nullptr'
         elif self.tokentype.tokentype == TokenType.BoolType:
             value = 'false'
+            tokentype = TokenType.FalseLiteral
         elif self.tokentype.is_integer():
             value = '0'
+            tokentype = TokenType.IntegerLiteral
         elif self.tokentype.tokentype == TokenType.SingleFloatingType:
             value = '0.0f'
+            tokentype = TokenType.SingleFloatingLiteral
         elif self.tokentype.tokentype == TokenType.DoubleFloatingType:
             value = '0.0'
+            tokentype = TokenType.DoubleFloatingLiteral
         elif self.tokentype.tokentype == TokenType.CharType:
             value = "'\\0'"
+            tokentype = TokenType.CharLiteral
         elif self.tokentype.tokentype == TokenType.WCharType:
             value = "L'\\0'"
+            tokentype = TokenType.WCharLiteral
         elif self.tokentype.tokentype == TokenType.StringType:
             value = 'epiDEBUG_ONLY("Empty")'
+            tokentype = TokenType.StringLiteral
         elif self.tokentype.tokentype == TokenType.WStringType:
             value = 'epiDEBUG_ONLY(L"Empty")'
+            tokentype = TokenType.WStringLiteral
 
-        return value
+        return Token(tokentype, 0, 0, '', value)
 
     def __eq__(self, rhs):
+
+        if type(rhs) is not EpiProperty:
+            return False
+
         return \
             super(EpiProperty, self).__eq__(rhs) and \
             self.form == rhs.form and \
-            self.value == rhs.value and \
+            self.__tokenvalue == rhs.__tokenvalue and \
             self.tokentype == rhs.tokentype
 
     def __repr__(self):
 
         rtokentype_nested = ', '.join([repr(t) for t in self.tokentype_nested])
-        r = f'{super(EpiProperty, self).__repr__()}, tokentype=({repr(self.tokentype)}), form={self.form}, value={self.value}, tokentype_nested={rtokentype_nested}'
+        r = f'{super(EpiProperty, self).__repr__()}, tokentype=({repr(self.tokentype)}), form={self.form}, value={self.__tokenvalue}, tokentype_nested={rtokentype_nested}'
 
         return r
 
@@ -157,6 +200,10 @@ class EpiClass(EpiSymbol):
         self.properties = []
 
     def __eq__(self, rhs):
+
+        if type(rhs) is not EpiClass:
+            return False
+
         return \
             super(EpiClass, self).__eq__(rhs) and \
             self.parent == rhs.parent and \
@@ -169,6 +216,23 @@ class EpiClass(EpiSymbol):
         r = f'{r}:{rproperties}'
 
         return r
+
+
+class EpiAttributeBuilder:
+
+    def __init__(self):
+        self.__tokentype = None
+
+    def tokentype(self, tokentype: TokenType):
+
+        self.__tokentype = tokentype
+        return self
+
+    def build(self):
+
+        assert self.__tokentype is not None
+
+        return EpiAttribute(self.__tokentype)
 
 
 class EpiPropertyBuilder:
@@ -202,9 +266,19 @@ class EpiPropertyBuilder:
         self.__form = form
         return self
 
-    def value(self, value: str):
+    def value(self, value: str, tokentype: TokenType = None):
 
-        self.__value = value
+        if tokentype is not None or self.__tokentype_type is not None:
+
+            if tokentype is None:
+                literals = TokenType.literals_of(self.__tokentype_type)
+                assert len(literals) == 1
+                tokentype = literals[0]
+        else:
+
+            assert False, '`tokentype` or `self.__tokentype_type` should be provided'
+
+        self.__value = Token(tokentype, 0, 0, '', value)
         return self
 
     def attr(self, attr: EpiAttribute):
@@ -232,7 +306,7 @@ class EpiPropertyBuilder:
         prty.tokentype_nested = self.__tokentype_nested
 
         if self.__value is not None:
-            prty.value = self.__value
+            prty.tokenvalue = self.__value
 
         return prty
 

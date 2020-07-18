@@ -84,7 +84,7 @@ def parse_property(parser: idl.IDLParser) -> EpiProperty:
             if parser._test(prty.tokentype, TokenType.assignable(), err_code=idl.IDLSyntaxErrorCode.IncorrectValueAssignment, fatal=False):
                 parser._test(t, TokenType.literals_of(prty.tokentype.tokentype), err_code=idl.IDLSyntaxErrorCode.IncorrectValueLiteral, fatal=False)
 
-            prty.value = t.text
+            prty.tokenvalue = t
 
         t = parser._next()
 

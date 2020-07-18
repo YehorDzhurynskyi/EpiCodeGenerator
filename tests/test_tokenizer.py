@@ -222,6 +222,33 @@ class TestTokenizer:
         ('==', [TokenType.Assing, TokenType.Assing], ['=', '=']),
         ("'", [TokenType.Unknown], ["'"]),
         ('"', [TokenType.Unknown], ['"']),
+        ('[ExpectMin(5)] epiS32 Name = 6;',
+            [
+                TokenType.OpenSqBracket,
+                TokenType.ExpectMin,
+                TokenType.OpenBracket,
+                TokenType.IntegerLiteral,
+                TokenType.CloseBracket,
+                TokenType.CloseSqBracket,
+                TokenType.Int32Type,
+                TokenType.Identifier,
+                TokenType.Assing,
+                TokenType.IntegerLiteral,
+                TokenType.Semicolon
+            ],
+            [
+                '[',
+                'ExpectMin',
+                '(',
+                '5',
+                ')',
+                ']',
+                'epiS32',
+                'Name',
+                '=',
+                '6',
+                ';'
+            ]),
     ])
     def test_sequence(self, tmpdir: str, text: str, expected_type: list, expected_text: list):
 

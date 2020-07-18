@@ -1,9 +1,11 @@
 from epi_code_generator.tokenizer import Tokenizer, TokenType
 
 from epi_code_generator.symbol.symbol import EpiClass
-from epi_code_generator.symbol.symbol import EpiProperty
 from epi_code_generator.symbol.symbol import EpiClassBuilder
+from epi_code_generator.symbol.symbol import EpiProperty
 from epi_code_generator.symbol.symbol import EpiPropertyBuilder
+from epi_code_generator.symbol.symbol import EpiAttribute
+from epi_code_generator.symbol.symbol import EpiAttributeBuilder
 
 from epi_code_generator.idlparser import idlparser_base as idl
 
@@ -605,6 +607,85 @@ class TestIDLParser:
             {},
             [idl.IDLSyntaxErrorCode.IncorrectValueAssignment] * 21
         ),
+        (
+            '''
+            class A : B
+            {
+                [Virtual]
+                epiFloat Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .parent('B')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .attr(EpiAttributeBuilder().tokentype(TokenType.Virtual).build())
+                                .tokentype_type(TokenType.SingleFloatingType)
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class A : B
+            {
+                [Virtual]
+                epiFloat Name = 4.0f;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            '''
+            class A : B
+            {
+                [ExpectMin(5)]
+                epiS32 Name = 4;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            '''
+            class A : B
+            {
+                [ExpectMax(5)]
+                epiS32 Name = 6;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            '''
+            class A : B
+            {
+                [ExpectMin(5)]
+                epiS32 Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            '''
+            class A : B
+            {
+                [ExpectMax(-1)]
+                epiS32 Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
     ])
     def test_sequence(self, tmpdir: str, text: str, expected_registry: dict, expected_errors: list):
 
@@ -779,7 +860,7 @@ class TestIDLParser:
                         .parent('B')
                         .property(EpiPropertyBuilder().name('Name0').tokentype_type(TokenType.CharType).value("'E'").build())
                         .property(EpiPropertyBuilder().name('Name1').tokentype_type(TokenType.WCharType).value("L'F'").build())
-                        .property(EpiPropertyBuilder().name('Name2').tokentype_type(TokenType.BoolType).value('true').build())
+                        .property(EpiPropertyBuilder().name('Name2').tokentype_type(TokenType.BoolType).value('true', TokenType.TrueLiteral).build())
                         .property(EpiPropertyBuilder().name('Name3').tokentype_type(TokenType.ByteType).value('12').build())
                         .property(EpiPropertyBuilder().name('Name4').tokentype_type(TokenType.SizeTType).value('23').build())
                         .property(EpiPropertyBuilder().name('Name5').tokentype_type(TokenType.HashTType).value('42').build())
@@ -944,7 +1025,7 @@ class TestIDLParser:
                     .parent('ParentClassName')
                     .property(EpiPropertyBuilder().name('Name0').tokentype_type(TokenType.CharType).value("'f'").build())
                     .property(EpiPropertyBuilder().name('Name1').tokentype_type(TokenType.WCharType).value("L'F'").build())
-                    .property(EpiPropertyBuilder().name('Name2').tokentype_type(TokenType.BoolType).value('true').build())
+                    .property(EpiPropertyBuilder().name('Name2').tokentype_type(TokenType.BoolType).value('true', TokenType.TrueLiteral).build())
                     .property(EpiPropertyBuilder().name('Name3').tokentype_type(TokenType.ByteType).build())
                     .property(EpiPropertyBuilder().name('Name4').tokentype_type(TokenType.SizeTType).build())
                     .property(EpiPropertyBuilder().name('Name5').tokentype_type(TokenType.HashTType).build())
