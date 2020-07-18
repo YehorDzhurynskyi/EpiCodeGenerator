@@ -64,7 +64,7 @@ class TestIDLParser:
                 };
                 '''
             ],
-            [ln.LinkerErrorCode.DuplicatingSymbol] * 6
+            [ln.LinkerErrorCode.DuplicatingSymbol] * 4
         ),
         (
             [
@@ -164,7 +164,7 @@ class TestIDLParser:
                 };
                 '''
             ],
-            [ln.LinkerErrorCode.DuplicatingSymbol] * 3
+            [ln.LinkerErrorCode.DuplicatingSymbol] * 2
         ),
         (
             [
@@ -185,7 +185,7 @@ class TestIDLParser:
                 };
                 '''
             ],
-            [ln.LinkerErrorCode.DuplicatingSymbol] * 11
+            [ln.LinkerErrorCode.DuplicatingSymbol] * 7
         ),
         (
             [
@@ -207,7 +207,7 @@ class TestIDLParser:
                 };
                 '''
             ],
-            [ln.LinkerErrorCode.DuplicatingSymbol] * 11
+            [ln.LinkerErrorCode.DuplicatingSymbol] * 7
         ),
         (
             [
@@ -219,7 +219,7 @@ class TestIDLParser:
                 };
                 '''
             ],
-            [ln.LinkerErrorCode.DuplicatingSymbol] * 2
+            [ln.LinkerErrorCode.DuplicatingSymbol]
         ),
         (
             [
@@ -232,7 +232,7 @@ class TestIDLParser:
                 };
                 '''
             ],
-            [ln.LinkerErrorCode.DuplicatingSymbol] * 6
+            [ln.LinkerErrorCode.DuplicatingSymbol] * 3
         ),
         (
             [
@@ -250,7 +250,92 @@ class TestIDLParser:
                 };
                 '''
             ],
-            [ln.LinkerErrorCode.DuplicatingSymbol] * 10
+            [ln.LinkerErrorCode.DuplicatingSymbol] * 6
+        ),
+        (
+            [
+                '''
+                class AClass
+                {
+                    epiS32 APrty;
+                };
+
+                class BClass
+                {
+                    epiS32 BPrty;
+                };
+                ''',
+                '''
+                class AClass
+                {
+                    epiS32 APrty;
+                };
+
+                class ClassName : AClass
+                {
+                    epiS32 Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.DuplicatingSymbol]
+        ),
+        (
+            [
+                '''
+                class AClass
+                {
+                    epiS32 APrty;
+                };
+
+                class BClass
+                {
+                    epiS32 BPrty;
+                };
+                ''',
+                '''
+                class AClass
+                {
+                    epiU32 APrty;
+                };
+                ''',
+                '''
+                class ClassName : AClass
+                {
+                    epiS32 Name;
+                    BClass Name2;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.DuplicatingSymbol]
+        ),
+        (
+            [
+                '''
+                class AClass
+                {
+                    epiS32 APrty;
+                };
+
+                class BClass : AClass
+                {
+                    epiS32 BPrty;
+                };
+                ''',
+                '''
+                class AClass
+                {
+                    epiU32 APrty;
+                };
+                ''',
+                '''
+                class ClassName : AClass
+                {
+                    epiS32 Name;
+                    BClass Name2;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.DuplicatingSymbol]
         ),
         (
             [
@@ -269,7 +354,7 @@ class TestIDLParser:
                 };
                 '''
             ],
-            [ln.LinkerErrorCode.DuplicatingSymbol] * 10 # TODO: reduce number of such spam
+            [ln.LinkerErrorCode.DuplicatingSymbol] * 6
         ),
     ])
     def test_sequence(self, tmpdir: str, contents: list, expected_errors: list):
