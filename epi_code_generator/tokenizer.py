@@ -199,7 +199,7 @@ class Token:
 
     def __eq__(self, rhs):
 
-        if type(rhs) is not Token:
+        if not isinstance(rhs, Token):
             return False
 
         return self.tokentype == rhs.tokentype and self.text == rhs.text

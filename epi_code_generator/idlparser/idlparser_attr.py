@@ -36,12 +36,12 @@ def __validate_conflicts(attr: EpiAttribute, target: EpiSymbol):
     for a in target.attrs:
 
         if a.tokentype == attr.tokentype:
-            raise EpiAttributeValidationError(f'It duplicates {a.token}', attr.token, idl.IDLSyntaxErrorCode.AttributeConflict)
+            raise EpiAttributeValidationError(f'It duplicates {a.tokentype.name}', attr.token, idl.IDLSyntaxErrorCode.AttributeConflict)
 
         assert attr.tokentype in __EPI_ATTRIBUTE_CONFLICT_TABLE
 
         if a.tokentype in __EPI_ATTRIBUTE_CONFLICT_TABLE[attr.tokentype]:
-            raise EpiAttributeValidationError(f'It conflicts with {a.token}', attr.token, idl.IDLSyntaxErrorCode.AttributeConflict)
+            raise EpiAttributeValidationError(f'It conflicts with {a.tokentype.name}', attr.token, idl.IDLSyntaxErrorCode.AttributeConflict)
 
 
 def __validate_parameters_positional(attr: EpiAttribute, positional: list):

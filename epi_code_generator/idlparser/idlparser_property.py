@@ -13,7 +13,7 @@ def parse_property(parser: idl.IDLParser) -> EpiProperty:
     parser._test(parser._curr(), tokentype_types, err_code=idl.IDLSyntaxErrorCode.UnexpectedToken)
 
     tokentype = parser._next()
-    tokentype_nested = []
+    tokens_nested = []
     form = EpiProperty.Form.Plain
 
     if tokentype is not None and tokentype.is_templated():
@@ -26,12 +26,12 @@ def parse_property(parser: idl.IDLParser) -> EpiProperty:
             if parser._test(parser._curr(), tokentype_types, err_code=idl.IDLSyntaxErrorCode.UnexpectedToken, fatal=False):
 
                 # TODO: parse >1 number of template arguments
-                tokentype_nested.append(parser._next())
+                tokens_nested.append(parser._next())
 
             t = parser._next()
             parser._test(t, [TokenType.CloseAngleBracket], err_code=idl.IDLSyntaxErrorCode.NoMatchingClosingBracket)
 
-            if len(tokentype_nested) == 0:
+            if len(tokens_nested) == 0:
                 parser._push_error(t, idl.IDLSyntaxErrorCode.MissingTemplateArguments, fatal=False)
 
     while True:
@@ -59,7 +59,7 @@ def parse_property(parser: idl.IDLParser) -> EpiProperty:
     prty = EpiProperty(t, tokentype, form)
 
     if prty.form == EpiProperty.Form.Template:
-        prty.tokentype_nested = tokentype_nested
+        prty.tokens_nested = tokens_nested
 
     # NOTE: if property is virtual an assignment is invalid
     t = parser._next()

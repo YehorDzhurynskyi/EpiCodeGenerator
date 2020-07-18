@@ -424,7 +424,7 @@ class TestIDLParser:
                                 .name('Name')
                                 .tokentype_type(TokenType.ArrayType)
                                 .form(EpiProperty.Form.Template)
-                                .tokentype_nested(TokenType.SingleFloatingType)
+                                .token_nested(TokenType.SingleFloatingType)
                                 .build()
                         )
                         .build()
@@ -538,7 +538,7 @@ class TestIDLParser:
                                 .name('Name')
                                 .tokentype_type(TokenType.PtrArrayType)
                                 .form(EpiProperty.Form.Template)
-                                .tokentype_nested(TokenType.Identifier)
+                                .token_nested(TokenType.Identifier, 'C')
                                 .build()
                         )
                         .build()
@@ -686,6 +686,30 @@ class TestIDLParser:
             {},
             [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
         ),
+        (
+            '''
+            class A : B
+            {
+                [Virtual]
+                epiFloat Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .parent('B')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .attr(EpiAttributeBuilder().tokentype(TokenType.Virtual).build())
+                                .tokentype_type(TokenType.SingleFloatingType)
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
     ])
     def test_sequence(self, tmpdir: str, text: str, expected_registry: dict, expected_errors: list):
 
@@ -783,8 +807,8 @@ class TestIDLParser:
                         .property(EpiPropertyBuilder().name('Name15').tokentype_type(TokenType.DoubleFloatingType).build())
                         .property(EpiPropertyBuilder().name('Name16').tokentype_type(TokenType.StringType).build())
                         .property(EpiPropertyBuilder().name('Name17').tokentype_type(TokenType.WStringType).build())
-                        .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiProperty.Form.Template).tokentype_nested(TokenType.Identifier).build())
-                        .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiProperty.Form.Template).tokentype_nested(TokenType.SingleFloatingType).build())
+                        .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiProperty.Form.Template).token_nested(TokenType.Identifier, 'MyClassName').build())
+                        .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiProperty.Form.Template).token_nested(TokenType.SingleFloatingType).build())
                         .property(EpiPropertyBuilder().name('Name20').tokentype_type(TokenType.Vec2FType).build())
                         .property(EpiPropertyBuilder().name('Name21').tokentype_type(TokenType.Vec2DType).build())
                         .property(EpiPropertyBuilder().name('Name22').tokentype_type(TokenType.Vec2SType).build())
@@ -876,8 +900,8 @@ class TestIDLParser:
                         .property(EpiPropertyBuilder().name('Name15').tokentype_type(TokenType.DoubleFloatingType).value('+32.00007').build())
                         .property(EpiPropertyBuilder().name('Name16').tokentype_type(TokenType.StringType).value('"TEXT"').build())
                         .property(EpiPropertyBuilder().name('Name17').tokentype_type(TokenType.WStringType).value('L"QwertY!"').build())
-                        .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiProperty.Form.Template).tokentype_nested(TokenType.Identifier).build())
-                        .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiProperty.Form.Template).tokentype_nested(TokenType.SingleFloatingType).build())
+                        .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiProperty.Form.Template).token_nested(TokenType.Identifier, 'MyClassName').build())
+                        .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiProperty.Form.Template).token_nested(TokenType.SingleFloatingType).build())
                         .property(EpiPropertyBuilder().name('Name20').tokentype_type(TokenType.Vec2FType).build())
                         .property(EpiPropertyBuilder().name('Name21').tokentype_type(TokenType.Vec2DType).build())
                         .property(EpiPropertyBuilder().name('Name22').tokentype_type(TokenType.Vec2SType).build())
@@ -923,13 +947,21 @@ class TestIDLParser:
                 epiWChar Name1 = L'F';
                 epiBool Name2 = true;
                 epiByte Name3;
-                epiSize_t Name4;
-                epiHash_t Name5;
-                epiU8 Name6;
-                epiU16 Name7;
+
+                [Transient, ReadOnly]
+                {
+                    epiSize_t Name4;
+                    epiHash_t Name5;
+
+                    [Virtual]
+                    epiU8 Name6;
+                    epiU16 Name7;
+                }
 
                 epiU32 Name8 = -1;
                 epiU64 Name9;
+
+                [ExpectMin(-5)]
                 epiS8 Name10;
                 epiS16 Name11 = 15;
                 epiS32 Name12;
@@ -958,6 +990,8 @@ class TestIDLParser:
                 epiMat3x3f Name33;
                 epiMat4x4f Name34;
                 epiRect2f Name35;
+
+                [WriteOnly]
                 epiRect2d Name36;
 
                 # comment
@@ -976,14 +1010,13 @@ class TestIDLParser:
                 # comment
                 epiChar Name0 = 'f'; epiWChar Name1 = L'F'; epiBool Name2 = true; epiByte Name3;
 
-                epiSize_t Name4;
-                epiHash_t Name5;
-                epiU8 Name6;
-                epiU16 Name7;
+                [Transient, ReadOnly] { epiSize_t Name4; epiHash_t Name5; [Virtual] epiU8 Name6; epiU16 Name7; }
 
-                epiU32 Name8 = -1;                  epiU64 Name9;
+                epiU32 Name8    =   -1;                  epiU64 Name9;
+
+                [ ExpectMin ( -5 ) ]
                 epiS8 Name10;
-                epiS16 Name11 = 15; epiS32 Name12;
+                epiS16 Name11 =    15; epiS32 Name12;
                 epiS64 Name13;
                 epiFloat Name14;       
 
@@ -1004,7 +1037,7 @@ class TestIDLParser:
                 epiMat3x3f Name33;
                 epiMat4x4f Name34;
                 epiRect2f Name35;
-                epiRect2d Name36;
+                [WriteOnly] epiRect2d Name36;
 
                 # comment
                 # comment
@@ -1027,13 +1060,13 @@ class TestIDLParser:
                     .property(EpiPropertyBuilder().name('Name1').tokentype_type(TokenType.WCharType).value("L'F'").build())
                     .property(EpiPropertyBuilder().name('Name2').tokentype_type(TokenType.BoolType).value('true', TokenType.TrueLiteral).build())
                     .property(EpiPropertyBuilder().name('Name3').tokentype_type(TokenType.ByteType).build())
-                    .property(EpiPropertyBuilder().name('Name4').tokentype_type(TokenType.SizeTType).build())
-                    .property(EpiPropertyBuilder().name('Name5').tokentype_type(TokenType.HashTType).build())
-                    .property(EpiPropertyBuilder().name('Name6').tokentype_type(TokenType.UInt8Type).build())
-                    .property(EpiPropertyBuilder().name('Name7').tokentype_type(TokenType.UInt16Type).build())
+                    .property(EpiPropertyBuilder().name('Name4').tokentype_type(TokenType.SizeTType).attr(EpiAttributeBuilder().tokentype(TokenType.Transient).build()).attr(EpiAttributeBuilder().tokentype(TokenType.ReadOnly).build()).build())
+                    .property(EpiPropertyBuilder().name('Name5').tokentype_type(TokenType.HashTType).attr(EpiAttributeBuilder().tokentype(TokenType.Transient).build()).attr(EpiAttributeBuilder().tokentype(TokenType.ReadOnly).build()).build())
+                    .property(EpiPropertyBuilder().name('Name6').tokentype_type(TokenType.UInt8Type).attr(EpiAttributeBuilder().tokentype(TokenType.Transient).build()).attr(EpiAttributeBuilder().tokentype(TokenType.ReadOnly).build()).attr(EpiAttributeBuilder().tokentype(TokenType.Virtual).build()).build())
+                    .property(EpiPropertyBuilder().name('Name7').tokentype_type(TokenType.UInt16Type).attr(EpiAttributeBuilder().tokentype(TokenType.Transient).build()).attr(EpiAttributeBuilder().tokentype(TokenType.ReadOnly).build()).build())
                     .property(EpiPropertyBuilder().name('Name8').tokentype_type(TokenType.UInt32Type).value('-1').build())
                     .property(EpiPropertyBuilder().name('Name9').tokentype_type(TokenType.UInt64Type).build())
-                    .property(EpiPropertyBuilder().name('Name10').tokentype_type(TokenType.Int8Type).build())
+                    .property(EpiPropertyBuilder().name('Name10').tokentype_type(TokenType.Int8Type).attr(EpiAttributeBuilder().tokentype(TokenType.ExpectMin).param_positional(TokenType.IntegerLiteral, '-5').build()).build())
                     .property(EpiPropertyBuilder().name('Name11').tokentype_type(TokenType.Int16Type).value('15').build())
                     .property(EpiPropertyBuilder().name('Name12').tokentype_type(TokenType.Int32Type).build())
                     .property(EpiPropertyBuilder().name('Name13').tokentype_type(TokenType.Int64Type).build())
@@ -1041,8 +1074,8 @@ class TestIDLParser:
                     .property(EpiPropertyBuilder().name('Name15').tokentype_type(TokenType.DoubleFloatingType).build())
                     .property(EpiPropertyBuilder().name('Name16').tokentype_type(TokenType.StringType).value('"Hello"').build())
                     .property(EpiPropertyBuilder().name('Name17').tokentype_type(TokenType.WStringType).build())
-                    .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiProperty.Form.Template).tokentype_nested(TokenType.Identifier).build())
-                    .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiProperty.Form.Template).tokentype_nested(TokenType.SingleFloatingType).build())
+                    .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiProperty.Form.Template).token_nested(TokenType.Identifier, 'MyClassName').build())
+                    .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiProperty.Form.Template).token_nested(TokenType.SingleFloatingType).build())
                     .property(EpiPropertyBuilder().name('Name20').tokentype_type(TokenType.Vec2FType).build())
                     .property(EpiPropertyBuilder().name('Name_21').tokentype_type(TokenType.Vec2DType).build())
                     .property(EpiPropertyBuilder().name('Name22').tokentype_type(TokenType.Vec2SType).build())
@@ -1059,7 +1092,7 @@ class TestIDLParser:
                     .property(EpiPropertyBuilder().name('Name33').tokentype_type(TokenType.Mat3x3FType).build())
                     .property(EpiPropertyBuilder().name('Name34').tokentype_type(TokenType.Mat4x4FType).build())
                     .property(EpiPropertyBuilder().name('Name35').tokentype_type(TokenType.Rect2FType).build())
-                    .property(EpiPropertyBuilder().name('Name36').tokentype_type(TokenType.Rect2DType).build())
+                    .property(EpiPropertyBuilder().name('Name36').tokentype_type(TokenType.Rect2DType).attr(EpiAttributeBuilder().tokentype(TokenType.WriteOnly).build()).build())
                     .property(EpiPropertyBuilder().name('Name37').tokentype_type(TokenType.Rect2SType).build())
                     .property(EpiPropertyBuilder().name('Name38').tokentype_type(TokenType.Rect2UType).build())
                     .build()

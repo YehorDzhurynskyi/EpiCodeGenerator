@@ -18,10 +18,18 @@ class EpiAttribute:
 
     def __eq__(self, rhs):
 
-        if type(rhs) is not EpiAttribute:
+        if not isinstance(rhs, EpiAttribute):
             return False
 
-        return self.tokentype == rhs.tokentype
+        return \
+            self.tokentype == rhs.tokentype and \
+            self.__params_positional == rhs.__params_positional and \
+            self.__params_named == rhs.__params_named
+
+    def __repr__(self):
+
+        params_positional = '\n'.join([repr(p) for p in self.__params_positional])
+        return f'tokentype=({repr(self.tokentype)}):{params_positional}'
 
     @property
     def params(self):
@@ -74,12 +82,18 @@ class EpiSymbol(abc.ABC):
         return str(self.token)
 
     def __repr__(self):
-        return repr(self.token)
+
+        attrs = '\n'.join(repr(a) for a in self.__attrs)
+        return f'{repr(self.token)}, attrs={attrs}'
 
     def __eq__(self, rhs):
+
+        if not isinstance(rhs, EpiSymbol):
+            return False
+
         return \
             self.token == rhs.token and \
-            self.attrs == rhs.attrs
+            self.__attrs == rhs.__attrs
 
     @property
     def attrs(self):
@@ -121,7 +135,7 @@ class EpiProperty(EpiSymbol):
 
         self.tokentype = tokentype
         self.form = form
-        self.tokentype_nested = []
+        self.tokens_nested = []
         self.__tokenvalue = None
 
     @property
@@ -173,19 +187,20 @@ class EpiProperty(EpiSymbol):
 
     def __eq__(self, rhs):
 
-        if type(rhs) is not EpiProperty:
+        if not isinstance(rhs, EpiProperty):
             return False
 
         return \
             super(EpiProperty, self).__eq__(rhs) and \
             self.form == rhs.form and \
             self.__tokenvalue == rhs.__tokenvalue and \
-            self.tokentype == rhs.tokentype
+            self.tokentype == rhs.tokentype and \
+            self.tokens_nested == rhs.tokens_nested
 
     def __repr__(self):
 
-        rtokentype_nested = ', '.join([repr(t) for t in self.tokentype_nested])
-        r = f'{super(EpiProperty, self).__repr__()}, tokentype=({repr(self.tokentype)}), form={self.form}, value={self.__tokenvalue}, tokentype_nested={rtokentype_nested}'
+        rtokentype_nested = ', '.join([repr(t) for t in self.tokens_nested])
+        r = f'{super(EpiProperty, self).__repr__()}, tokentype=({repr(self.tokentype)}), form={self.form}, value={repr(self.__tokenvalue)}, tokentype_nested={rtokentype_nested}'
 
         return r
 
@@ -201,7 +216,7 @@ class EpiClass(EpiSymbol):
 
     def __eq__(self, rhs):
 
-        if type(rhs) is not EpiClass:
+        if not isinstance(rhs, EpiClass):
             return False
 
         return \
@@ -221,18 +236,30 @@ class EpiClass(EpiSymbol):
 class EpiAttributeBuilder:
 
     def __init__(self):
+
         self.__tokentype = None
+        self.__params_positional = []
 
     def tokentype(self, tokentype: TokenType):
 
         self.__tokentype = tokentype
         return self
 
+    def param_positional(self, tokentype: TokenType, tokentext: str):
+
+        self.__params_positional.append(Token(tokentype, 0, 0, '', tokentext))
+        return self
+
     def build(self):
 
         assert self.__tokentype is not None
 
-        return EpiAttribute(self.__tokentype)
+        attr = EpiAttribute(self.__tokentype)
+
+        for p in self.__params_positional:
+            attr.param_positional_push(p)
+
+        return attr
 
 
 class EpiPropertyBuilder:
@@ -240,12 +267,11 @@ class EpiPropertyBuilder:
     def __init__(self):
 
         self.__name = None
-        self.__tokentype_type = None
-        self.__tokentype_text = None
+        self.__tokentype = None
         self.__form = EpiProperty.Form.Plain
         self.__value = None
         self.__attrs = []
-        self.__tokentype_nested = []
+        self.__tokens_nested = []
 
     def name(self, name: str):
 
@@ -256,8 +282,8 @@ class EpiPropertyBuilder:
 
         assert tokentype != TokenType.Identifier or tokentext is not None, '<identifier> should be provided with a text'
 
-        self.__tokentype_type = tokentype
-        self.__tokentype_text = tokentext
+        tokentext = tokentext if tokentext is not None else TokenType.repr_of(tokentype)
+        self.__tokentype = Token(tokentype, 0, 0, '', tokentext)
 
         return self
 
@@ -268,10 +294,10 @@ class EpiPropertyBuilder:
 
     def value(self, value: str, tokentype: TokenType = None):
 
-        if tokentype is not None or self.__tokentype_type is not None:
+        if tokentype is not None or self.__tokentype is not None:
 
             if tokentype is None:
-                literals = TokenType.literals_of(self.__tokentype_type)
+                literals = TokenType.literals_of(self.__tokentype.tokentype)
                 assert len(literals) == 1
                 tokentype = literals[0]
         else:
@@ -286,24 +312,25 @@ class EpiPropertyBuilder:
         self.__attrs.append(attr)
         return self
 
-    def tokentype_nested(self, tokentype: TokenType):
+    def token_nested(self, tokentype: TokenType, tokentext: str = None):
 
-        self.__tokentype_nested.append(tokentype)
+        assert tokentype != TokenType.Identifier or tokentext is not None, '<identifier> should be provided with a text'
+
+        tokentext = tokentext if tokentext is not None else TokenType.repr_of(tokentype)
+        self.__tokens_nested.append(Token(tokentype, 0, 0, '', tokentext))
+
         return self
 
     def build(self):
 
         assert self.__name is not None
-        assert self.__tokentype_type is not None
+        assert self.__tokentype is not None
 
         token = Token(TokenType.Identifier, 0, 0, '', self.__name)
 
-        tokentype_text = self.__tokentype_text if self.__tokentype_text is not None else TokenType.repr_of(self.__tokentype_type)
-        tokentype = Token(self.__tokentype_type, 0, 0, '', tokentype_text)
-
-        prty = EpiProperty(token, tokentype, self.__form)
+        prty = EpiProperty(token, self.__tokentype, self.__form)
         prty.attrs = self.__attrs
-        prty.tokentype_nested = self.__tokentype_nested
+        prty.tokens_nested = self.__tokens_nested
 
         if self.__value is not None:
             prty.tokenvalue = self.__value
