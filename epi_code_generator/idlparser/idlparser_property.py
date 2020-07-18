@@ -72,7 +72,6 @@ def parse_property(parser: idl.IDLParser) -> EpiProperty:
                     tip="The assigned value isn't a literal",
                     fatal=False)
 
-        # TODO: add suppress exception
         if prty.tokentype.tokentype == TokenType.Identifier:
             parser._push_error(t, idl.IDLSyntaxErrorCode.IncorrectValueAssignment, 'Only fundamental types are assingable', fatal=False)
         elif prty.form == EpiProperty.Form.Pointer:

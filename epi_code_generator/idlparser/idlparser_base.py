@@ -25,32 +25,31 @@ class IDLSyntaxErrorCode(Enum):
     AttributeInvalidTarget = auto()
 
 
-SYNTAX_ERROR_MSGS = {
-    IDLSyntaxErrorCode.NoMatchingClosingBrace: 'No matching closing brace for',
-    IDLSyntaxErrorCode.NoMatchingClosingBracket: 'No matching closing bracket for',
-    IDLSyntaxErrorCode.NoSemicolonOnDeclaration: 'No `;` on the end of the declaration',
-    IDLSyntaxErrorCode.NoBodyOnDeclaration: 'The body of type declaration is absent',
-    IDLSyntaxErrorCode.MissingTypeDeclaration: 'Missing an user type declaration',
-    IDLSyntaxErrorCode.MissingTemplateArguments: 'Template type should have template argument list',
-    IDLSyntaxErrorCode.UnknownToken: 'Unknown token (the token is unrecognized)',
-    IDLSyntaxErrorCode.UnexpectedToken: 'Unexpected token (the token is recognized, but used in the wrong context)',
-    IDLSyntaxErrorCode.UnexpectedKeywordUsage: 'Unexpected keyword usage',
-    IDLSyntaxErrorCode.UnexpectedEOF: 'Unexpected end of file',
-    IDLSyntaxErrorCode.IncorrectValueLiteral: 'Incorrect value literal',
-    IDLSyntaxErrorCode.IncorrectValueAssignment: 'Incorrect value assignment',
-    IDLSyntaxErrorCode.AttributeConflict: 'Provided attribute conflicts with the other attribute',
-    IDLSyntaxErrorCode.AttributeInvalidParameters: 'Invalid attribute parameters',
-    IDLSyntaxErrorCode.AttributeInvalidTarget: 'An attribute was applied to the wrong target'
-}
-
-
 class IDLSyntaxError:
+
+    __SYNTAX_ERROR_MSGS = {
+        IDLSyntaxErrorCode.NoMatchingClosingBrace: 'No matching closing brace for',
+        IDLSyntaxErrorCode.NoMatchingClosingBracket: 'No matching closing bracket for',
+        IDLSyntaxErrorCode.NoSemicolonOnDeclaration: 'No `;` on the end of the declaration',
+        IDLSyntaxErrorCode.NoBodyOnDeclaration: 'The body of type declaration is absent',
+        IDLSyntaxErrorCode.MissingTypeDeclaration: 'Missing an user type declaration',
+        IDLSyntaxErrorCode.MissingTemplateArguments: 'Template type should have template argument list',
+        IDLSyntaxErrorCode.UnknownToken: 'Unknown token (the token is unrecognized)',
+        IDLSyntaxErrorCode.UnexpectedToken: 'Unexpected token (the token is recognized, but used in the wrong context)',
+        IDLSyntaxErrorCode.UnexpectedKeywordUsage: 'Unexpected keyword usage',
+        IDLSyntaxErrorCode.UnexpectedEOF: 'Unexpected end of file',
+        IDLSyntaxErrorCode.IncorrectValueLiteral: 'Incorrect value literal',
+        IDLSyntaxErrorCode.IncorrectValueAssignment: 'Incorrect value assignment',
+        IDLSyntaxErrorCode.AttributeConflict: 'Provided attribute conflicts with the other attribute',
+        IDLSyntaxErrorCode.AttributeInvalidParameters: 'Invalid attribute parameters',
+        IDLSyntaxErrorCode.AttributeInvalidTarget: 'An attribute was applied to the wrong target'
+    }
 
     def __init__(self, token: Token, err_code: IDLSyntaxErrorCode, tip: str):
 
         self.__token = token
         self.__err_code = err_code
-        self.__err_message = SYNTAX_ERROR_MSGS[err_code]
+        self.__err_message = IDLSyntaxError.__SYNTAX_ERROR_MSGS[err_code]
         self.__tip = tip
 
     @property
@@ -67,10 +66,10 @@ class IDLSyntaxError:
         return s
 
     def __repr__(self):
-        return f'{repr(self.__err_code)}: {self.__token} {self.__tip}'
+        return f'{repr(self.__err_code)}: {repr(self.__token)} {self.__tip}'
 
 
-class IDLParserFatalError(Exception):
+class IDLParserErrorFatal(Exception):
     pass
 
 
@@ -112,13 +111,10 @@ class IDLParser:
         self.syntax_errors.append(IDLSyntaxError(token, err_code, tip))
 
         if fatal:
-            raise IDLParserFatalError()
+            raise IDLParserErrorFatal()
 
 
     def _test(self, token: Token, expected: list, **kwargs) -> bool:
-
-        # TODO: throw some exception on fail if `required` is True, and silencly return False otherwise
-        # Perform here: `self.syntax_errors.append(IDLSyntaxError(token, IDLSyntaxErrorCode.?))`
 
         if token is None or token.tokentype not in expected:
 
@@ -168,7 +164,7 @@ class IDLParser:
 
                 registry[clss.name] = clss
 
-        except IDLParserFatalError:
+        except IDLParserErrorFatal:
             pass
 
         if len(self.syntax_errors) > 0:
