@@ -169,6 +169,24 @@ class TestIDLParser:
         (
             [
                 '''
+                class ParentClassName
+                {
+                    [Virtual]
+                    epiVec2f Name;
+                };
+                ''',
+                '''
+                class ClassName : ParentClassName
+                {
+                    epiS32 Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.DuplicatingSymbol] * 2
+        ),
+        (
+            [
+                '''
                 class AClassName
                 {
                     epiS32 Name;
