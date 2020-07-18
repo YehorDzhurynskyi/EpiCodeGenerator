@@ -90,10 +90,8 @@ WriteOnly
 WriteCallback
 ReadCallback
 Virtual
-ExpectMin
-ExpectMax
-ForceMin
-ForceMax
+Min
+Max
 Transient
 ValidIdentifier
 

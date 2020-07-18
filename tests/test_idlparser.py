@@ -646,7 +646,7 @@ class TestIDLParser:
             '''
             class A : B
             {
-                [ExpectMin(5)]
+                [Min(5)]
                 epiS32 Name = 4;
             };
             ''',
@@ -657,7 +657,7 @@ class TestIDLParser:
             '''
             class A : B
             {
-                [ExpectMax(5)]
+                [Max(5)]
                 epiS32 Name = 6;
             };
             ''',
@@ -668,7 +668,7 @@ class TestIDLParser:
             '''
             class A : B
             {
-                [ExpectMin(5)]
+                [Min(5)]
                 epiS32 Name;
             };
             ''',
@@ -679,7 +679,7 @@ class TestIDLParser:
             '''
             class A : B
             {
-                [ExpectMax(-1)]
+                [Max(-1)]
                 epiS32 Name;
             };
             ''',
@@ -690,7 +690,7 @@ class TestIDLParser:
             '''
             class A : B
             {
-                [ExpectMax(-1.043)]
+                [Max(-1.043)]
                 epiFloat Name;
             };
             ''',
@@ -701,7 +701,7 @@ class TestIDLParser:
             '''
             class A : B
             {
-                [ExpectMax(-1)]
+                [Max(-1)]
                 C Name;
             };
             ''',
@@ -843,6 +843,69 @@ class TestIDLParser:
             '''
             class A : B
             {
+                [Max(5, Force=true)]
+                epiS32 Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .parent('B')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.Int32Type)
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Max)
+                                        .param_positional(TokenType.IntegerLiteral, '5')
+                                        .param_named('Force', TokenType.TrueLiteral, 'true')
+                                        .build()
+                                )
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class A : B
+            {
+                [Max(Force=true, 5)]
+                epiS32 Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.AttributeInvalidParameters]
+        ),
+        (
+            '''
+            class A : B
+            {
+                [Max(Force=true, 5)]
+                epiS32 Name = 4.0f;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.AttributeInvalidParameters, idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            class A : B
+            {
+                [Max(force=true, 5)]
+                epiS32 Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.UnknownToken]
+        ),
+        (
+            '''
+            class A : B
+            {
                 [Virtual]
                 epiFloat Name;
             };
@@ -878,8 +941,8 @@ class TestIDLParser:
         parser = idl.IDLParser(tokens)
         registry_local, errors_syntax = parser.parse()
 
-        assert len(registry_local) == len(expected_registry)
         assert len(errors_syntax) == len(expected_errors)
+        assert len(registry_local) == len(expected_registry)
 
         assert list(registry_local.keys()) == list(expected_registry.keys())
 
@@ -1098,10 +1161,10 @@ class TestIDLParser:
             {
                 [Transient, WriteOnly]
                 {
-                    [ForceMax(5)]
+                    [Max(5, Force=true)]
                     epiS32 A = 1;
 
-                    [ExpectMin(-5), ExpectMax(5)]
+                    [Min(-5), Max(5)]
                     {
                         epiS32 B = 1;
                         epiS32 C = -5;
@@ -1130,7 +1193,7 @@ class TestIDLParser:
                 epiU32 Name8 = -1;
                 epiU64 Name9;
 
-                [ExpectMin(-5)]
+                [Min(-5)]
                 epiS8 Name10;
                 epiS16 Name11 = 15;
                 epiS32 Name12;
@@ -1177,10 +1240,10 @@ class TestIDLParser:
             {
                 [Transient, WriteOnly]
                 {
-                    [ForceMax(5)] { epiS32 A = 1; }
+                    [Max(5, Force=true)] { epiS32 A = 1; }
 
-                    [ExpectMin(-5)]
-                    [ExpectMax(5)]
+                    [Min(-5)]
+                    [Max(5)]
                     {
                         epiS32 B = 1;
                         epiS32 C = -5;
@@ -1199,7 +1262,7 @@ class TestIDLParser:
 
                 epiU32 Name8    =   -1;                  epiU64 Name9;
 
-                [ ExpectMin ( -5 ) ]
+                [ Min ( -5 ) ]
                 epiS8 Name10;
                 epiS16 Name11 =    15; epiS32 Name12;
                 epiS64 Name13;
@@ -1251,8 +1314,9 @@ class TestIDLParser:
                                 .build())
                         .attr(
                             EpiAttributeBuilder()
-                                .tokentype(TokenType.ForceMax)
+                                .tokentype(TokenType.Max)
                                 .param_positional(TokenType.IntegerLiteral, '5')
+                                .param_named('Force', TokenType.TrueLiteral, 'true')
                                 .build())
                         .value('1').build())
                     .property(EpiPropertyBuilder().name('B').tokentype_type(TokenType.Int32Type)
@@ -1266,12 +1330,12 @@ class TestIDLParser:
                                 .build())
                         .attr(
                             EpiAttributeBuilder()
-                                .tokentype(TokenType.ExpectMin)
+                                .tokentype(TokenType.Min)
                                 .param_positional(TokenType.IntegerLiteral, '-5')
                                 .build())
                         .attr(
                             EpiAttributeBuilder()
-                                .tokentype(TokenType.ExpectMax)
+                                .tokentype(TokenType.Max)
                                 .param_positional(TokenType.IntegerLiteral, '5')
                                 .build())
                         .value('1').build())
@@ -1286,12 +1350,12 @@ class TestIDLParser:
                                 .build())
                         .attr(
                             EpiAttributeBuilder()
-                                .tokentype(TokenType.ExpectMin)
+                                .tokentype(TokenType.Min)
                                 .param_positional(TokenType.IntegerLiteral, '-5')
                                 .build())
                         .attr(
                             EpiAttributeBuilder()
-                                .tokentype(TokenType.ExpectMax)
+                                .tokentype(TokenType.Max)
                                 .param_positional(TokenType.IntegerLiteral, '5')
                                 .build())
                         .value('-5').build())
@@ -1306,12 +1370,12 @@ class TestIDLParser:
                                 .build())
                         .attr(
                             EpiAttributeBuilder()
-                                .tokentype(TokenType.ExpectMin)
+                                .tokentype(TokenType.Min)
                                 .param_positional(TokenType.IntegerLiteral, '-5')
                                 .build())
                         .attr(
                             EpiAttributeBuilder()
-                                .tokentype(TokenType.ExpectMax)
+                                .tokentype(TokenType.Max)
                                 .param_positional(TokenType.IntegerLiteral, '5')
                                 .build())
                         .value('1').build())
@@ -1330,7 +1394,7 @@ class TestIDLParser:
                     .property(EpiPropertyBuilder().name('Name7').tokentype_type(TokenType.UInt16Type).attr(EpiAttributeBuilder().tokentype(TokenType.Transient).build()).attr(EpiAttributeBuilder().tokentype(TokenType.ReadOnly).build()).build())
                     .property(EpiPropertyBuilder().name('Name8').tokentype_type(TokenType.UInt32Type).value('-1').build())
                     .property(EpiPropertyBuilder().name('Name9').tokentype_type(TokenType.UInt64Type).build())
-                    .property(EpiPropertyBuilder().name('Name10').tokentype_type(TokenType.Int8Type).attr(EpiAttributeBuilder().tokentype(TokenType.ExpectMin).param_positional(TokenType.IntegerLiteral, '-5').build()).build())
+                    .property(EpiPropertyBuilder().name('Name10').tokentype_type(TokenType.Int8Type).attr(EpiAttributeBuilder().tokentype(TokenType.Min).param_positional(TokenType.IntegerLiteral, '-5').build()).build())
                     .property(EpiPropertyBuilder().name('Name11').tokentype_type(TokenType.Int16Type).value('15').build())
                     .property(EpiPropertyBuilder().name('Name12').tokentype_type(TokenType.Int32Type).build())
                     .property(EpiPropertyBuilder().name('Name13').tokentype_type(TokenType.Int64Type).build())

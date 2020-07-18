@@ -87,10 +87,8 @@ class TokenType(Enum):
     WriteCallback = auto()
     ReadCallback = auto()
     Virtual = auto()
-    ExpectMin = auto()
-    ExpectMax = auto()
-    ForceMin = auto()
-    ForceMax = auto()
+    Min = auto()
+    Max = auto()
     # NoDuplicate = auto()
     Transient = auto()
     # AdditionalInterface = auto()
@@ -228,7 +226,10 @@ class Token:
             return str(self.text)
         elif self.tokentype == TokenType.IntegerLiteral:
             return int(self.text)
-        elif self.tokentype in [TokenType.SingleFloatingLiteral, TokenType.DoubleFloatingLiteral]:
+        elif self.tokentype == TokenType.SingleFloatingLiteral:
+            assert self.text[-1] == 'f'
+            return float(self.text[:-1])
+        elif self.tokentype == TokenType.DoubleFloatingLiteral:
             return float(self.text)
         elif self.tokentype == TokenType.TrueLiteral:
             return True
@@ -372,10 +373,8 @@ class Tokenizer:
         'WriteCallback': TokenType.WriteCallback,
         'ReadCallback': TokenType.ReadCallback,
         'Virtual': TokenType.Virtual,
-        'ExpectMin': TokenType.ExpectMin,
-        'ExpectMax': TokenType.ExpectMax,
-        'ForceMin': TokenType.ForceMin,
-        'ForceMax': TokenType.ForceMax,
+        'Min': TokenType.Min,
+        'Max': TokenType.Max,
         # 'NoDuplicate': TokenType.NoDuplicate,
         'Transient': TokenType.Transient,
         # 'DllEntry': TokenType.DllEntry
@@ -612,7 +611,7 @@ class Tokenizer:
             tokentype_suspected = TokenType.SingleFloatingLiteral
             self.at += 1
 
-        if self._ch().isspace() or self._ch() in ['\0', ';', ')']:
+        if self._ch().isspace() or self._ch() in ['\0', ';', ')', ',']:
             token.tokentype = tokentype_suspected
 
         if token.tokentype == TokenType.Unknown:

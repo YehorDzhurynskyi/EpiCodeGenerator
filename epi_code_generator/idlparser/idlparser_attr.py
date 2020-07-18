@@ -24,10 +24,8 @@ __EPI_ATTRIBUTE_CONFLICT_TABLE = {
     TokenType.ReadOnly: [TokenType.WriteOnly],
     TokenType.WriteOnly: [TokenType.ReadOnly],
     TokenType.Transient: [],
-    TokenType.ExpectMin: [TokenType.ReadOnly, TokenType.ForceMin],
-    TokenType.ExpectMax: [TokenType.ReadOnly, TokenType.ForceMax],
-    TokenType.ForceMin: [TokenType.ReadOnly, TokenType.ExpectMin],
-    TokenType.ForceMax: [TokenType.ReadOnly, TokenType.ExpectMax]
+    TokenType.Min: [TokenType.ReadOnly],
+    TokenType.Max: [TokenType.ReadOnly]
 }
 
 
@@ -223,7 +221,7 @@ def introduce_Transient(attr: EpiAttribute, target: EpiSymbol):
     __validate_parameters_named(attr, {})
 
 
-def introduce_ExpectMin(attr: EpiAttribute, target: EpiSymbol):
+def introduce_Min(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
     __validate_target(attr, target, [EpiProperty])
@@ -240,11 +238,13 @@ def introduce_ExpectMin(attr: EpiAttribute, target: EpiSymbol):
                                           TokenType.ByteType,
                                           TokenType.SizeTType])
     __validate_parameters_positional(attr, [TokenType.literals_of(target.tokentype.tokentype)])
-    __validate_parameters_named(attr, {})
+    __validate_parameters_named(attr, {
+        'Force': [TokenType.TrueLiteral, TokenType.FalseLiteral]
+    })
     __validate_target_value_greater_eq(attr, target, attr.param_positional_at(0).value())
 
 
-def introduce_ExpectMax(attr: EpiAttribute, target: EpiSymbol):
+def introduce_Max(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)
     __validate_target(attr, target, [EpiProperty])
@@ -261,49 +261,9 @@ def introduce_ExpectMax(attr: EpiAttribute, target: EpiSymbol):
                                           TokenType.ByteType,
                                           TokenType.SizeTType])
     __validate_parameters_positional(attr, [TokenType.literals_of(target.tokentype.tokentype)])
-    __validate_parameters_named(attr, {})
-    __validate_target_value_less_eq(attr, target, attr.param_positional_at(0).value())
-
-
-def introduce_ForceMin(attr: EpiAttribute, target: EpiSymbol):
-
-    __validate_conflicts(attr, target)
-    __validate_target(attr, target, [EpiProperty])
-    __validate_target_type(attr, target, [TokenType.SingleFloatingType,
-                                          TokenType.DoubleFloatingType,
-                                          TokenType.Int8Type,
-                                          TokenType.Int16Type,
-                                          TokenType.Int32Type,
-                                          TokenType.Int64Type,
-                                          TokenType.UInt8Type,
-                                          TokenType.UInt16Type,
-                                          TokenType.UInt32Type,
-                                          TokenType.UInt64Type,
-                                          TokenType.ByteType,
-                                          TokenType.SizeTType])
-    __validate_parameters_positional(attr, [TokenType.literals_of(target.tokentype.tokentype)])
-    __validate_parameters_named(attr, {})
-    __validate_target_value_greater_eq(attr, target, attr.param_positional_at(0).value())
-
-
-def introduce_ForceMax(attr: EpiAttribute, target: EpiSymbol):
-
-    __validate_conflicts(attr, target)
-    __validate_target(attr, target, [EpiProperty])
-    __validate_target_type(attr, target, [TokenType.SingleFloatingType,
-                                          TokenType.DoubleFloatingType,
-                                          TokenType.Int8Type,
-                                          TokenType.Int16Type,
-                                          TokenType.Int32Type,
-                                          TokenType.Int64Type,
-                                          TokenType.UInt8Type,
-                                          TokenType.UInt16Type,
-                                          TokenType.UInt32Type,
-                                          TokenType.UInt64Type,
-                                          TokenType.ByteType,
-                                          TokenType.SizeTType])
-    __validate_parameters_positional(attr, [TokenType.literals_of(target.tokentype.tokentype)])
-    __validate_parameters_named(attr, {})
+    __validate_parameters_named(attr, {
+        'Force': [TokenType.TrueLiteral, TokenType.FalseLiteral]
+    })
     __validate_target_value_less_eq(attr, target, attr.param_positional_at(0).value())
 
 
@@ -330,7 +290,7 @@ def __parse_attr(parser: idl.IDLParser) -> EpiAttribute:
             if has_named_params:
 
                 tip = 'Named parameters should come after positional parameters'
-                parser._push_error(param, idl.IDLSyntaxErrorCode.AttributeInvalidParameters, tip)
+                parser._push_error(param, idl.IDLSyntaxErrorCode.AttributeInvalidParameters, tip, fatal=False)
 
             attr.param_positional_push(param)
         else:
