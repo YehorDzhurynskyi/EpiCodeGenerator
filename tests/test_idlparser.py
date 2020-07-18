@@ -799,6 +799,50 @@ class TestIDLParser:
             '''
             class A : B
             {
+                [ReadCallback(SuppressRef=true) ReadOnly]
+                C Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.NoMatchingClosingBracket]
+        ),
+        (
+            '''
+            class A : B
+            {
+                [ReadCallback(SuppressRef=true) ReadOnly
+                C Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.NoMatchingClosingBracket]
+        ),
+        (
+            '''
+            class A : B
+            {
+                [ReadCallback(SuppressRef=true), ReadOnly
+                C Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.NoMatchingClosingBracket]
+        ),
+        (
+            '''
+            class A : B
+            {
+                [ReadCallback(SuppressRef=true),, ReadOnly]
+                C Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.UnexpectedToken]
+        ),
+        (
+            '''
+            class A : B
+            {
                 [Virtual]
                 epiFloat Name;
             };
@@ -1050,6 +1094,22 @@ class TestIDLParser:
     @pytest.mark.parametrize('text', [
         (
             '''
+            class ParentClassName
+            {
+                [Transient, WriteOnly]
+                {
+                    [ForceMax(5)]
+                    epiS32 A = 1;
+
+                    [ExpectMin(-5), ExpectMax(5)]
+                    {
+                        epiS32 B = 1;
+                        epiS32 C = -5;
+                        epiS32 D = 1;
+                    }
+                }
+            };
+
             class ClassName : ParentClassName
             {
                 epiChar Name0 = 'f';
@@ -1113,6 +1173,22 @@ class TestIDLParser:
         ),
         (
             '''
+            class ParentClassName
+            {
+                [Transient, WriteOnly]
+                {
+                    [ForceMax(5)] { epiS32 A = 1; }
+
+                    [ExpectMin(-5)]
+                    [ExpectMax(5)]
+                    {
+                        epiS32 B = 1;
+                        epiS32 C = -5;
+                        epiS32 D = 1;
+                    }
+                }
+            };
+
             class
             ClassName
                 : ParentClassName { # comment
@@ -1161,6 +1237,85 @@ class TestIDLParser:
 
         expected_errors = []
         expected_registry = {
+            'ParentClassName':
+                EpiClassBuilder()
+                    .name('ParentClassName')
+                    .property(EpiPropertyBuilder().name('A').tokentype_type(TokenType.Int32Type)
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.Transient)
+                                .build())
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.WriteOnly)
+                                .build())
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.ForceMax)
+                                .param_positional(TokenType.IntegerLiteral, '5')
+                                .build())
+                        .value('1').build())
+                    .property(EpiPropertyBuilder().name('B').tokentype_type(TokenType.Int32Type)
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.Transient)
+                                .build())
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.WriteOnly)
+                                .build())
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.ExpectMin)
+                                .param_positional(TokenType.IntegerLiteral, '-5')
+                                .build())
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.ExpectMax)
+                                .param_positional(TokenType.IntegerLiteral, '5')
+                                .build())
+                        .value('1').build())
+                    .property(EpiPropertyBuilder().name('C').tokentype_type(TokenType.Int32Type)
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.Transient)
+                                .build())
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.WriteOnly)
+                                .build())
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.ExpectMin)
+                                .param_positional(TokenType.IntegerLiteral, '-5')
+                                .build())
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.ExpectMax)
+                                .param_positional(TokenType.IntegerLiteral, '5')
+                                .build())
+                        .value('-5').build())
+                    .property(EpiPropertyBuilder().name('D').tokentype_type(TokenType.Int32Type)
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.Transient)
+                                .build())
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.WriteOnly)
+                                .build())
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.ExpectMin)
+                                .param_positional(TokenType.IntegerLiteral, '-5')
+                                .build())
+                        .attr(
+                            EpiAttributeBuilder()
+                                .tokentype(TokenType.ExpectMax)
+                                .param_positional(TokenType.IntegerLiteral, '5')
+                                .build())
+                        .value('1').build())
+                    .build(),
             'ClassName':
                 EpiClassBuilder()
                     .name('ClassName')
