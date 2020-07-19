@@ -13,8 +13,8 @@ from epi_code_generator.linker import linker as ln
 import pytest
 
 
-class TestIDLParser:
-
+@pytest.mark.order(2)
+class TestLinker:
 
     @pytest.mark.parametrize('contents,expected_errors', [
         (

@@ -12,6 +12,7 @@ from epi_code_generator.idlparser import idlparser_base as idl
 import pytest
 
 
+@pytest.mark.order(1)
 class TestIDLParser:
 
     def test_empty(self, tmpdir: str):
@@ -31,7 +32,7 @@ class TestIDLParser:
 
         assert len(registry_local) == 0 and len(errors_syntax) == 0
 
-    @pytest.mark.parametrize('text,expected_registry,expected_errors', [
+    @pytest.mark.parametrize('content,expected_registry,expected_errors', [
         (
             'class A {};',
             {
@@ -942,13 +943,13 @@ class TestIDLParser:
             [idl.IDLSyntaxErrorCode.DuplicatingSymbol]
         ),
     ])
-    def test_sequence(self, tmpdir: str, text: str, expected_registry: dict, expected_errors: list):
+    def test_sequence(self, tmpdir: str, content: str, expected_registry: dict, expected_errors: list):
 
         assert len(expected_registry) * len(expected_errors) == 0 and (len(expected_registry) != 0 or len(expected_errors) != 0)
 
         path = f'{tmpdir}/test.epi'
         with open(path, 'w') as f:
-            f.write(text)
+            f.write(content)
 
         tokenizer = Tokenizer(path, path)
         tokens = tokenizer.tokenize()
@@ -969,7 +970,7 @@ class TestIDLParser:
 
         return registry_local, errors_syntax
 
-    @pytest.mark.parametrize('text,expected_registry,expected_errors', [
+    @pytest.mark.parametrize('content,expected_registry,expected_errors', [
         (
             '''
             class A : B
@@ -1157,9 +1158,9 @@ class TestIDLParser:
             []
         ),
     ])
-    def test_sequence_builtin(self, tmpdir: str, text: str, expected_registry: dict, expected_errors: list):
+    def test_sequence_builtin(self, tmpdir: str, content: str, expected_registry: dict, expected_errors: list):
 
-        registry_local, _ = self.test_sequence(tmpdir, text, expected_registry, expected_errors)
+        registry_local, _ = self.test_sequence(tmpdir, content, expected_registry, expected_errors)
 
         builtins = [property.tokentype.text for property in list(registry_local.values())[0].properties]
         builtins.sort()
@@ -1169,7 +1170,7 @@ class TestIDLParser:
 
         assert builtins == exp_builtins, 'Some builtin type is missing'
 
-    @pytest.mark.parametrize('text', [
+    @pytest.mark.parametrize('content', [
         (
             '''
             class ParentClassName
@@ -1311,7 +1312,7 @@ class TestIDLParser:
             '''
         ),
     ])
-    def test_sequence_formatting(self, tmpdir: str, text: str):
+    def test_sequence_formatting(self, tmpdir: str, content: str):
 
         expected_errors = []
         expected_registry = {
@@ -1441,5 +1442,5 @@ class TestIDLParser:
                     .build()
         }
 
-        self.test_sequence(tmpdir, text, expected_registry, expected_errors)
+        self.test_sequence(tmpdir, content, expected_registry, expected_errors)
 

@@ -54,6 +54,10 @@ class Linker:
         self.__registry = {}
         self.__linker_errors = []
 
+    @property
+    def registry(self):
+        return self.__registry
+
     def _push_error(self, symbol: EpiSymbol, err_code: LinkerErrorCode, tip: str = ''):
         self.__linker_errors.append(LinkerError(symbol, err_code, tip))
 
@@ -84,7 +88,8 @@ class Linker:
         typeids_local = _typeids(list(registry.values()))
         typeids_local_typeids_local = [(lhs, rhs) for lhs in typeids_local for rhs in typeids_local]
 
-        # NOTE: `pids_pids` is cartesian product A * A, so we need exclude (a0, a0), (a1, a1) and (a0, a1), (a1, a0) pairs
+        # NOTE: `typeids_local_typeids_local` is cartesian product A * A,
+        # so we need exclude (a0, a0), (a1, a1) and (a0, a1), (a1, a0) pairs
         ii = 0
         typeids_local_len = len(typeids_local)
         for i in range(typeids_local_len):

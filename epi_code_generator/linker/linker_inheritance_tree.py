@@ -83,7 +83,8 @@ class InheritanceTree:
                 pids = _pids(prts)
                 pids_pids = [(lhs, rhs) for lhs in pids for rhs in pids]
 
-                # NOTE: `pids_pids` is cartesian product A * A, so we need exclude (a0, a0), (a1, a1) and (a0, a1), (a1, a0) pairs
+                # NOTE: `pids_pids` is cartesian product A * A,
+                # so we need exclude (a0, a0), (a1, a1) and (a0, a1), (a1, a0) pairs
                 ii = 0
                 pids_len = len(pids)
                 for i in range(pids_len):
