@@ -4,6 +4,7 @@ from epi_code_generator.symbol import EpiSymbol
 from epi_code_generator.symbol import EpiProperty
 
 from enum import Enum, auto
+import zlib
 
 
 class LinkerErrorCode(Enum):
@@ -58,15 +59,47 @@ class Linker:
 
     def register(self, registry: dict):
 
-        intersection = self.__registry.keys() & registry.keys()
-        if len(intersection) != 0:
+        def _typeids(symbols: list) -> set:
+            return [(s, hex(zlib.crc32(s.name.encode()) & 0xffffffff)) for s in symbols]
 
-            for v in intersection:
+        def _validate_duplicates(typeid_pairs: list) -> bool:
 
-                tip = f'{v} is already defined in {self.__registry[v].token.filepath}'
-                self._push_error(registry[v], LinkerErrorCode.DuplicatingSymbol, tip)
+            valid = True
+            for lhs, rhs in typeid_pairs:
 
-        else:
+                if lhs[0].name == rhs[0].name:
+
+                    valid = False
+                    tip = f'The symbol has been already defined in `{rhs[0].token.filepath}`'
+                    self._push_error(lhs[0], LinkerErrorCode.DuplicatingSymbol, tip)
+
+                elif lhs[1] == rhs[1]:
+
+                    valid = False
+                    tip = f'Hash collision with `{rhs[0].name}` defined in `{rhs[0].token.filepath}`'
+                    self._push_error(lhs[0], LinkerErrorCode.HashCollision, tip)
+
+            return valid
+
+        typeids_local = _typeids(list(registry.values()))
+        typeids_local_typeids_local = [(lhs, rhs) for lhs in typeids_local for rhs in typeids_local]
+
+        # NOTE: `pids_pids` is cartesian product A * A, so we need exclude (a0, a0), (a1, a1) and (a0, a1), (a1, a0) pairs
+        ii = 0
+        typeids_local_len = len(typeids_local)
+        for i in range(typeids_local_len):
+
+            del typeids_local_typeids_local[i + ii : typeids_local_len + ii]
+            ii += i
+
+        valid = _validate_duplicates(typeids_local_typeids_local)
+
+        typeids_global = _typeids(list(self.__registry.values()))
+        typeids_local_typeids_global = [(lhs, rhs) for lhs in typeids_local for rhs in typeids_global]
+
+        valid = _validate_duplicates(typeids_local_typeids_global) and valid
+
+        if valid:
             self.__registry = { **self.__registry, **registry }
 
     def link(self) -> list:
@@ -86,7 +119,7 @@ class Linker:
 
                 if p.tokentype_basename() not in self.__registry:
 
-                    tip = f'No such symbol exists with a name {p.tokentype.text}'
+                    tip = f'No such symbol exists: `{p.tokentype.text}`'
                     self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
 
                 elif p.tokentype_basename() == sym.name and not p.is_polymorphic():
