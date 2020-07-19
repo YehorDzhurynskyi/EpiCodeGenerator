@@ -1,18 +1,17 @@
+from epi_code_generator.symbol import EpiSymbol
+from epi_code_generator.symbol import EpiClass
+
+from epi_code_generator.code_generator import code_generator_emitter as emmiter
+from epi_code_generator.code_generator import code_generator_emitter as emmiter
+from epi_code_generator.code_generator import code_generator_emitter as emmiter
+from epi_code_generator.code_generator import code_generator_emitter as emmiter
+from epi_code_generator.code_generator import code_generator_emitter as emmiter
+from epi_code_generator.code_generator import code_generator_emitter as emmiter
+
 import os
-import zlib
 import pickle
 import hashlib
 from enum import Enum, auto
-
-from ..symbol import EpiSymbol
-from ..symbol import EpiClass
-
-from .code_generator_emitter import emit_sekeleton_file
-from .code_generator_emitter import emit_skeleton_class
-from .code_generator_emitter import emit_class_declaration
-from .code_generator_emitter import emit_class_declaration_hidden
-from .code_generator_emitter import emit_class_serialization
-from .code_generator_emitter import emit_class_meta
 
 
 class CodeGenerationErrorCode(Enum):
@@ -21,105 +20,130 @@ class CodeGenerationErrorCode(Enum):
     CorruptedAnchor = auto()
 
 
-CODE_GENERATION_ERROR_MSGS = {
-    CodeGenerationErrorCode.CorruptedFile: 'File corrupted',
-    CodeGenerationErrorCode.CorruptedAnchor: 'Anchor corrupted'
-}
-
-
 class CodeGenerationError(Exception):
+
+    __CODE_GENERATION_ERROR_MSGS = {
+        CodeGenerationErrorCode.CorruptedFile: 'File corrupted',
+        CodeGenerationErrorCode.CorruptedAnchor: 'Anchor corrupted'
+    }
 
     def __init__(self, basename, err_code, tip = ''):
 
-        self.basename = basename
-        self.err_code = err_code
-        self.err_message = CODE_GENERATION_ERROR_MSGS[err_code]
-        self.tip = tip
+        self.__basename = basename
+        self.__err_code = err_code
+        self.__err_message = CodeGenerationError.__CODE_GENERATION_ERROR_MSGS[err_code]
+        self.__tip = tip
 
     def __str__(self):
 
-        s = f'Code Generation error {self.basename}: {self.err_message}'
-        if len(self.tip) != 0:
-            s = f'{s} ({self.tip})'
+        s = f'Code Generation error {self.__basename}: {self.__err_message}'
+        if len(self.__tip) != 0:
+            s = f'{s} ({self.__tip})'
 
         return s
+
+    @property
+    def err_code(self):
+        return self.__err_code
 
 
 class CodeGenerator:
 
-    def __init__(self, input_dir: str, output_dir: str, output_dir_cxx_hxx: str):
+    def __init__(self, symbols: list, dir_input: str, dir_output: str, dir_output_build: str):
 
-        self.input_dir = input_dir
-        self.output_dir = output_dir
-        self.output_dir_cxx_hxx = output_dir_cxx_hxx
-        self.generated_files_cache = {}
-        self.files_outbuff_cache = {}
+        self.__symbols = symbols
+        self.__dir_input = dir_input
+        self.__dir_output = dir_output
+        self.__dir_output_build = dir_output_build
 
-        if os.path.exists(f'{output_dir_cxx_hxx}/epigen_cache.bin'):
+        self.__codegen_erros = []
 
-            with open(f'{output_dir_cxx_hxx}/epigen_cache.bin', 'rb') as f:
-                self.generated_files_cache = pickle.load(f)
+        self.__cache_files_generated = {}
+        self.__cache_files_storebuff = {}
+
+        if os.path.exists(f'{self.__dir_output_build}/epigen_cache.bin'):
+
+            with open(f'{self.__dir_output_build}/epigen_cache.bin', 'rb') as f:
+                self.__cache_files_generated = pickle.load(f)
 
     def dump(self):
 
-        for path, content in self.files_outbuff_cache.items():
+        for path, content in self.__cache_files_storebuff.items():
 
             with open(path, 'w') as f:
                 f.write(content)
 
-            self.generated_files_cache[path] = hashlib.md5(content.encode()).hexdigest()
+            self.__cache_files_generated[path] = hashlib.md5(content.encode()).hexdigest()
 
-        with open(f'{self.output_dir_cxx_hxx}/epigen_cache.bin', 'wb') as f:
-            pickle.dump(self.generated_files_cache, f)
+        with open(f'{self.__dir_output_build}/epigen_cache.bin', 'wb') as f:
+            pickle.dump(self.__cache_files_generated, f)
 
-    def _lookup(self, needle: str, basename: str, ext: str) -> int:
+    def _content_load(self, basename: str, ext: str) -> str:
 
-        assert ext == 'h' or ext == 'cpp'
+        filepath = self._filepath_of(basename, ext)
+        if filepath not in self.__cache_files_storebuff:
 
-        path = f'{os.path.join(self.output_dir, basename)}.{ext}'
-        if path not in self.files_outbuff_cache:
-
-            with open(path, 'r') as f:
+            with open(filepath, 'r') as f:
 
                 content = f.read()
-                self.files_outbuff_cache[path] = content
+                self.__cache_files_storebuff[filepath] = content
 
-        content = self.files_outbuff_cache[path]
+        content = self.__cache_files_storebuff[filepath]
 
-        return content.find(needle)
+        return content
 
-    def _should_be_regenerated(self, basename: str, ext: str):
+    def _content_store(self, content: str, basename: str, ext: str):
 
-        if ext == 'cxx' or ext == 'hxx':
-            filename = f'{os.path.join(self.output_dir_cxx_hxx, basename)}.{ext}'
-        elif ext == 'cpp' or ext == 'h':
-            filename = f'{os.path.join(self.output_dir, basename)}.{ext}'
-        else:
-            assert False, "Unexpected file extension"
+        filepath = self._filepath_of(basename, ext)
+        self.__cache_files_storebuff[filepath] = content
 
-        if not os.path.exists(filename):
+    def _lookup(self, needle: str, basename: str, ext: str) -> int:
+        return self._content_load(basename, ext).find(needle)
+
+    def _filepath_of(self, basename: str, ext: str) -> str:
+
+        assert ext == 'h' or ext == 'cpp' or ext == 'hxx' or ext == 'cxx' or ext == 'epi'
+
+        outdirs = {
+            'cxx': self.__dir_output_build,
+            'hxx': self.__dir_output_build,
+            'cpp': self.__dir_output,
+            'h': self.__dir_output,
+            'epi': self.__dir_input
+        }
+
+        outdir = outdirs[ext]
+
+        return f'{os.path.join(outdir, basename)}.{ext}'
+
+
+    def _is_dirty(self, basename: str, ext: str):
+
+        filepath = self._filepath_of(basename, ext)
+
+        if not os.path.exists(filepath):
             return True
 
-        if filename not in self.generated_files_cache:
+        if filepath not in self.__cache_files_generated:
             return True
 
-        checksum = self.generated_files_cache[filename]
-        if self._calc_file_checksum(filename) != checksum:
+        checksum = self.__cache_files_generated[filepath]
+        if self._file_checksum(filepath) != checksum:
             return True
 
-        epifilename = f'{os.path.join(self.input_dir, basename)}.epi'
-        assert os.path.exists(epifilename)
+        epifilepath = f'{os.path.join(self.__dir_input, basename)}.epi'
+        assert os.path.exists(epifilepath)
 
-        if epifilename not in self.generated_files_cache:
+        if epifilepath not in self.__cache_files_generated:
             return True
 
-        epichecksum = self.generated_files_cache[epifilename]
-        if self._calc_file_checksum(epifilename) != epichecksum:
+        epichecksum = self.__cache_files_generated[epifilepath]
+        if self._file_checksum(epifilepath) != epichecksum:
             return True
 
         return False
 
-    def _calc_file_checksum(self, filename: str):
+    def _file_checksum(self, filename: str):
 
         with open(filename, 'r') as f:
 
@@ -135,17 +159,7 @@ class CodeGenerator:
                               before: str = None,
                               after: str = None):
 
-        outdir = self.output_dir if ext == 'h' or ext == 'cpp' else self.output_dir_cxx_hxx
-
-        path = f'{os.path.join(outdir, basename)}.{ext}'
-        if path not in self.files_outbuff_cache:
-
-            with open(path, 'r') as f:
-                content = f.read()
-
-        else:
-            content = self.files_outbuff_cache[path]
-
+        content = self._content_load(basename, ext)
         if before is None and after is None:
             lbound = len(content)
             rbound = len(content)
@@ -165,53 +179,52 @@ class CodeGenerator:
             tip = f'Can\'t find `{before if before is not None else after}` anchor'
             raise CodeGenerationError(f'{basename}.{ext}', CodeGenerationErrorCode.CorruptedFile, tip)
 
-        self.files_outbuff_cache[path] = content[:lbound] + inj + content[rbound:]
+        newcontent = content[:lbound] + inj + content[rbound:]
+        self._content_store(newcontent, basename, ext)
 
-    def code_generate(self, symbol: EpiSymbol, basename: str):
+    def code_generate(self, symbol: EpiSymbol, basename: str) -> list:
 
-        os.makedirs(os.path.dirname(os.path.join(self.output_dir, basename)), exist_ok=True)
-        os.makedirs(os.path.dirname(os.path.join(self.output_dir_cxx_hxx, basename)), exist_ok=True)
+        os.makedirs(os.path.dirname(os.path.join(self.__dir_output, basename)), exist_ok=True)
+        os.makedirs(os.path.dirname(os.path.join(self.__dir_output_build, basename)), exist_ok=True)
         basename = os.path.splitext(basename)[0]
 
         assert isinstance(symbol, EpiClass)
 
-        if self._should_be_regenerated(basename, 'hxx'):
+        if self._is_dirty(basename, 'hxx'):
 
-            filename = f'{os.path.join(self.output_dir_cxx_hxx, basename)}.hxx'
-            with open(filename, 'w') as f:
-                f.write(emit_sekeleton_file(basename, 'hxx'))
+            with open(self._filepath_of(basename, 'hxx'), 'w') as f:
+                f.write(emmiter.emit_sekeleton_file(basename, 'hxx'))
 
-            injection = f'\n{emit_class_declaration_hidden(symbol).build()}'
+            injection = f'\n{emmiter.emit_class_declaration_hidden(symbol).build()}'
             self._code_generate_inject(injection, basename, 'hxx')
 
-        if self._should_be_regenerated(basename, 'cxx'):
+        if self._is_dirty(basename, 'cxx'):
 
-            filename = f'{os.path.join(self.output_dir_cxx_hxx, basename)}.cxx'
-            with open(filename, 'w') as f:
-                f.write(emit_sekeleton_file(basename, 'cxx'))
+            with open(self._filepath_of(basename, 'cxx'), 'w') as f:
+                f.write(emmiter.emit_sekeleton_file(basename, 'cxx'))
 
-            injection = f'{emit_class_serialization(symbol).build()}\n'
+            injection = f'{emmiter.emit_class_serialization(symbol).build()}\n'
             self._code_generate_inject(injection, basename, 'cxx', before='EPI_NAMESPACE_END()')
 
-            injection = f'{emit_class_meta(symbol).build()}\n'
+            injection = f'{emmiter.emit_class_meta(symbol).build()}\n'
             self._code_generate_inject(injection, basename, 'cxx', before='EPI_NAMESPACE_END()')
 
-        if self._should_be_regenerated(basename, 'cpp'):
+        if self._is_dirty(basename, 'cpp'):
 
-            filename = f'{os.path.join(self.output_dir, basename)}.cpp'
-            if not os.path.exists(filename):
-                with open(filename, 'w') as f:
-                    f.write(emit_sekeleton_file(basename, 'cpp'))
+            filepath = self._filepath_of(basename, 'cpp')
+            if not os.path.exists(filepath):
+                with open(filepath, 'w') as f:
+                    f.write(emmiter.emit_sekeleton_file(basename, 'cpp'))
 
             # NOTE: fake injection to force cache its content
             self._code_generate_inject('', basename, 'cpp', before='EPI_NAMESPACE_END()')
 
-        if self._should_be_regenerated(basename, 'h'):
+        if self._is_dirty(basename, 'h'):
 
-            filename = f'{os.path.join(self.output_dir, basename)}.h'
-            if not os.path.exists(filename):
-                with open(filename, 'w') as f:
-                    f.write(emit_sekeleton_file(basename, 'h'))
+            filepath = self._filepath_of(basename, 'h')
+            if not os.path.exists(filepath):
+                with open(filepath, 'w') as f:
+                    f.write(emmiter.emit_sekeleton_file(basename, 'h'))
 
             if self._lookup(f'EPI_GENREGION_END({symbol.name})', basename, 'h') == -1:
 
@@ -221,7 +234,7 @@ class CodeGenerator:
                     raise CodeGenerationError(f'{basename}.h', CodeGenerationErrorCode.CorruptedAnchor, tip)
 
                 # NOTE: symbol isn't present add it to the end
-                injection = f'{emit_skeleton_class(symbol).build()}\n'
+                injection = f'{emmiter.emit_skeleton_class(symbol).build()}\n'
                 self._code_generate_inject(
                     injection,
                     basename,
@@ -237,7 +250,7 @@ class CodeGenerator:
                     raise CodeGenerationError(f'{basename}.h', CodeGenerationErrorCode.CorruptedAnchor, tip)
 
                 # NOTE: symbol is present add it to the corresponding region
-                injection = f'\n{emit_class_declaration(symbol).build()}\n'
+                injection = f'\n{emmiter.emit_class_declaration(symbol).build()}\n'
                 self._code_generate_inject(
                     injection,
                     basename,
@@ -246,9 +259,5 @@ class CodeGenerator:
                     after=f'EPI_GENREGION_BEGIN({symbol.name})'
                 )
 
-        epifilename = f'{os.path.join(self.input_dir, basename)}.epi'
-        with open(epifilename, 'r') as f:
-            epicontent = f.read()
-
-        self.generated_files_cache[epifilename] = hashlib.md5(epicontent.encode()).hexdigest()
-
+        filepath = self._filepath_of(basename, 'epi')
+        self.__cache_files_generated[filepath] = self._file_checksum(filepath)

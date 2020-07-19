@@ -35,14 +35,10 @@ class TestCodeGenerator:
 
         assert len(errors_linkage) == 0
 
-        errors_codegen = []
-        code_generator = cgen.CodeGenerator(tmpdir, tmpdir, tmpdir)
-        for sym in linker.registry.values():
-
-            errors_codegen_local = code_generator.code_generate(sym, sym.token.filepath)
-            errors_codegen.extend(errors_codegen_local)
+        symbols = list(linker.registry.values())
+        codegen = cgen.CodeGenerator(symbols, tmpdir, tmpdir, tmpdir)
+        errors_codegen = codegen.code_generate()
 
         assert len(errors_codegen) == 0
 
-        code_generator.dump()
-
+        codegen.dump()
