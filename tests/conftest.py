@@ -16,14 +16,20 @@ def pytest_configure(config):
 def pytest_assertrepr_compare(op, left, right):
 
     if isinstance(left, EpiSymbol) and isinstance(right, EpiSymbol) and op == "==":
+        repr_left = repr(left)
+        repr_right = repr(right)
 
-        import difflib
+    elif isinstance(left, str) and isinstance(right, str) and op == "==":
+        repr_left = left
+        repr_right = right
 
-        diffs = [diff for diff in difflib.ndiff(repr(left).splitlines(keepends=False), repr(right).splitlines(keepends=False)) if diff[0] != ' ']
-        if len(diffs) != 0:
+    else:
+        return None
 
-            diffs.insert(0, f'Difference between {left.name} and {right.name}')
-            return diffs
+    import difflib
+
+    diffs = [diff for diff in difflib.ndiff(repr_left.splitlines(keepends=False), repr_right.splitlines(keepends=False)) if diff[0] != ' ']
+    return diffs
 
 def pytest_collection_modifyitems(session: Session, config, items: List[Item]):
 

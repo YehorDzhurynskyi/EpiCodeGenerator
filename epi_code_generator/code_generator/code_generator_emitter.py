@@ -245,11 +245,10 @@ def emit_class_meta(clss: EpiClass, builder: Builder = Builder()) -> Builder:
     for p in clss.properties:
 
         hash_typenested = '0'
-        if p.form == EpiProperty.Form.Array:
+        if p.form == EpiProperty.Form.Template:
             hash_typenested = f'epiHashCompileTime({p.nestedtokentype.text})'
 
-        # TODO: remove rstrip
-        hash_type = f'epiHashCompileTime({p.tokentype.text.rstrip("*")})'
+        hash_type = f'epiHashCompileTime({p.tokentype_basename()})'
 
         flags = []
 

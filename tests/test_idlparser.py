@@ -842,6 +842,71 @@ class TestIDLParser:
         ),
         (
             '''
+            class A
+            {
+                [Virtual, ReadCallback(SuppressRef=true)]
+                epiMat4x4f Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.Mat4x4FType)
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Virtual)
+                                        .build()
+                                )
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.ReadCallback)
+                                        .param_named('SuppressRef', TokenType.TrueLiteral, 'true')
+                                        .build()
+                                )
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class A
+            {
+                [Virtual, ReadOnly]
+                epiFloat Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.SingleFloatingType)
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Virtual)
+                                        .build()
+                                )
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.ReadOnly)
+                                        .build()
+                                )
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
             class A : B
             {
                 [Max(5, Force=true)]

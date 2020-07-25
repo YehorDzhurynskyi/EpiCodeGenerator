@@ -13,6 +13,7 @@ class EpiAttribute:
 
         self.tokentype = tokentype
         self.token = token
+        self.is_implied_indirectly = False
         self.__params_positional = []
         self.__params_named = {}
 
@@ -111,6 +112,22 @@ class EpiSymbol(abc.ABC):
         from epi_code_generator.idlparser import idlparser_attr as idlattr
 
         getattr(idlattr, f'introduce_{attr.tokentype.name}')(attr, self)
+
+        duplicates = [a for a in self.__attrs if attr.tokentype == a.tokentype]
+        assert len(duplicates) <= 1
+
+        if len(duplicates) == 1:
+
+            # NOTE: there could be a case when a duplicating attribute is implied indirectly
+            # for example: [Virtual, ReadCallback(SuppressRef=true)], looking on this example
+            # Virtual attribute implies ReadCallback, but later parser stumbles on user-provided
+            # ReadCallback attribute, so the collision occurs, but the user-defined attributes
+            # couldn't collide and such collision is invalid
+
+            assert duplicates[0].is_implied_indirectly
+
+            self.__attrs.remove(duplicates[0])
+
         self.__attrs.append(attr)
 
     def attr_find(self, tokentype: TokenType):

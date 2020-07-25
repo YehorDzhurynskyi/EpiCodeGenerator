@@ -152,25 +152,31 @@ class CodeGenerator:
 
         return digest
 
-    def _code_generate_inject(self,
-                              inj: str,
-                              basename: str,
-                              ext: str,
-                              before: str = None,
-                              after: str = None):
+    def _inject(self,
+                inj: str,
+                basename: str,
+                ext: str,
+                before: str = None,
+                after: str = None):
 
         content = self._content_load(basename, ext)
         if before is None and after is None:
+
             lbound = len(content)
             rbound = len(content)
         else:
             if before is not None and after is not None:
+
                 lbound = content.find(after) + len(after)
                 rbound = content.find(before)
+
             elif before is not None:
+
                 rbound = content.find(before)
                 lbound = rbound
+
             elif after is not None:
+
                 lbound = content.find(after) + len(after)
                 rbound = lbound
 
@@ -182,82 +188,98 @@ class CodeGenerator:
         newcontent = content[:lbound] + inj + content[rbound:]
         self._content_store(newcontent, basename, ext)
 
-    def code_generate(self, symbol: EpiSymbol, basename: str) -> list:
+    def _code_generate_hxx(self, symbol: EpiSymbol, basename: str):
 
-        os.makedirs(os.path.dirname(os.path.join(self.__dir_output, basename)), exist_ok=True)
-        os.makedirs(os.path.dirname(os.path.join(self.__dir_output_build, basename)), exist_ok=True)
-        basename = os.path.splitext(basename)[0]
+        with open(self._filepath_of(basename, 'hxx'), 'w') as f:
+            f.write(emmiter.emit_sekeleton_file(basename, 'hxx'))
 
-        assert isinstance(symbol, EpiClass)
+        injection = f'\n{emmiter.emit_class_declaration_hidden(symbol).build()}'
+        self._inject(injection, basename, 'hxx')
 
-        if self._is_dirty(basename, 'hxx'):
+    def _code_generate_cxx(self, symbol: EpiSymbol, basename: str):
 
-            with open(self._filepath_of(basename, 'hxx'), 'w') as f:
-                f.write(emmiter.emit_sekeleton_file(basename, 'hxx'))
+        with open(self._filepath_of(basename, 'cxx'), 'w') as f:
+            f.write(emmiter.emit_sekeleton_file(basename, 'cxx'))
 
-            injection = f'\n{emmiter.emit_class_declaration_hidden(symbol).build()}'
-            self._code_generate_inject(injection, basename, 'hxx')
+        injection = f'{emmiter.emit_class_serialization(symbol).build()}\n'
+        self._inject(injection, basename, 'cxx', before='EPI_NAMESPACE_END()')
 
-        if self._is_dirty(basename, 'cxx'):
+        injection = f'{emmiter.emit_class_meta(symbol).build()}\n'
+        self._inject(injection, basename, 'cxx', before='EPI_NAMESPACE_END()')
 
-            with open(self._filepath_of(basename, 'cxx'), 'w') as f:
-                f.write(emmiter.emit_sekeleton_file(basename, 'cxx'))
+    def _code_generate_cpp(self, symbol: EpiSymbol, basename: str):
 
-            injection = f'{emmiter.emit_class_serialization(symbol).build()}\n'
-            self._code_generate_inject(injection, basename, 'cxx', before='EPI_NAMESPACE_END()')
+        filepath = self._filepath_of(basename, 'cpp')
+        if not os.path.exists(filepath):
+            with open(filepath, 'w') as f:
+                f.write(emmiter.emit_sekeleton_file(basename, 'cpp'))
 
-            injection = f'{emmiter.emit_class_meta(symbol).build()}\n'
-            self._code_generate_inject(injection, basename, 'cxx', before='EPI_NAMESPACE_END()')
+        # NOTE: fake injection to force cache its content
+        self._inject('', basename, 'cpp', before='EPI_NAMESPACE_END()')
 
-        if self._is_dirty(basename, 'cpp'):
+    def _code_generate_h(self, symbol: EpiSymbol, basename: str):
 
-            filepath = self._filepath_of(basename, 'cpp')
-            if not os.path.exists(filepath):
-                with open(filepath, 'w') as f:
-                    f.write(emmiter.emit_sekeleton_file(basename, 'cpp'))
+        filepath = self._filepath_of(basename, 'h')
+        if not os.path.exists(filepath):
+            with open(filepath, 'w') as f:
+                f.write(emmiter.emit_sekeleton_file(basename, 'h'))
 
-            # NOTE: fake injection to force cache its content
-            self._code_generate_inject('', basename, 'cpp', before='EPI_NAMESPACE_END()')
+        if self._lookup(f'EPI_GENREGION_END({symbol.name})', basename, 'h') == -1:
 
-        if self._is_dirty(basename, 'h'):
+            if self._lookup(f'EPI_GENREGION_BEGIN({symbol.name})', basename, 'h') != -1:
 
-            filepath = self._filepath_of(basename, 'h')
-            if not os.path.exists(filepath):
-                with open(filepath, 'w') as f:
-                    f.write(emmiter.emit_sekeleton_file(basename, 'h'))
+                tip = f'`EPI_GENREGION_END({symbol.name})` is absent while corresponding anchor `EPI_GENREGION_BEGIN({symbol.name})` is present'
+                raise CodeGenerationError(f'{basename}.h', CodeGenerationErrorCode.CorruptedAnchor, tip)
 
-            if self._lookup(f'EPI_GENREGION_END({symbol.name})', basename, 'h') == -1:
+            # NOTE: symbol isn't present add it to the end
+            injection = f'{emmiter.emit_skeleton_class(symbol).build()}\n'
+            self._inject(
+                injection,
+                basename,
+                'h',
+                before='EPI_NAMESPACE_END()'
+            )
 
-                if self._lookup(f'EPI_GENREGION_BEGIN({symbol.name})', basename, 'h') != -1:
+        else:
 
-                    tip = f'`EPI_GENREGION_END({symbol.name})` is absent while corresponding anchor `EPI_GENREGION_BEGIN({symbol.name})` is present'
-                    raise CodeGenerationError(f'{basename}.h', CodeGenerationErrorCode.CorruptedAnchor, tip)
+            if self._lookup(f'EPI_GENREGION_BEGIN({symbol.name})', basename, 'h') == -1:
 
-                # NOTE: symbol isn't present add it to the end
-                injection = f'{emmiter.emit_skeleton_class(symbol).build()}\n'
-                self._code_generate_inject(
-                    injection,
-                    basename,
-                    'h',
-                    before='EPI_NAMESPACE_END()'
-                )
+                tip = f'`EPI_GENREGION_BEGIN({symbol.name})` is absent while corresponding anchor `EPI_GENREGION_END({symbol.name})` is present'
+                raise CodeGenerationError(f'{basename}.h', CodeGenerationErrorCode.CorruptedAnchor, tip)
 
-            else:
+            # NOTE: symbol is present add it to the corresponding region
+            injection = f'\n{emmiter.emit_class_declaration(symbol).build()}\n'
+            self._inject(
+                injection,
+                basename,
+                'h',
+                before=f'EPI_GENREGION_END({symbol.name})',
+                after=f'EPI_GENREGION_BEGIN({symbol.name})'
+            )
 
-                if self._lookup(f'EPI_GENREGION_BEGIN({symbol.name})', basename, 'h') == -1:
+    def code_generate(self) -> list:
 
-                    tip = f'`EPI_GENREGION_BEGIN({symbol.name})` is absent while corresponding anchor `EPI_GENREGION_END({symbol.name})` is present'
-                    raise CodeGenerationError(f'{basename}.h', CodeGenerationErrorCode.CorruptedAnchor, tip)
+        for symbol in self.__symbols:
 
-                # NOTE: symbol is present add it to the corresponding region
-                injection = f'\n{emmiter.emit_class_declaration(symbol).build()}\n'
-                self._code_generate_inject(
-                    injection,
-                    basename,
-                    'h',
-                    before=f'EPI_GENREGION_END({symbol.name})',
-                    after=f'EPI_GENREGION_BEGIN({symbol.name})'
-                )
+            assert isinstance(symbol, EpiClass)
 
-        filepath = self._filepath_of(basename, 'epi')
-        self.__cache_files_generated[filepath] = self._file_checksum(filepath)
+            basename = os.path.splitext(symbol.token.filepath)[0]
+            os.makedirs(os.path.dirname(os.path.join(self.__dir_output, basename)), exist_ok=True)
+            os.makedirs(os.path.dirname(os.path.join(self.__dir_output_build, basename)), exist_ok=True)
+
+            if self._is_dirty(basename, 'hxx'):
+                self._code_generate_hxx(symbol, basename)
+
+            if self._is_dirty(basename, 'cxx'):
+                self._code_generate_cxx(symbol, basename)
+
+            if self._is_dirty(basename, 'cpp'):
+                self._code_generate_cpp(symbol, basename)
+
+            if self._is_dirty(basename, 'h'):
+                self._code_generate_h(symbol, basename)
+
+            filepath = self._filepath_of(basename, 'epi')
+            self.__cache_files_generated[filepath] = self._file_checksum(filepath)
+
+        return self.__codegen_erros

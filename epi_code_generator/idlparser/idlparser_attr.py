@@ -33,7 +33,7 @@ def __validate_conflicts(attr: EpiAttribute, target: EpiSymbol):
 
     for a in target.attrs:
 
-        if a.tokentype == attr.tokentype:
+        if a.tokentype == attr.tokentype and not a.is_implied_indirectly:
             raise EpiAttributeValidationError(f'It duplicates {a.tokentype.name}', attr.token, idl.IDLSyntaxErrorCode.AttributeConflict)
 
         assert attr.tokentype in __EPI_ATTRIBUTE_CONFLICT_TABLE
@@ -144,7 +144,11 @@ def __validate_target_value_less_eq(attr: EpiAttribute, target: EpiSymbol, value
 def __implies(tokentype: TokenType, target: EpiSymbol):
 
     try:
-        target.attr_push(EpiAttribute(tokentype))
+        attr = EpiAttribute(tokentype)
+        attr.is_implied_indirectly = True
+
+        target.attr_push(attr)
+
     except EpiAttributeValidationError:
         pass
 

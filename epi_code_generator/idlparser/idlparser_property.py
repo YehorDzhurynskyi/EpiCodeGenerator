@@ -61,7 +61,6 @@ def parse_property(parser: idl.IDLParser) -> EpiProperty:
     if prty.form == EpiProperty.Form.Template:
         prty.tokens_nested = tokens_nested
 
-    # NOTE: if property is virtual an assignment is invalid
     t = parser._next()
     if parser._test(t, [TokenType.Assing]):
 
