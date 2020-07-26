@@ -1007,6 +1007,111 @@ class TestIDLParser:
             {},
             [idl.IDLSyntaxErrorCode.DuplicatingSymbol]
         ),
+        (
+            '''
+            class ClassName
+            {
+                epiFloat* Name;
+            };
+            ''',
+            {
+                'ClassName':
+                    EpiClassBuilder()
+                        .name('ClassName')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.SingleFloatingType)
+                                .form(EpiProperty.Form.Pointer)
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Transient)
+                                        .build()
+                                )
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class ClassName
+            {
+                epiFloat * Name;
+            };
+            ''',
+            {
+                'ClassName':
+                    EpiClassBuilder()
+                        .name('ClassName')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.SingleFloatingType)
+                                .form(EpiProperty.Form.Pointer)
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Transient)
+                                        .build()
+                                )
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class ClassName
+            {
+                epiFloat *Name;
+            };
+            ''',
+            {
+                'ClassName':
+                    EpiClassBuilder()
+                        .name('ClassName')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.SingleFloatingType)
+                                .form(EpiProperty.Form.Pointer)
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Transient)
+                                        .build()
+                                )
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class ClassName
+            {
+                epiFloat** Name1;
+                epiFloat* *Name2;
+                epiFloat **Name3;
+                epiFloat ** Name4;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.MultiDepthPointer] * 4
+        ),
+        (
+            '''
+            class ClassName
+            {
+                epiFloat * * * Name1;
+                epiFloat **Name2;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.MultiDepthPointer] * 3
+        ),
     ])
     def test_sequence(self, tmpdir: str, content: str, expected_registry: dict, expected_errors: list):
 
@@ -1278,7 +1383,7 @@ class TestIDLParser:
                 epiS8 Name10;
                 epiS16 Name11 = 15;
                 epiS32 Name12;
-                epiS64 Name13;
+                epiS64* Name13;
                 epiFloat Name14;
 
                 epiDouble Name15; # comment
@@ -1301,7 +1406,7 @@ class TestIDLParser:
                 epiVec4u Name31;
                 epiMat2x2f Name32;
                 epiMat3x3f Name33;
-                epiMat4x4f Name34;
+                epiMat4x4f* Name34;
                 epiRect2f Name35;
 
                 [WriteOnly]
@@ -1346,7 +1451,7 @@ class TestIDLParser:
                 [ Min ( -5 ) ]
                 epiS8 Name10;
                 epiS16 Name11 =    15; epiS32 Name12;
-                epiS64 Name13;
+                epiS64 * Name13;
                 epiFloat Name14;       
 
                 epiDouble Name15; # comment
@@ -1364,7 +1469,7 @@ class TestIDLParser:
                 epiVec4u Name31;
                 epiMat2x2f Name32;
                 epiMat3x3f Name33;
-                epiMat4x4f Name34;
+                epiMat4x4f *Name34;
                 epiRect2f Name35;
                 [WriteOnly] epiRect2d Name36;
 
@@ -1478,7 +1583,7 @@ class TestIDLParser:
                     .property(EpiPropertyBuilder().name('Name10').tokentype_type(TokenType.Int8Type).attr(EpiAttributeBuilder().tokentype(TokenType.Min).param_positional(TokenType.IntegerLiteral, '-5').build()).build())
                     .property(EpiPropertyBuilder().name('Name11').tokentype_type(TokenType.Int16Type).value('15').build())
                     .property(EpiPropertyBuilder().name('Name12').tokentype_type(TokenType.Int32Type).build())
-                    .property(EpiPropertyBuilder().name('Name13').tokentype_type(TokenType.Int64Type).build())
+                    .property(EpiPropertyBuilder().name('Name13').tokentype_type(TokenType.Int64Type).form(EpiProperty.Form.Pointer).attr(EpiAttributeBuilder().tokentype(TokenType.Transient).build()).build())
                     .property(EpiPropertyBuilder().name('Name14').tokentype_type(TokenType.SingleFloatingType).build())
                     .property(EpiPropertyBuilder().name('Name15').tokentype_type(TokenType.DoubleFloatingType).build())
                     .property(EpiPropertyBuilder().name('Name16').tokentype_type(TokenType.StringType).value('"Hello"').build())
@@ -1499,7 +1604,7 @@ class TestIDLParser:
                     .property(EpiPropertyBuilder().name('Name31').tokentype_type(TokenType.Vec4UType).build())
                     .property(EpiPropertyBuilder().name('Name32').tokentype_type(TokenType.Mat2x2FType).build())
                     .property(EpiPropertyBuilder().name('Name33').tokentype_type(TokenType.Mat3x3FType).build())
-                    .property(EpiPropertyBuilder().name('Name34').tokentype_type(TokenType.Mat4x4FType).build())
+                    .property(EpiPropertyBuilder().name('Name34').tokentype_type(TokenType.Mat4x4FType).form(EpiProperty.Form.Pointer).attr(EpiAttributeBuilder().tokentype(TokenType.Transient).build()).build())
                     .property(EpiPropertyBuilder().name('Name35').tokentype_type(TokenType.Rect2FType).build())
                     .property(EpiPropertyBuilder().name('Name36').tokentype_type(TokenType.Rect2DType).attr(EpiAttributeBuilder().tokentype(TokenType.WriteOnly).build()).build())
                     .property(EpiPropertyBuilder().name('Name37').tokentype_type(TokenType.Rect2SType).build())

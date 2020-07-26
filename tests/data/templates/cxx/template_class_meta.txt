@@ -1,8 +1,0 @@
-MetaClass ${ClassName}::EmitMetaClass()
-{
-    MetaClassData data;
-
-    ${ClassPropertiesMeta}
-
-    return MetaClass(std::move(data), epiHashCompileTime(${ClassName}), epiHashCompileTime(${ClassParentName}), sizeof(${ClassName}), "${ClassName}");
-}

@@ -1,0 +1,3 @@
+void ${class_name}::Deserialization(const json_t& json)
+{
+    super::Deserialization(json);

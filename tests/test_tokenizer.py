@@ -220,6 +220,13 @@ class TestTokenizer:
         ('==', [TokenType.Assing, TokenType.Assing], ['=', '=']),
         ("'", [TokenType.Unknown], ["'"]),
         ('"', [TokenType.Unknown], ['"']),
+        ('epiFloat* Name', [TokenType.SingleFloatingType, TokenType.Asterisk, TokenType.Identifier], ['epiFloat', '*', 'Name']),
+        ('epiFloat * Name', [TokenType.SingleFloatingType, TokenType.Asterisk, TokenType.Identifier], ['epiFloat', '*', 'Name']),
+        ('epiFloat *Name', [TokenType.SingleFloatingType, TokenType.Asterisk, TokenType.Identifier], ['epiFloat', '*', 'Name']),
+        ('epiFloat** Name', [TokenType.SingleFloatingType, TokenType.Asterisk, TokenType.Asterisk, TokenType.Identifier], ['epiFloat', '*', '*', 'Name']),
+        ('epiFloat* *Name', [TokenType.SingleFloatingType, TokenType.Asterisk, TokenType.Asterisk, TokenType.Identifier], ['epiFloat', '*', '*', 'Name']),
+        ('epiFloat **Name', [TokenType.SingleFloatingType, TokenType.Asterisk, TokenType.Asterisk, TokenType.Identifier], ['epiFloat', '*', '*', 'Name']),
+        ('epiFloat ** Name', [TokenType.SingleFloatingType, TokenType.Asterisk, TokenType.Asterisk, TokenType.Identifier], ['epiFloat', '*', '*', 'Name']),
         ('[Min(5, Force=true)] epiS32 Name = 6;',
             [
                 TokenType.OpenSqBracket,

@@ -1,0 +1,3 @@
+MetaClass ${class_name}::EmitMetaClass()
+{
+    MetaClassData data;

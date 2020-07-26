@@ -1,0 +1,8 @@
+#include "${module_name}/pch.h"
+
+EPI_GENREGION_BEGIN(include)
+#include "${filepath}${basename}.h"
+#include "${filepath}${basename}.cxx"
+EPI_GENREGION_END(include)
+
+EPI_NAMESPACE_BEGIN()

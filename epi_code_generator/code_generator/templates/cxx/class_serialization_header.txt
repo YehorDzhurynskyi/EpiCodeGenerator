@@ -1,0 +1,3 @@
+void ${class_name}::Serialization(json_t& json)
+{
+    super::Serialization(json);

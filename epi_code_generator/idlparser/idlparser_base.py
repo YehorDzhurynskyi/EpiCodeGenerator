@@ -24,6 +24,7 @@ class IDLSyntaxErrorCode(Enum):
     AttributeInvalidParameters = auto()
     AttributeInvalidTarget = auto()
     DuplicatingSymbol = auto()
+    MultiDepthPointer = auto()
 
     # TODO: move here incomplete type error checking from linking stage
 
@@ -46,7 +47,8 @@ class IDLSyntaxError:
         IDLSyntaxErrorCode.AttributeConflict: 'Provided attribute conflicts with the other attribute',
         IDLSyntaxErrorCode.AttributeInvalidParameters: 'Invalid attribute parameters',
         IDLSyntaxErrorCode.AttributeInvalidTarget: 'An attribute was applied to the wrong target',
-        IDLSyntaxErrorCode.DuplicatingSymbol: "The symbol's name duplicates other symbol's name"
+        IDLSyntaxErrorCode.DuplicatingSymbol: "The symbol's name duplicates other symbol's name",
+        IDLSyntaxErrorCode.MultiDepthPointer: 'Only single-depth pointers are allowed'
     }
 
     def __init__(self, token: Token, err_code: IDLSyntaxErrorCode, tip: str):
@@ -117,10 +119,27 @@ class IDLParser:
         if fatal:
             raise IDLParserErrorFatal()
 
+    def _test(self, token: Token, **kwargs) -> bool:
 
-    def _test(self, token: Token, expected: list, **kwargs) -> bool:
+        expected = None
+        unexpected = None
 
-        if token is None or token.tokentype not in expected:
+        success = True
+        if 'expected' in kwargs:
+
+            expected = kwargs['expected']
+            assert isinstance(expected, list)
+
+            success = token is not None and token.tokentype in expected
+
+        if success and 'unexpected' in kwargs:
+
+            unexpected = kwargs['unexpected']
+            assert isinstance(unexpected, list)
+
+            success = token is not None and token.tokentype not in unexpected
+
+        if not success:
 
             if 'err_code' in kwargs:
 
@@ -131,7 +150,7 @@ class IDLParser:
                 fatal = kwargs['fatal'] if 'fatal' in kwargs else True
                 assert isinstance(fatal, bool)
 
-                if token is not None:
+                if token is not None and expected is not None:
 
                     token.tokentype_expected.extend(expected)
                     expected = ' or '.join([f'`{exp}`' for exp in token.tokentype_expected])
@@ -160,7 +179,7 @@ class IDLParser:
             while not self._eof():
 
                 t = self._curr()
-                self._test(t, list(Tokenizer.BUILTIN_USER_TYPES.values()), err_code=IDLSyntaxErrorCode.MissingTypeDeclaration)
+                self._test(t, expected=list(Tokenizer.BUILTIN_USER_TYPES.values()), err_code=IDLSyntaxErrorCode.MissingTypeDeclaration)
 
                 assert t.tokentype == TokenType.ClassType, 'Handle other usertypes'
 

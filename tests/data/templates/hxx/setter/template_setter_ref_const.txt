@@ -1,1 +1,0 @@
-void Set${PropertyName}(const ${PropertyType}& value) { m_${PropertyName} = value; } \

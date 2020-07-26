@@ -1,0 +1,2 @@
+    return MetaClass(std::move(data), epiHashCompileTime(${class_name}), epiHashCompileTime(${class_parent_name}), sizeof(${class_name}), "${class_name}");
+}

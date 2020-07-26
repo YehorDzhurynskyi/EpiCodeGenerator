@@ -277,7 +277,7 @@ def __parse_attr(parser: idl.IDLParser) -> EpiAttribute:
 
     attr = EpiAttribute(a_t.tokentype, a_t)
 
-    if not parser._test(parser._curr(), [TokenType.OpenBracket]):
+    if not parser._test(parser._curr(), expected=[TokenType.OpenBracket]):
         return attr
 
     has_named_params = False
@@ -285,11 +285,11 @@ def __parse_attr(parser: idl.IDLParser) -> EpiAttribute:
     parser._next()
     while True:
 
-        if parser._test(parser._curr(), [TokenType.CloseBracket]):
+        if parser._test(parser._curr(), expected=[TokenType.CloseBracket]):
             break
 
         param = parser._next()
-        if not parser._test(parser._curr(), [TokenType.Assing]):
+        if not parser._test(parser._curr(), expected=[TokenType.Assing]):
 
             if has_named_params:
 
@@ -302,12 +302,12 @@ def __parse_attr(parser: idl.IDLParser) -> EpiAttribute:
             has_named_params = True
             attr.param_named_push(param.text, parser._next(2))
 
-        if not parser._test(parser._curr(), [TokenType.Comma]):
+        if not parser._test(parser._curr(), expected=[TokenType.Comma]):
             break
 
         parser._next()
 
-    parser._test(parser._next(), [TokenType.CloseBracket], err_code=idl.IDLSyntaxErrorCode.NoMatchingClosingBracket)
+    parser._test(parser._next(), expected=[TokenType.CloseBracket], err_code=idl.IDLSyntaxErrorCode.NoMatchingClosingBracket)
 
     return attr
 
@@ -318,25 +318,25 @@ def parse_attr_list(parser: idl.IDLParser) -> list:
     while True:
 
         t = parser._curr()
-        if not parser._test(t, [TokenType.OpenSqBracket]):
+        if not parser._test(t, expected=[TokenType.OpenSqBracket]):
             break
 
         parser._next()
         while True:
 
-            parser._test(parser._curr(), TokenType.attributes(), err_code=idl.IDLSyntaxErrorCode.UnexpectedToken)
+            parser._test(parser._curr(), expected=TokenType.attributes(), err_code=idl.IDLSyntaxErrorCode.UnexpectedToken)
 
             attr = __parse_attr(parser)
             attrs.append(attr)
 
-            if not parser._test(parser._curr(), [TokenType.Comma]):
+            if not parser._test(parser._curr(), expected=[TokenType.Comma]):
                 break
 
             parser._next()
 
         t = parser._next()
         parser._test(t,
-                    [TokenType.CloseSqBracket],
+                    expected=[TokenType.CloseSqBracket],
                     err_code=idl.IDLSyntaxErrorCode.NoMatchingClosingBracket,
                     tip='Attribute list should be followed by `]`')
 

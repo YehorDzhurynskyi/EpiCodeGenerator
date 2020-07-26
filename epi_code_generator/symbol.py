@@ -58,6 +58,13 @@ class EpiAttribute:
     def params_named(self):
         return self.__params_named
 
+    def param_named_of(self, name: str) -> Token:
+
+        if name not in self.__params_named:
+            return None
+
+        return self.__params_named[name]
+
     def param_named_push(self, name: str, token: Token):
         self.__params_named[name] = token
 
@@ -100,12 +107,6 @@ class EpiSymbol(abc.ABC):
     @property
     def attrs(self):
         return self.__attrs
-
-    @attrs.setter
-    def attrs(self, attrs: list):
-
-        for attr in attrs:
-            self.attr_push(attr)
 
     def attr_push(self, attr: EpiAttribute):
 
@@ -364,7 +365,10 @@ class EpiPropertyBuilder:
         token = Token(TokenType.Identifier, self.__name)
 
         prty = EpiProperty(token, self.__tokentype, self.__form)
-        prty.attrs = self.__attrs
+
+        for attr in self.__attrs:
+            prty.attr_push(attr)
+
         prty.tokens_nested = self.__tokens_nested
 
         if self.__value is not None:

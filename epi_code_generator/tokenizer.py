@@ -84,8 +84,8 @@ class TokenType(Enum):
     ReadOnly = auto()
     WriteOnly = auto()
     # Private = auto()
-    WriteCallback = auto()
     ReadCallback = auto()
+    WriteCallback = auto()
     Virtual = auto()
     Min = auto()
     Max = auto()
@@ -370,8 +370,8 @@ class Tokenizer:
         'ReadOnly': TokenType.ReadOnly,
         'WriteOnly': TokenType.WriteOnly,
         # 'Private': TokenType.Private,
-        'WriteCallback': TokenType.WriteCallback,
         'ReadCallback': TokenType.ReadCallback,
+        'WriteCallback': TokenType.WriteCallback,
         'Virtual': TokenType.Virtual,
         'Min': TokenType.Min,
         'Max': TokenType.Max,

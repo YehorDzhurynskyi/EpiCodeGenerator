@@ -9,6 +9,40 @@ from ..symbol import EpiProperty
 import zlib
 
 
+def _property_signature_getter(prty: EpiProperty, const: bool) -> str:
+
+    if prty.attr_find(TokenType.WriteOnly) is not None:
+        return None
+
+    signature = ''
+    if not any(a.tokentype in [TokenType.ReadCallback,
+                               TokenType.WriteCallback,
+                               TokenType.Min,
+                               TokenType.Max] for a in prty.attrs):
+        signature = 'inline '
+
+    if prty.form not in [EpiProperty.Form.Pointer] and prty.tokentype_basename() not in Tokenizer.fundamentals():
+
+        attr_readcallback = prty.attr_find(TokenType.ReadCallback)
+        param_suppress_ref = attr_readcallback.param_named_of('SuppressRef')
+        if param_suppress_ref is not None:
+
+            # NOTE: SuppressRef implies return by the value that in its turn implies constness
+            if not const:
+                return None
+
+            signature = f'{signature}const '
+    else:
+        signature = f'{signature}const ' if const else signature
+
+    signature = f'{signature}{prty.tokentype.text} Get{prty.name}()'
+    signature = f'{signature} const' if const else signature
+
+    return signature
+
+def _property_signature_setter(property: EpiProperty) -> str:
+    pass
+
 def emit_properties(properties: list, accessor_modifier: str, builder: Builder = Builder()) -> Builder:
 
     if len(properties) == 0:
@@ -20,9 +54,7 @@ def emit_properties(properties: list, accessor_modifier: str, builder: Builder =
 
     for p in properties:
 
-        typename = f'{p.tokentype.text}'
-        if p.form == EpiProperty.Form.Array:
-            typename = f'{typename}<{p.nestedtokentype.text}>'
+        typename = p.tokentype.text
         value = f'{{{p.value}}}' if p.value is not None else ''
 
         builder.line(f'{typename} m_{p.name}{value};')
@@ -42,8 +74,8 @@ def emit_property_callbacks(properties: list, accessor_modifier: str, builder: B
 
     for p in properties:
 
-        attr_readcallback = p.find_attr(TokenType.ReadCallback)
-        attr_writecallback = p.find_attr(TokenType.WriteCallback)
+        attr_readcallback = p.attr_find(TokenType.ReadCallback)
+        attr_writecallback = p.attr_find(TokenType.WriteCallback)
 
         ptype = p.tokentype.text
         if p.form == EpiProperty.Form.Array:
@@ -77,62 +109,23 @@ def emit_sekeleton_file(basename: str, ext: str) -> str:
 
     builder = Builder()
 
-    if ext == 'h':
-
-        builder.line('#pragma once')
-        builder.line_empty()
-
     if ext in ['cxx', 'hxx']:
-        header = \
-'''
-/*                                                      */
-/*  ______       _                                      */
-/* |  ____|     (_)                                     */
-/* | |__   _ __  _                                      */
-/* |  __| | '_ \| |   THIS FILE IS AUTO-GENERATED       */
-/* | |____| |_) | |   manual changes won't be saved     */
-/* |______| .__/|_|                                     */
-/*        | |                                           */
-/*        |_|                                           */
-/*                                                      */
-'''
+        builder.template('header_comment')
+    if ext == 'h':
+        builder.template('h/header', filepath='filepath', basename=basename)
+    elif ext == 'cpp':
+        builder.template('cpp/header', module_name='module_name', filepath='filepath', basename=basename)
+    elif ext == 'cxx':
+        builder.template('cxx/header')
 
-        builder.line(header.strip())
-        builder.line_empty()
-
-    if ext in ['cpp', 'h']:
-
-        builder.anchor_gen_region('include')
-
-        if ext == 'cpp':
-            builder.line(f'#include "{basename}.h"')
-            builder.line(f'#include "{basename}.cxx"')
-        elif ext == 'h':
-            builder.line(f'#include "{basename}.hxx"')
-
-        builder.anchor_gen_endregion('include')
-        builder.line_empty()
-
-    if ext in ['cxx', 'cpp', 'h']:
-
-        builder.anchor_namespace_begin()
-        builder.line_empty()
-        builder.anchor_namespace_end()
-        builder.line_empty()
+    builder.template('footer')
 
     return builder.build()
 
 def emit_class_declaration(clss: EpiClass, builder: Builder = Builder()) -> Builder:
 
-    builder.line_empty()
-    builder.line(f'EPI_GENHIDDEN_{clss.name}()')
-    builder.line_empty()
-    builder.line('public:')
-    builder.tab()
-
-    crc = hex(zlib.crc32(clss.name.encode()) & 0xffffffff)
-    builder.line(f'constexpr static MetaTypeID TypeID{{{crc}}};')
-    builder.line_empty()
+    clss_typeid = hex(zlib.crc32(clss.name.encode()) & 0xffffffff)
+    builder.template('h/class_header', class_name=clss.name, class_typeid=clss_typeid)
 
     # pids
     builder.line(f'enum {clss.name}_PIDs')
@@ -150,36 +143,12 @@ def emit_class_declaration(clss: EpiClass, builder: Builder = Builder()) -> Buil
     builder.line('};')
     builder.line_empty()
 
-    filter_properties_non_virtual = lambda p: not any(a.tokentype in [
-        TokenType.Virtual,
-    ] for a in p.attrs)
+    emit_property_callbacks(clss.properties, 'protected', builder)
 
-    filter_properties_cb = lambda p: any(a.tokentype in [
-        TokenType.ReadCallback,
-        TokenType.WriteCallback
-    ] for a in p.attrs)
+    properties = [p for p in clss.properties if p.attr_find(TokenType.Virtual) is None]
+    emit_properties(properties, 'protected', builder)
 
-    filter_properties_non_private = lambda p: not any(a.tokentype in [
-        TokenType.Private
-    ] for a in p.attrs)
-
-    filter_properties_private = lambda p: any(a.tokentype in [
-        TokenType.Private
-    ] for a in p.attrs)
-
-    properties_cb = list(filter(filter_properties_cb, clss.properties))
-    properties_non_private = list(filter(filter_properties_non_private, properties_cb))
-    properties_private = list(filter(filter_properties_private, properties_cb))
-
-    emit_property_callbacks(properties_non_private, 'protected', builder)
-    emit_property_callbacks(properties_private, 'private', builder)
-
-    properties_non_virtual = list(filter(filter_properties_non_virtual, clss.properties))
-    properties_non_private = list(filter(filter_properties_non_private, properties_non_virtual))
-    properties_private = list(filter(filter_properties_private, properties_non_virtual))
-
-    emit_properties(properties_non_private, 'protected', builder)
-    emit_properties(properties_private, 'private', builder)
+    builder.template('h/class_footer', class_name=clss.name)
 
     return builder
 
@@ -201,31 +170,25 @@ def emit_skeleton_class(clss: EpiClass, builder: Builder = Builder()) -> Builder
 
 def emit_class_serialization(clss: EpiClass, builder: Builder = Builder()) -> Builder:
 
-    builder.line(f'void {clss.name}::Serialization(json_t& json)')
-    builder.line('{')
-    builder.tab()
-    builder.line('super::Serialization(json);')
-    builder.line_empty()
+    builder.template('cxx/class_serialization_header', class_name=clss.name)
 
+    builder.tab()
     for p in clss.properties:
 
-        if not any(a.tokentype == TokenType.Transient for a in p.attrs):
-            builder.line(f'epiSerialize({p.name}, json);')
+        if p.attr_find(TokenType.Transient) is None:
+            builder.template('cxx/class_serialization_property', property_name=p.name)
 
     builder.tab(-1)
     builder.line('}')
     builder.line_empty()
 
-    builder.line(f'void {clss.name}::Deserialization(const json_t& json)')
-    builder.line('{')
-    builder.tab()
-    builder.line('super::Deserialization(json);')
-    builder.line_empty()
+    builder.template('cxx/class_deserialization_header', class_name=clss.name)
 
+    builder.tab()
     for p in clss.properties:
 
-        if not any(a.tokentype == TokenType.Transient for a in p.attrs):
-            builder.line(f'epiDeserialize({p.name}, json);')
+        if p.attr_find(TokenType.Transient) is None:
+            builder.template('cxx/class_deserialization_property', property_name=p.name)
 
     builder.tab(-1)
     builder.line('}')
@@ -235,28 +198,24 @@ def emit_class_serialization(clss: EpiClass, builder: Builder = Builder()) -> Bu
 
 def emit_class_meta(clss: EpiClass, builder: Builder = Builder()) -> Builder:
 
-    # TODO: make it constexpr
-    builder.line(f'MetaClass {clss.name}::EmitMetaClass()')
-    builder.line('{')
-    builder.tab()
-    builder.line('MetaClassData data;')
-    builder.line_empty()
+    builder.template('cxx/class_meta_header', class_name=clss.name)
 
     for p in clss.properties:
 
-        hash_typenested = '0'
-        if p.form == EpiProperty.Form.Template:
-            hash_typenested = f'epiHashCompileTime({p.nestedtokentype.text})'
+        p_nested_typeid = 'MetaTypeID_None'
 
-        hash_type = f'epiHashCompileTime({p.tokentype_basename()})'
+        # TODO: make it work for >1 template arguments
+        if p.form == EpiProperty.Form.Template:
+            p_nested_typeid = f'epiHashCompileTime({p.tokens_nested[0].text})'
+
+        p_typeid = f'epiHashCompileTime({p.tokentype_basename()})'
+
+        attr_readcallback = p.attr_find(TokenType.ReadCallback)
+        attr_writecallback = p.attr_find(TokenType.WriteCallback)
+        attr_readonly = p.attr_find(TokenType.ReadOnly)
+        attr_writeonly = p.attr_find(TokenType.WriteOnly)
 
         flags = []
-
-        attr_readcallback = p.find_attr(TokenType.ReadCallback)
-        attr_writecallback = p.find_attr(TokenType.WriteCallback)
-        attr_readonly = p.find_attr(TokenType.ReadOnly)
-        attr_writeonly = p.find_attr(TokenType.WriteOnly)
-
         if attr_readcallback is not None:
             flags.append('ReadCallback')
         if attr_writecallback is not None:
@@ -266,83 +225,40 @@ def emit_class_meta(clss: EpiClass, builder: Builder = Builder()) -> Builder:
         if attr_writeonly is not None:
             flags.append('WriteOnly')
 
-        builder.line('{')
-        builder.tab()
-        builder.line('MetaProperty m = epiMetaProperty(')
-        builder.tab()
-        builder.line(f'/* Name */ "{p.name}",')
+        flags = [f'MetaProperty::Flags::Mask{f}' for f in flags]
 
-        ptrread = '/* PtrRead */ nullptr,'
+        p_ptr_read = 'nullptr'
         if attr_writeonly is None:
             if attr_readcallback is None:
-                ptrread = f'/* PtrRead */ (void*)offsetof({clss.name}, m_{p.name}),'
+                p_ptr_read = f'offsetof({clss.name}, m_{p.name})'
             elif attr_writeonly is None:
-                ptrread = f'/* PtrRead */ (void*)offsetof({clss.name}, Get{p.name}_FuncPtr),'
+                p_ptr_read = f'offsetof({clss.name}, Get{p.name}_FuncPtr)'
 
-        builder.line(ptrread)
-
-        ptrwrite = '/* PtrWrite */ nullptr,'
+        p_ptr_write = 'nullptr'
         if attr_readonly is None:
             if attr_writecallback is None:
-                ptrwrite = f'/* PtrWrite */ (void*)offsetof({clss.name}, m_{p.name}),'
+                p_ptr_write = f'offsetof({clss.name}, m_{p.name})'
             else:
-                ptrwrite = f'/* PtrWrite */ (void*)offsetof({clss.name}, Set{p.name}_FuncPtr),'
+                p_ptr_write = f'offsetof({clss.name}, Set{p.name}_FuncPtr)'
 
-        builder.line(ptrwrite)
-
-        flags = [f'MetaProperty::Flags::Mask{f}' for f in flags]
-        builder.line(f'/* Flags */ {{{ " | ".join(flags) }}},')
-        builder.line(f'/* typeID */ {hash_type},')
-        builder.line(f'/* nestedTypeID */ {hash_typenested}')
-        builder.tab(-1)
-        builder.line(');')
-        builder.line(f'data.AddProperty(epiHashCompileTime({p.name}), std::move(m));')
-        builder.tab(-1)
-        builder.line('}')
-
-    builder.line_empty()
+        builder.template('cxx/class_meta_property',
+                         property_name=p.name,
+                         class_name=clss.name,
+                         property_typeid=p_typeid,
+                         property_nested_typeid=p_nested_typeid,
+                         property_flags=' | '.join(flags),
+                         property_ptr_read=p_ptr_read,
+                         property_ptr_write=p_ptr_write)
 
     clss_parent = clss.parent if clss.parent is not None else 'Object'
-    hash_parent = f'epiHashCompileTime({clss_parent})'
-    hash_clss = f'epiHashCompileTime({clss.name})'
-    builder.line(f'return MetaClass(std::move(data), {hash_clss}, {hash_parent}, sizeof({clss.name}), "{clss.name}");')
-
-    builder.tab(-1)
-    builder.line('}')
-    builder.line_empty()
+    builder.template('cxx/class_meta_footer', class_name=clss.name, class_parent_name=clss_parent)
 
     return builder
 
 def emit_class_declaration_hidden(clss: EpiClass, builder: Builder = Builder()) -> Builder:
 
     clss_parent = clss.parent if clss.parent is not None else 'Object'
-    builder.line(f'#define EPI_GENHIDDEN_{clss.name}() \\')
-    builder.line('public: \\')
-
-    content = \
-f'''
-
-using super = {clss_parent};
-
-static MetaClass EmitMetaClass();
-
-const MetaClass& GetMetaClass() const override
-{{
-super::GetMetaClass();
-return ClassRegistry_GetMetaClass<{clss.name}>();
-}}
-
-epiBool Is(MetaTypeID rhs) const override
-{{
-return rhs == {clss.name}::TypeID || super::Is(rhs);
-}}
-
-void Serialization(json_t& json) override;
-void Deserialization(const json_t& json) override;
-
-'''
-    builder.line(' \\\n'.join(content.strip().split('\n')) + ' \\')
-    builder.line('\\')
+    builder.template('hxx/class_hidden_header', class_name=clss.name, class_parent_name=clss_parent)
 
     # getters/setters
     for p in clss.properties:
@@ -395,7 +311,7 @@ void Deserialization(const json_t& json) override;
             pptype = ptype
             if pptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiProperty.Form.Pointer:
 
-                attr_readcallback = p.find_attr(TokenType.ReadCallback)
+                attr_readcallback = p.attr_find(TokenType.ReadCallback)
                 if not attr_readcallback or attr_readcallback.find_param('"SuppressRef"') is None:
 
                     if not attr_readcallback:
@@ -410,7 +326,7 @@ void Deserialization(const json_t& json) override;
             pptype = ptype
             if ptype not in Tokenizer.BUILTIN_PRIMITIVE_TYPES and p.form != EpiProperty.Form.Pointer:
 
-                attr_writecallback = p.find_attr(TokenType.WriteCallback)
+                attr_writecallback = p.attr_find(TokenType.WriteCallback)
                 if not attr_writecallback or attr_writecallback.find_param('"SuppressRef"') is None:
                     pptype = f'const {pptype}&'
 
@@ -442,10 +358,10 @@ void Deserialization(const json_t& json) override;
         if p.form == EpiProperty.Form.Array:
             ptype = f'{ptype}<{p.nestedtokentype.text}>'
 
-        attr_readcallback = p.find_attr(TokenType.ReadCallback)
-        attr_writecallback = p.find_attr(TokenType.WriteCallback)
-        attr_readonly = p.find_attr(TokenType.ReadOnly)
-        attr_writeonly = p.find_attr(TokenType.WriteOnly)
+        attr_readcallback = p.attr_find(TokenType.ReadCallback)
+        attr_writecallback = p.attr_find(TokenType.WriteCallback)
+        attr_readonly = p.attr_find(TokenType.ReadOnly)
+        attr_writeonly = p.attr_find(TokenType.WriteOnly)
 
         if attr_readcallback is not None and attr_writeonly is None:
 
