@@ -157,8 +157,21 @@ class EpiProperty(EpiSymbol):
         self.tokens_nested = []
         self.__tokenvalue = None
 
-    def tokentype_basename(self):
+    def typename_basename(self):
         return self.tokentype.text.rstrip('*&')
+
+    def typename(self):
+
+        nested_len = len(self.tokens_nested)
+        assert \
+            (self.form == EpiProperty.Form.Template and nested_len > 0) or \
+            (self.form != EpiProperty.Form.Template and nested_len == 0)
+
+        typename = self.tokentype.text
+        if nested_len != 0:
+            typename = f'{typename}<{",".join(n.text for n in self.tokens_nested)}>'
+
+        return typename
 
     @property
     def tokenvalue(self) -> Token:
@@ -207,6 +220,8 @@ class EpiProperty(EpiSymbol):
         elif self.tokentype.tokentype == TokenType.WStringType:
             value = 'epiDEBUG_ONLY(L"Empty")'
             tokentype = TokenType.WStringLiteral
+        else:
+            return None
 
         return Token(tokentype, value)
 

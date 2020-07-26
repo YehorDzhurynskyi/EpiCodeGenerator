@@ -1,6 +1,5 @@
-#include "${module_name}/pch.h"
-
 EPI_GENREGION_BEGIN(include)
+#include "${module_name}/pch.h"
 #include "${filepath}${basename}.h"
 #include "${filepath}${basename}.cxx"
 EPI_GENREGION_END(include)

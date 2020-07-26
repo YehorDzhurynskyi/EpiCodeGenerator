@@ -122,12 +122,12 @@ class Linker:
 
             for p in (p for p in sym.properties if p.tokentype.tokentype == TokenType.Identifier):
 
-                if p.tokentype_basename() not in self.__registry:
+                if p.typename_basename() not in self.__registry:
 
                     tip = f'No such symbol exists: `{p.tokentype.text}`'
                     self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
 
-                elif p.tokentype_basename() == sym.name and not p.is_polymorphic():
+                elif p.typename_basename() == sym.name and not p.is_polymorphic():
 
                     tip = f'The symbol should be a complete type, but not: `{p.tokentype.text}`'
                     self._push_error(p, LinkerErrorCode.IncompleteTypeUsage, tip)
