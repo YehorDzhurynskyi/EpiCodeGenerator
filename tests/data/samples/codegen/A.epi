@@ -1,0 +1,30 @@
+class A
+{
+    epiS32 PName;
+
+    [Transient]
+    epiString Text = "my text";
+
+    [Virtual, ReadOnly]
+    epiArray<epiFloat> VirtualFloats;
+
+    [Virtual]
+    epiFloat VirtualFloat;
+
+    [Virtual, ReadCallback(SuppressRef=true)]
+    epiMat4x4f ProjMat;
+
+    [Min(0.0)]
+    epiDouble Value1 = 3.0;
+
+    [Min(0.0), Max(10.0)]
+    epiDouble Value2 = 5.0;
+
+    [Min(0.0), Max(10.0, Force=true)]
+    epiDouble Value3 = 2.535;
+
+    [Min(0, Force=true), Max(54, Force=true)]
+    epiU32 Value4;
+};
+
+class AA : A {};

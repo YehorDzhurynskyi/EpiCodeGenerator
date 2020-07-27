@@ -8,6 +8,8 @@ from epi_code_generator.code_generator import code_generator_emitter as emmiter
 from epi_code_generator.code_generator import code_generator_emitter as emmiter
 from epi_code_generator.code_generator import code_generator_emitter as emmiter
 
+from epigen_config import EpiGenConfig
+
 import os
 import pickle
 import hashlib
@@ -49,21 +51,19 @@ class CodeGenerationError(Exception):
 
 class CodeGenerator:
 
-    def __init__(self, symbols: list, dir_input: str, dir_output: str, dir_output_build: str):
+    def __init__(self, symbols: list, config: EpiGenConfig):
 
         self.__symbols = symbols
-        self.__dir_input = dir_input
-        self.__dir_output = dir_output
-        self.__dir_output_build = dir_output_build
+        self.__config = config
 
         self.__codegen_erros = []
 
         self.__cache_files_generated = {}
         self.__cache_files_storebuff = {}
 
-        if os.path.exists(f'{self.__dir_output_build}/epigen_cache.bin'):
+        if os.path.exists(f'{self.__config.dir_output_build}/epigen-cache.bin'):
 
-            with open(f'{self.__dir_output_build}/epigen_cache.bin', 'rb') as f:
+            with open(f'{self.__config.dir_output_build}/epigen-cache.bin', 'rb') as f:
                 self.__cache_files_generated = pickle.load(f)
 
     def dump(self):
@@ -75,7 +75,7 @@ class CodeGenerator:
 
             self.__cache_files_generated[path] = hashlib.md5(content.encode()).hexdigest()
 
-        with open(f'{self.__dir_output_build}/epigen_cache.bin', 'wb') as f:
+        with open(f'{self.__config.dir_output_build}/epigen-cache.bin', 'wb') as f:
             pickle.dump(self.__cache_files_generated, f)
 
     def _content_load(self, basename: str, ext: str) -> str:
@@ -104,18 +104,17 @@ class CodeGenerator:
 
         assert ext == 'h' or ext == 'cpp' or ext == 'hxx' or ext == 'cxx' or ext == 'epi'
 
+        if ext == 'epi':
+            return f'{basename}.epi'
+
         outdirs = {
-            'cxx': self.__dir_output_build,
-            'hxx': self.__dir_output_build,
-            'cpp': self.__dir_output,
-            'h': self.__dir_output,
-            'epi': self.__dir_input
+            'cxx': self.__config.dir_output_build,
+            'hxx': self.__config.dir_output_build,
+            'cpp': self.__config.dir_output,
+            'h': self.__config.dir_output
         }
 
-        outdir = outdirs[ext]
-
-        return f'{os.path.join(outdir, basename)}.{ext}'
-
+        return f'{os.path.join(outdirs[ext], basename)}.{ext}'
 
     def _is_dirty(self, basename: str, ext: str):
 
@@ -131,7 +130,7 @@ class CodeGenerator:
         if self._file_checksum(filepath) != checksum:
             return True
 
-        epifilepath = f'{os.path.join(self.__dir_input, basename)}.epi'
+        epifilepath = f'{os.path.join(self.__config.dir_input, basename)}.epi'
         assert os.path.exists(epifilepath)
 
         if epifilepath not in self.__cache_files_generated:
@@ -263,9 +262,10 @@ class CodeGenerator:
 
             assert isinstance(symbol, EpiClass)
 
-            basename = os.path.splitext(symbol.token.filepath)[0]
-            os.makedirs(os.path.dirname(os.path.join(self.__dir_output, basename)), exist_ok=True)
-            os.makedirs(os.path.dirname(os.path.join(self.__dir_output_build, basename)), exist_ok=True)
+            basename = os.path.splitext(symbol.token.abspath)[0]
+
+            os.makedirs(os.path.dirname(os.path.join(self.__config.dir_output, basename)), exist_ok=True)
+            os.makedirs(os.path.dirname(os.path.join(self.__config.dir_output_build, basename)), exist_ok=True)
 
             if self._is_dirty(basename, 'hxx'):
                 self._code_generate_hxx(symbol, basename)

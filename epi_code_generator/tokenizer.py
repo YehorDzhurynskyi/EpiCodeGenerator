@@ -201,7 +201,8 @@ class Token:
         self.text = text
         self.line = None
         self.column = None
-        self.filepath = None
+        self.abspath = None
+        self.relpath = None
 
     def __eq__(self, rhs):
 
@@ -211,7 +212,7 @@ class Token:
         return self.tokentype == rhs.tokentype and self.text == rhs.text
 
     def __str__(self):
-        return f'[{self.filepath}' '(l:{:4d}, c:{:4d})]: '.format(self.line, self.column) + f'"{self.text}" ({self.tokentype})'
+        return f'[{self.relpath}' '(l:{:4d}, c:{:4d})]: '.format(self.line, self.column) + f'"{self.text}" ({self.tokentype})'
 
     def __repr__(self):
         return f'text={self.text}, tokentype={self.tokentype}'
@@ -392,9 +393,10 @@ class Tokenizer:
 
         self.content_len = len(self.content)
         self.__at = 0
-        self.line = 1
-        self.column = 1
-        self.filepath = relpath
+        self.__line = 1
+        self.__column = 1
+        self.__abspath = abspath
+        self.__relpath = relpath
         self.tokens = []
 
     def _ch(self, offset: int = 0) -> chr:
@@ -402,6 +404,17 @@ class Tokenizer:
 
     def _substring_until_at(self, start: int) -> str:
         return self.content[start:min(self.at, self.content_len)]
+
+    def _token_create(self, tokentype: TokenType) -> Token:
+
+        token = Token(tokentype)
+
+        token.line = self.__line
+        token.column = self.__column
+        token.abspath = self.__abspath
+        token.relpath = self.__relpath
+
+        return token
 
     @property
     def at(self):
@@ -412,10 +425,10 @@ class Tokenizer:
 
         if self._ch() == '\n':
 
-            self.line += 1
-            self.column = 1
+            self.__line += 1
+            self.__column = 1
 
-        self.column += at - self.__at
+        self.__column += at - self.__at
         self.__at = at
 
     def tokenize(self):
@@ -443,10 +456,8 @@ class Tokenizer:
                 self._tokenize_term()
             else:
 
-                token = Token(TokenType.Unknown, ch)
-                token.line = self.line
-                token.column = self.column
-                token.filepath = self.filepath
+                token = self._token_create(TokenType.Unknown)
+                token.text = ch
 
                 self.tokens.append(token)
                 self.at += 1
@@ -466,10 +477,8 @@ class Tokenizer:
 
             if self.content.startswith(text, self.at):
 
-                token = Token(tokentype, text)
-                token.line = self.line
-                token.column = self.column
-                token.filepath = self.filepath
+                token = self._token_create(tokentype)
+                token.text = text
 
                 break
 
@@ -487,10 +496,7 @@ class Tokenizer:
 
     def _tokenize_string_literal(self):
 
-        token = Token(TokenType.Unknown)
-        token.line = self.line
-        token.column = self.column
-        token.filepath = self.filepath
+        token = self._token_create(TokenType.Unknown)
 
         tokentype_suspected = TokenType.StringLiteral
         begin = self.at
@@ -509,7 +515,7 @@ class Tokenizer:
 
             self.at += 1
 
-        if self._ch() == '"' and self.line == token.line:
+        if self._ch() == '"' and self.__line == token.line:
 
             token.tokentype = tokentype_suspected
             self.at += 1
@@ -525,10 +531,7 @@ class Tokenizer:
         # TODO: add unicode support (like: '\u8080')
         # (see: https://docs.microsoft.com/en-us/cpp/cpp/string-and-character-literals-cpp?view=vs-2019)
 
-        token = Token(TokenType.Unknown)
-        token.line = self.line
-        token.column = self.column
-        token.filepath = self.filepath
+        token = self._token_create(TokenType.Unknown)
 
         tokentype_suspected = TokenType.CharLiteral
         begin = self.at
@@ -544,7 +547,7 @@ class Tokenizer:
             self.at += 1
 
         self.at += 1
-        if self._ch() == "'" and self.line == token.line:
+        if self._ch() == "'" and self.__line == token.line:
 
             token.tokentype = tokentype_suspected
             self.at += 1
@@ -557,10 +560,7 @@ class Tokenizer:
 
     def _tokenize_term(self):
 
-        token = Token(TokenType.Unknown)
-        token.line = self.line
-        token.column = self.column
-        token.filepath = self.filepath
+        token = self._token_create(TokenType.Unknown)
 
         tokentype_suspected = TokenType.Identifier
         begin = self.at
@@ -578,10 +578,7 @@ class Tokenizer:
 
     def _tokenize_numeric_literal(self):
 
-        token = Token(TokenType.Unknown)
-        token.line = self.line
-        token.column = self.column
-        token.filepath = self.filepath
+        token = self._token_create(TokenType.Unknown)
 
         tokentype_suspected = TokenType.IntegerLiteral
         tokentype_expected = TokenType.IntegerLiteral

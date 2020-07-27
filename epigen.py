@@ -1,63 +1,79 @@
+from epi_code_generator.tokenizer import Tokenizer
+
+from epi_code_generator.idlparser import idlparser_base as idl
+from epi_code_generator.linker import linker as ln
+from epi_code_generator.code_generator import code_generator as cgen
+
+from epigen_config import EpiGenConfig
+from epigen_config import EpiGenManifest
+
 import os
 import logging
 import argparse
 import shutil
 import fnmatch
 
-from epi_code_generator.tokenizer import Tokenizer
-from epi_code_generator.inheritance_tree import InheritanceTree
-from epi_code_generator.inheritance_tree import InheritanceError
-from epi_code_generator.idlparser.idlparser import IDLParser
-from epi_code_generator.code_generator.code_generator import CodeGenerator
-from epi_code_generator.code_generator.code_generator import CodeGenerationError
-
 
 logger = logging.getLogger()
 
-def print_dependencies(args):
 
-    depds = []
-    for root, _, files in os.walk(args.input_dir):
+def epigen_dependencies(config: EpiGenConfig) -> list:
 
-        for file in filter(lambda f: f.endswith('epi'), files):
+    dependencies = []
+    for root, _, files in os.walk(config.dir_input):
 
-            relpath = os.path.join(os.path.relpath(root, args.input_dir), file)
-            if any(fnmatch.fnmatch(relpath, p) for p in args.ignore):
+        for epifile in filter(lambda f: f.endswith('epi'), files):
+
+            relpath = os.path.join(os.path.relpath(root, config.dir_input), epifile)
+            relpath = os.path.normpath(relpath)
+            if any(fnmatch.fnmatch(relpath, p) for p in config.ignore_list):
+
+                logger.debug(f'Ignoring: `{relpath}`')
                 continue
 
-            depds.append(os.path.join(root, relpath))
+            dependencies.append(os.path.join(config.dir_input, relpath))
 
-    print(';'.join(depds).replace('\\', '/'))
+    return dependencies
 
-def print_outputs(args, output_dir):
+
+def epigen_outputs(config: EpiGenConfig) -> list:
 
     outputs = []
-    for root, _, files in os.walk(args.input_dir):
+    for root, _, files in os.walk(config.dir_input):
 
-        for file in filter(lambda f: f.endswith('epi'), files):
+        for epifile in filter(lambda f: f.endswith('epi'), files):
 
-            relpath = os.path.join(os.path.relpath(root, args.input_dir), file)
-            if any(fnmatch.fnmatch(relpath, p) for p in args.ignore):
+            relpath = os.path.join(os.path.relpath(root, config.dir_input), epifile)
+            relpath = os.path.normpath(relpath)
+            if any(fnmatch.fnmatch(relpath, p) for p in config.ignore_list):
+
+                logger.debug(f'Ignoring: `{relpath}`')
                 continue
 
-            path = os.path.join(output_dir, relpath)
-            basename = os.path.splitext(path)[0]
-            outputs += [f'{basename}.{ext}' for ext in ['cpp', 'cxx', 'h', 'hxx']]
+            path_output = os.path.join(config.dir_output, relpath)
+            basename_output = os.path.splitext(path_output)[0]
+            outputs += [f'{basename_output}.{ext}' for ext in ['h', 'cpp']]
 
-    print(';'.join(outputs).replace('\\', '/'))
+            path_output_build = os.path.join(config.dir_output_build, relpath)
+            basename_output_build = os.path.splitext(path_output_build)[0]
+            outputs += [f'{basename_output_build}.{ext}' for ext in ['hxx','cxx']]
 
-def ignore_on_copy(dirname, files):
+    return outputs
+
+
+def _ignore_on_copy(dirname, files):
 
     filtered = []
     for f in files:
 
         p = os.path.join(dirname, f)
-        if any(fnmatch.fnmatch(p, i) for i in args.ignore):
+        if any(fnmatch.fnmatch(p, i) for i in config.ignore_list):
             filtered.append(f)
 
     return filtered
 
-def init_logger(log_level: int):
+
+def _init_logger(log_level: int, outdir: str):
 
     logger.setLevel(log_level)
 
@@ -67,12 +83,94 @@ def init_logger(log_level: int):
     stderr_handler.setLevel(logging.INFO)
     stderr_handler.setFormatter(formatter)
 
-    file_handler = logging.FileHandler('epi_code_generator.log', mode='w')
+    file_handler = logging.FileHandler(os.path.join(outdir, 'epigen.log'), mode='w')
     file_handler.setLevel(log_level)
     file_handler.setFormatter(formatter)
 
     logger.addHandler(stderr_handler)
     logger.addHandler(file_handler)
+
+
+def epigen(config: EpiGenConfig, manifest: EpiGenManifest):
+
+    os.makedirs(config.dir_output, exist_ok=True)
+    os.makedirs(config.dir_output_build, exist_ok=True)
+
+    if config.debug:
+
+        _init_logger(logging.DEBUG, config.dir_output_build)
+        logger.info(f'Debug mode enabled')
+
+    else:
+        _init_logger(logging.INFO, config.dir_output_build)
+
+    logger.info(f'Input Dir: {config.dir_input}')
+    logger.info(f'Output Dir: {config.dir_output}')
+    logger.info(f'Output CXX HXX Dir: {config.dir_output_build}')
+    logger.info(f'Ignore-list: {";".join(config.ignore_list)}')
+
+    if config.backup:
+
+        from tempfile import TemporaryDirectory
+        from tempfile import gettempdir
+        from uuid import uuid1
+
+        backupdir = f'{gettempdir()}/EpiCodeGenerator-{uuid1()}-backup'
+        logger.info(f'Backup <input dir> into {backupdir}')
+        shutil.copytree(config.dir_input, backupdir, ignore=_ignore_on_copy)
+
+    linker = ln.Linker()
+
+    modules = manifest.modules[:]
+    modules.sort(reverse=True)
+    for abspath in epigen_dependencies(config):
+
+        modulepath = next((m for m in modules if m in abspath), None)
+        if modulepath is None:
+
+            logger.fatal(f"Error while defining a module for `{abspath}`")
+            exit(-1)
+
+        relpath = os.path.relpath(abspath, modulepath)
+        relpath = os.path.normpath(relpath)
+        relpath = f'{os.path.basename(modulepath)}/{relpath}'
+
+        logger.info(f'Parsing: `{relpath}`')
+
+        tokenizer = Tokenizer(abspath, relpath)
+        tokens = tokenizer.tokenize()
+
+        for t in tokens:
+            logger.debug(str(t))
+
+        parser = idl.IDLParser(tokens)
+        registry_local, errors_syntax = parser.parse()
+
+        for e in errors_syntax:
+
+            logger.error(str(e))
+            exit(-1)
+
+        linker.register(registry_local)
+
+    errors_linkage = linker.link()
+
+    for e in errors_linkage:
+
+        logger.error(str(e))
+        exit(-1)
+
+    symbols = list(linker.registry.values())
+    codegen = cgen.CodeGenerator(symbols, config)
+    errors_codegen = codegen.code_generate()
+
+    for e in errors_codegen:
+
+        logger.error(str(e))
+        exit(-1)
+
+    codegen.dump()
+
 
 if __name__ == "__main__":
 
@@ -82,154 +180,86 @@ if __name__ == "__main__":
 
     grp_required.add_argument(
         '-i',
-        '--input-dir',
+        '--dir-input',
         type=str,
-        required=True,
-        help='TODO: fill'
+        required=True
+    )
+
+    grp_required.add_argument(
+        '-m',
+        '--manifest',
+        type=str,
+        required=True
     )
 
     grp_optional.add_argument(
         '-o',
-        '--output-dir',
-        type=str,
-        help='TODO: fill'
+        '--dir-output',
+        type=str
     )
 
     grp_optional.add_argument(
-        '--output-dir-cxx-hxx',
-        type=str,
-        help='TODO: fill'
+        '--dir-output-build',
+        type=str
     )
 
     grp_optional.add_argument(
         '--debug',
-        action='store_true',
-        help='TODO: fill'
+        action='store_true'
     )
 
     grp_optional.add_argument(
-        '--nobackup',
-        action='store_true',
-        help='TODO: fill'
+        '--backup',
+        action='store_true'
     )
 
     grp_optional.add_argument(
-        '--ignore',
+        '--ignore-list',
         action="extend",
         nargs="+",
         type=str,
-        help='TODO: fill',
         default=[]
     )
 
     grp_optional.add_argument(
         '--print-dependencies',
-        action='store_true',
-        help='TODO: fill'
+        action='store_true'
     )
 
     grp_optional.add_argument(
         '--print-outputs',
-        action='store_true',
-        help='TODO: fill'
+        action='store_true'
     )
 
     args = argparser.parse_args()
 
-    output_dir = args.output_dir if args.output_dir is not None else args.input_dir
-    output_dir_cxx_hxx = args.output_dir_cxx_hxx if args.output_dir_cxx_hxx is not None else output_dir
+    dir_output = args.dir_output if args.dir_output is not None else args.dir_input
+    dir_output_build = args.dir_output_build if args.dir_output_build is not None else dir_output
+
+    config = EpiGenConfig()
+    config.dir_input = args.dir_input
+    config.dir_output = dir_output
+    config.dir_output_build = dir_output_build
+    config.ignore_list = args.ignore_list
+    config.debug = args.debug
+    config.backup = args.backup
+
+    manifest = EpiGenManifest()
+    with open(args.manifest) as manifest_file:
+        manifest.from_json(manifest_file.read())
 
     if args.print_dependencies:
 
-        print_dependencies(args)
+        dependencies = epigen_dependencies(config)
+        print(';'.join(dependencies).replace('\\', '/'))
+
         exit(0)
 
     if args.print_outputs:
 
-        print_outputs(args, output_dir)
+        outputs = epigen_outputs(config)
+        print(';'.join(outputs).replace('\\', '/'))
+
         exit(0)
 
-    os.makedirs(output_dir, exist_ok=True)
-
-    if args.debug:
-
-        init_logger(logging.DEBUG)
-        logger.info(f'Debug mode enabled')
-
-    else:
-        init_logger(logging.INFO)
-
-    logger.info(f'Input Dir: {args.input_dir}')
-    logger.info(f'Output Dir: {output_dir}')
-    logger.info(f'Output CXX HXX Dir: {output_dir_cxx_hxx}')
-    logger.info(f'Ignore-list: {";".join(args.ignore)}')
-
-    if not args.nobackup:
-
-        from tempfile import TemporaryDirectory
-        from tempfile import gettempdir
-        from uuid import uuid1
-
-        backupdir = f'{gettempdir()}/EpiCodeGenerator-{uuid1()}-backup'
-        logger.info(f'Backup <input dir> into {backupdir}')
-        shutil.copytree(args.input_dir, backupdir, ignore=ignore_on_copy)
-
-    registry_global = {}
-    for root, _, files in os.walk(args.input_dir):
-
-        for file in filter(lambda f: f.endswith('epi'), files):
-
-            relpath = os.path.join(os.path.relpath(root, args.input_dir), file)
-            abspath = os.path.join(root, file)
-
-            if any(fnmatch.fnmatch(relpath, p) for p in args.ignore):
-                logger.info(f'Ignoring: {relpath}')
-                continue
-
-            logger.info(f'Parsing: {relpath}')
-
-            tokenizer = Tokenizer(abspath, relpath)
-            tokens = tokenizer.tokenize()
-
-            for t in tokens:
-                logger.debug(str(t))
-
-            parser = IDLParser(tokens)
-            registry_local, errors_syntax = parser.parse()
-
-            for e in errors_syntax:
-                logger.error(str(e))
-
-            if len(errors_syntax) != 0:
-                exit(-1)
-
-            registry_intersection = registry_global.keys() & registry_local.keys()
-            if len(registry_intersection) == 0:
-                registry_global = { **registry_global, **registry_local }
-            else:
-
-                for v in registry_intersection:
-                    logging.error(f'{v} is already defined in {registry_global[v].token.filepath}')
-
-                exit(-1)
-
-    try:
-        inheritance_tree = InheritanceTree(registry_global)
-    except InheritanceError as e:
-
-        logger.error(str(e))
-        exit(-1)
-
-    code_generator = CodeGenerator(args.input_dir, output_dir, output_dir_cxx_hxx)
-    for sym in registry_global.values():
-
-        logger.info(f'Generating code for: {sym.token.filepath}')
-
-        try:
-            code_generator.code_generate(sym, sym.token.filepath)
-        except CodeGenerationError as e:
-
-            logger.error(str(e))
-            exit(-1)
-
-    code_generator.dump()
+    epigen(config, manifest)

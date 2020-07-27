@@ -1,0 +1,12 @@
+class B : A
+{
+    epiPtrArray<B> BBs;
+
+    epiSize_t Size = 13;
+
+    B* Sibling;
+    epiFloat* NonSibling;
+
+    [Virtual]
+    epiFloat* NonSiblingVirtual;
+};
