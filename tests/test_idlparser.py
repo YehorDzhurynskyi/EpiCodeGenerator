@@ -713,6 +713,17 @@ class TestIDLParser:
             '''
             class A : B
             {
+                [Max(-1)]
+                epiS32* Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.AttributeInvalidTarget]
+        ),
+        (
+            '''
+            class A : B
+            {
                 [ReadCallback(SuppressRef=true)]
                 C Name;
             };
@@ -897,6 +908,38 @@ class TestIDLParser:
                                 .attr(
                                     EpiAttributeBuilder()
                                         .tokentype(TokenType.ReadOnly)
+                                        .build()
+                                )
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class A
+            {
+                [ReadOnly, Virtual]
+                epiFloat Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.SingleFloatingType)
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.ReadOnly)
+                                        .build()
+                                )
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Virtual)
                                         .build()
                                 )
                                 .build()

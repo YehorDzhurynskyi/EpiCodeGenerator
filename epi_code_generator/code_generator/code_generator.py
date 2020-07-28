@@ -2,11 +2,7 @@ from epi_code_generator.symbol import EpiSymbol
 from epi_code_generator.symbol import EpiClass
 
 from epi_code_generator.code_generator import code_generator_emitter as emmiter
-from epi_code_generator.code_generator import code_generator_emitter as emmiter
-from epi_code_generator.code_generator import code_generator_emitter as emmiter
-from epi_code_generator.code_generator import code_generator_emitter as emmiter
-from epi_code_generator.code_generator import code_generator_emitter as emmiter
-from epi_code_generator.code_generator import code_generator_emitter as emmiter
+from epi_code_generator.code_generator import code_generator_builder as bld
 
 from epigen_config import EpiGenConfig
 
@@ -185,41 +181,41 @@ class CodeGenerator:
         newcontent = content[:lbound] + inj + content[rbound:]
         self._content_store(newcontent, basename, ext)
 
-    def _code_generate_hxx(self, symbol: EpiSymbol, basename: str):
+    def _code_generate_hxx(self, symbol: EpiSymbol, basename: str, module_basename: str):
 
         with open(self._filepath_of(basename, 'hxx'), 'w') as f:
-            f.write(emmiter.emit_sekeleton_file(basename, 'hxx'))
+            f.write(emmiter.emit_sekeleton_file(module_basename, 'hxx', bld.Builder()).build())
 
-        injection = f'\n{emmiter.emit_class_declaration_hidden(symbol).build()}'
+        injection = f'\n{emmiter.emit_class_declaration_hidden(symbol, bld.Builder()).build()}'
         self._inject(injection, basename, 'hxx')
 
-    def _code_generate_cxx(self, symbol: EpiSymbol, basename: str):
+    def _code_generate_cxx(self, symbol: EpiSymbol, basename: str, module_basename: str):
 
         with open(self._filepath_of(basename, 'cxx'), 'w') as f:
-            f.write(emmiter.emit_sekeleton_file(basename, 'cxx'))
+            f.write(emmiter.emit_sekeleton_file(module_basename, 'cxx', bld.Builder()).build())
 
-        injection = f'{emmiter.emit_class_serialization(symbol).build()}\n'
+        injection = f'{emmiter.emit_class_serialization(symbol, bld.Builder()).build()}\n'
         self._inject(injection, basename, 'cxx', before='EPI_NAMESPACE_END()')
 
-        injection = f'{emmiter.emit_class_meta(symbol).build()}\n'
+        injection = f'{emmiter.emit_class_meta(symbol, bld.Builder()).build()}\n'
         self._inject(injection, basename, 'cxx', before='EPI_NAMESPACE_END()')
 
-    def _code_generate_cpp(self, symbol: EpiSymbol, basename: str):
+    def _code_generate_cpp(self, symbol: EpiSymbol, basename: str, module_basename: str):
 
         filepath = self._filepath_of(basename, 'cpp')
         if not os.path.exists(filepath):
             with open(filepath, 'w') as f:
-                f.write(emmiter.emit_sekeleton_file(basename, 'cpp'))
+                f.write(emmiter.emit_sekeleton_file(module_basename, 'cpp', bld.Builder()).build())
 
         # NOTE: fake injection to force cache its content
         self._inject('', basename, 'cpp', before='EPI_NAMESPACE_END()')
 
-    def _code_generate_h(self, symbol: EpiSymbol, basename: str):
+    def _code_generate_h(self, symbol: EpiSymbol, basename: str, module_basename: str):
 
         filepath = self._filepath_of(basename, 'h')
         if not os.path.exists(filepath):
             with open(filepath, 'w') as f:
-                f.write(emmiter.emit_sekeleton_file(basename, 'h'))
+                f.write(emmiter.emit_sekeleton_file(module_basename, 'h', bld.Builder()).build())
 
         if self._lookup(f'EPI_GENREGION_END({symbol.name})', basename, 'h') == -1:
 
@@ -229,7 +225,7 @@ class CodeGenerator:
                 raise CodeGenerationError(f'{basename}.h', CodeGenerationErrorCode.CorruptedAnchor, tip)
 
             # NOTE: symbol isn't present add it to the end
-            injection = f'{emmiter.emit_skeleton_class(symbol).build()}\n'
+            injection = f'{emmiter.emit_skeleton_class(symbol, bld.Builder()).build()}\n'
             self._inject(
                 injection,
                 basename,
@@ -245,7 +241,7 @@ class CodeGenerator:
                 raise CodeGenerationError(f'{basename}.h', CodeGenerationErrorCode.CorruptedAnchor, tip)
 
             # NOTE: symbol is present add it to the corresponding region
-            injection = f'\n{emmiter.emit_class_declaration(symbol).build()}\n'
+            injection = f'\n{emmiter.emit_class_declaration(symbol, bld.Builder()).build()}\n'
             self._inject(
                 injection,
                 basename,
@@ -260,22 +256,24 @@ class CodeGenerator:
 
             assert isinstance(symbol, EpiClass)
 
+            # TODO: move these functions to the Token class
             basename = os.path.splitext(symbol.token.relpath)[0]
+            module_basename = os.path.splitext(symbol.token.modulepath)[0]
 
             os.makedirs(os.path.dirname(os.path.join(self.__config.dir_output, basename)), exist_ok=True)
             os.makedirs(os.path.dirname(os.path.join(self.__config.dir_output_build, basename)), exist_ok=True)
 
             if self._is_dirty(basename, 'hxx'):
-                self._code_generate_hxx(symbol, basename)
+                self._code_generate_hxx(symbol, basename, module_basename)
 
             if self._is_dirty(basename, 'cxx'):
-                self._code_generate_cxx(symbol, basename)
+                self._code_generate_cxx(symbol, basename, module_basename)
 
             if self._is_dirty(basename, 'cpp'):
-                self._code_generate_cpp(symbol, basename)
+                self._code_generate_cpp(symbol, basename, module_basename)
 
             if self._is_dirty(basename, 'h'):
-                self._code_generate_h(symbol, basename)
+                self._code_generate_h(symbol, basename, module_basename)
 
             filepath = self._filepath_of(basename, 'epi')
             self.__cache_files_generated[filepath] = self._file_checksum(filepath)

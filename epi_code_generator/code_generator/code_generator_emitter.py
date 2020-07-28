@@ -14,11 +14,9 @@ def _property_getter(prty: EpiProperty, **kwargs) -> str:
     if prty.attr_find(TokenType.WriteOnly) is not None:
         return None
 
-    const = kwargs['const'] if 'const' in kwargs else False
     body = kwargs['body'] if 'body' in kwargs else True
     suffix = kwargs['suffix'] if 'suffix' in kwargs else ''
 
-    assert isinstance(const, bool)
     assert isinstance(body, bool)
     assert isinstance(suffix, str)
 
@@ -26,25 +24,21 @@ def _property_getter(prty: EpiProperty, **kwargs) -> str:
     if not any(a.tokentype in [TokenType.ReadCallback] for a in prty.attrs):
         signature = 'inline '
 
-    if prty.form not in [EpiProperty.Form.Pointer] and prty.typename_basename() not in Tokenizer.fundamentals():
+    if prty.form == EpiProperty.Form.Pointer:
+        signature = f'{signature}const {prty.typename()} '
+
+    elif prty.typename_basename() not in Tokenizer.fundamentals():
 
         attr_readcallback = prty.attr_find(TokenType.ReadCallback)
         if attr_readcallback is not None and attr_readcallback.param_named_of('SuppressRef') is not None:
-
-            # NOTE: SuppressRef implies return by the value that in its turn implies constness
-            if not const:
-                return None
-
             signature = f'{signature}{prty.typename()} '
-
         else:
-            signature = f'{signature}const {prty.typename()}& ' if const else f'{signature}{prty.typename()}& '
+            signature = f'{signature}const {prty.typename()}& '
 
     else:
         signature = f'{signature}{prty.typename()} '
 
-    signature = f'{signature}Get{prty.name}{suffix}()'
-    signature = f'{signature} const' if const else signature
+    signature = f'{signature}Get{prty.name}{suffix}() const'
 
     if not body:
         return signature
@@ -98,9 +92,9 @@ def _property_setter(prty: EpiProperty, **kwargs) -> str:
         value_min = attr_min.param_positional_at(0)
         force = attr_min.param_named_of('Force')
         if force:
-            signature = f'{signature}value = std::max(value, {value_min}); '
+            signature = f'{signature}value = std::max(value, {value_min.value()}); '
         else:
-            signature = f'{signature}epiExpected(value >= value_min); '
+            signature = f'{signature}epiExpected(value >= {value_min.value()}); '
 
     attr_max = prty.attr_find(TokenType.Max)
     if attr_max is not None:
@@ -108,9 +102,9 @@ def _property_setter(prty: EpiProperty, **kwargs) -> str:
         value_max = attr_max.param_positional_at(0)
         force = attr_max.param_named_of('Force')
         if force:
-            signature = f'{signature}value = std::min(value, {value_max}); '
+            signature = f'{signature}value = std::min(value, {value_max.value()}); '
         else:
-            signature = f'{signature}epiExpected(value <= value_max); '
+            signature = f'{signature}epiExpected(value <= {value_max.value()}); '
 
     if prty.attr_find(TokenType.WriteCallback) is not None:
         signature = f'{signature}Set{prty.name}_Callback(value)'
@@ -121,7 +115,7 @@ def _property_setter(prty: EpiProperty, **kwargs) -> str:
 
     return signature
 
-def emit_properties(properties: list, accessor_modifier: str, builder: bld.Builder = bld.Builder()) -> bld.Builder:
+def emit_properties(properties: list, accessor_modifier: str, builder: bld.Builder) -> bld.Builder:
 
     if len(properties) == 0:
         return builder
@@ -135,11 +129,12 @@ def emit_properties(properties: list, accessor_modifier: str, builder: bld.Build
         value = f'{{{p.tokenvalue.text}}}' if p.tokenvalue is not None else ''
         builder.line(f'{p.typename()} m_{p.name}{value};')
 
+    builder.tab(-1)
     builder.line_empty()
 
     return builder
 
-def emit_property_callbacks(properties: list, accessor_modifier: str, builder: bld.Builder = bld.Builder()) -> bld.Builder:
+def emit_property_callbacks(properties: list, accessor_modifier: str, builder: bld.Builder) -> bld.Builder:
 
     if len(properties) == 0:
         return builder
@@ -152,13 +147,9 @@ def emit_property_callbacks(properties: list, accessor_modifier: str, builder: b
 
         if p.attr_find(TokenType.ReadCallback) is not None:
 
-            p_getter = _property_getter(p, const=False, body=False, suffix='_Callback')
+            p_getter = _property_getter(p, body=False, suffix='_Callback')
             if p_getter is not None:
                 builder.line(f'{p_getter};')
-
-            p_getter_const = _property_getter(p, const=True, body=False, suffix='_Callback')
-            if p_getter_const is not None:
-                builder.line(f'{p_getter_const};')
 
         if p.attr_find(TokenType.WriteCallback) is not None:
 
@@ -166,33 +157,51 @@ def emit_property_callbacks(properties: list, accessor_modifier: str, builder: b
             if p_setter is not None:
                 builder.line(f'{p_setter};')
 
+    builder.tab(-1)
     builder.line_empty()
 
     return builder
 
-def emit_sekeleton_file(basename: str, ext: str) -> str:
-
-    builder = bld.Builder()
+def emit_sekeleton_file(module_basename: str, ext: str, builder: bld.Builder) -> bld.Builder:
 
     if ext in ['cxx', 'hxx']:
+
         builder.template('header_comment')
+        builder.line_empty()
+
+    if ext == 'hxx':
+        return builder
+
     if ext == 'h':
-        builder.template('h/header', filepath='filepath', basename=basename)
+
+        builder.template('h/header', module_basename=module_basename)
+        builder.line_empty()
+
     elif ext == 'cpp':
-        builder.template('cpp/header', module_name='module_name', filepath='filepath', basename=basename)
+
+        import pathlib
+
+        module_name = pathlib.Path(module_basename).parts[0]
+        builder.template('cpp/header', module_name=module_name, module_basename=module_basename)
+
     elif ext == 'cxx':
+
         builder.template('cxx/header')
+        builder.line_empty()
 
     builder.template('footer')
+    builder.line_empty()
 
-    return builder.build()
+    return builder
 
-def emit_class_declaration(clss: EpiClass, builder: bld.Builder = bld.Builder()) -> bld.Builder:
+def emit_class_declaration(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
 
     clss_typeid = hex(zlib.crc32(clss.name.encode()) & 0xffffffff)
     builder.template('h/class_header', class_name=clss.name, class_typeid=clss_typeid)
+    builder.line_empty()
 
     # pids
+    builder.tab()
     builder.line(f'enum {clss.name}_PIDs')
     builder.line('{')
     builder.tab()
@@ -206,6 +215,7 @@ def emit_class_declaration(clss: EpiClass, builder: bld.Builder = bld.Builder())
 
     builder.tab(-1)
     builder.line('};')
+    builder.tab(-1)
     builder.line_empty()
 
     properties_with_callback = [p for p in clss.properties if p.attr_find(TokenType.ReadCallback) is not None or
@@ -219,54 +229,61 @@ def emit_class_declaration(clss: EpiClass, builder: bld.Builder = bld.Builder())
 
     return builder
 
-def emit_skeleton_class(clss: EpiClass, builder: bld.Builder = bld.Builder()) -> bld.Builder:
+def emit_skeleton_class(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
 
     clss_parent = clss.parent if clss.parent is not None else 'Object'
     builder.line(f'class {clss.name} : public {clss_parent}')
     builder.line('{')
-    builder.anchor_gen_region(f'{clss.name}')
 
-    emit_class_declaration(clss, builder)
+    builder = emit_class_declaration(clss, builder)
 
-    builder.anchor_gen_endregion(f'{clss.name}')
     builder.tab(-1)
     builder.line('};')
     builder.line_empty()
 
     return builder
 
-def emit_class_serialization(clss: EpiClass, builder: bld.Builder = bld.Builder()) -> bld.Builder:
+def emit_class_serialization(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
+
+    properties_non_transient = [p for p in clss.properties if p.attr_find(TokenType.Transient) is None]
 
     builder.template('cxx/class_serialization_header', class_name=clss.name)
+    if len(properties_non_transient) > 0:
 
-    builder.tab()
-    for p in clss.properties:
+        builder.line_empty()
+        builder.tab()
 
-        if p.attr_find(TokenType.Transient) is None:
+        for p in properties_non_transient:
             builder.template('cxx/class_serialization_property', property_name=p.name)
 
-    builder.tab(-1)
+        builder.tab(-1)
+
     builder.line('}')
     builder.line_empty()
 
     builder.template('cxx/class_deserialization_header', class_name=clss.name)
 
-    builder.tab()
-    for p in clss.properties:
+    if len(properties_non_transient) > 0:
 
-        if p.attr_find(TokenType.Transient) is None:
+        builder.line_empty()
+        builder.tab()
+
+        for p in properties_non_transient:
             builder.template('cxx/class_deserialization_property', property_name=p.name)
 
-    builder.tab(-1)
+        builder.tab(-1)
+
     builder.line('}')
     builder.line_empty()
 
     return builder
 
-def emit_class_meta(clss: EpiClass, builder: bld.Builder = bld.Builder()) -> bld.Builder:
+def emit_class_meta(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
 
     builder.template('cxx/class_meta_header', class_name=clss.name)
+    builder.line_empty()
 
+    builder.tab()
     for p in clss.properties:
 
         p_nested_typeid = 'MetaTypeID_None'
@@ -276,6 +293,11 @@ def emit_class_meta(clss: EpiClass, builder: bld.Builder = bld.Builder()) -> bld
             p_nested_typeid = f'epiHashCompileTime({p.tokens_nested[0].text})'
 
         p_typeid = f'epiHashCompileTime({p.typename_basename()})'
+
+        if p.form == EpiProperty.Form.Pointer:
+
+            p_nested_typeid = p_typeid
+            p_typeid = 'MetaTypeID_Ptr'
 
         attr_readcallback = p.attr_find(TokenType.ReadCallback)
         attr_writecallback = p.attr_find(TokenType.WriteCallback)
@@ -316,30 +338,34 @@ def emit_class_meta(clss: EpiClass, builder: bld.Builder = bld.Builder()) -> bld
                          property_ptr_read=p_ptr_read,
                          property_ptr_write=p_ptr_write)
 
+        builder.line_empty()
+
+    builder.tab(-1)
+
     clss_parent = clss.parent if clss.parent is not None else 'Object'
     builder.template('cxx/class_meta_footer', class_name=clss.name, class_parent_name=clss_parent)
+    builder.line_empty()
 
     return builder
 
-def emit_class_declaration_hidden(clss: EpiClass, builder: bld.Builder = bld.Builder()) -> bld.Builder:
+def emit_class_declaration_hidden(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
 
     clss_parent = clss.parent if clss.parent is not None else 'Object'
     builder.template('hxx/class_hidden_header', class_name=clss.name, class_parent_name=clss_parent)
 
-    # getters/setters
-    for p in clss.properties:
+    if len(clss.properties) > 0:
 
-        p_getter = _property_getter(p, const=False)
-        if p_getter is not None:
-            builder.line(f'{p_getter} \\')
+        builder.line(' \\')
+        # getters/setters
+        for p in clss.properties:
 
-        p_getter_const = _property_getter(p, const=True)
-        if p_getter_const is not None:
-            builder.line(f'{p_getter_const} \\')
+            p_getter = _property_getter(p)
+            if p_getter is not None:
+                builder.line(f'{p_getter} \\')
 
-        p_setter = _property_setter(p)
-        if p_setter is not None:
-            builder.line(f'{p_setter} \\')
+            p_setter = _property_setter(p)
+            if p_setter is not None:
+                builder.line(f'{p_setter} \\')
 
     builder.line(' \\')
 
@@ -356,30 +382,32 @@ def emit_class_declaration_hidden(clss: EpiClass, builder: bld.Builder = bld.Bui
     builder.tab(-1)
     builder.line('}; \\')
 
-    builder.line(' \\')
-    builder.line('private: \\')
-
     # getters/setters function pointers
-    for p in clss.properties:
+    properties_func_ptrs = [p for p in clss.properties if p.attr_find(TokenType.ReadCallback) is not None or p.attr_find(TokenType.WriteCallback) is not None]
+    if len(properties_func_ptrs) > 0:
 
-        attr_readcallback = p.attr_find(TokenType.ReadCallback)
-        attr_writecallback = p.attr_find(TokenType.WriteCallback)
-        attr_readonly = p.attr_find(TokenType.ReadOnly)
-        attr_writeonly = p.attr_find(TokenType.WriteOnly)
+        builder.line(' \\')
+        builder.line('private: \\')
+        for p in properties_func_ptrs:
 
-        if attr_readcallback is not None and attr_writeonly is None:
+            attr_readcallback = p.attr_find(TokenType.ReadCallback)
+            attr_writecallback = p.attr_find(TokenType.WriteCallback)
 
-            if p.typename_basename() not in Tokenizer.fundamentals() and p.form != EpiProperty.Form.Pointer and attr_readcallback.param_named_of('SuppressRef') is None:
-                builder.line(f'const {p.typename()}& ({clss.name}::*Get{p.name}_FuncPtr)() const {{ &{clss.name}::Get{p.name} }}; \\')
-            else:
-                builder.line(f'{p.typename()} ({clss.name}::*Get{p.name}_FuncPtr)() const {{ &{clss.name}::Get{p.name} }}; \\')
+            if attr_readcallback is not None:
 
-        if attr_writecallback is not None and attr_readonly is None:
+                if p.form == EpiProperty.Form.Pointer:
+                    builder.line(f'const {p.typename()} ({clss.name}::*Get{p.name}_FuncPtr)() const {{ &{clss.name}::Get{p.name} }}; \\')
+                elif p.typename_basename() not in Tokenizer.fundamentals() and attr_readcallback.param_named_of('SuppressRef') is None:
+                    builder.line(f'const {p.typename()}& ({clss.name}::*Get{p.name}_FuncPtr)() const {{ &{clss.name}::Get{p.name} }}; \\')
+                else:
+                    builder.line(f'{p.typename()} ({clss.name}::*Get{p.name}_FuncPtr)() const {{ &{clss.name}::Get{p.name} }}; \\')
 
-            if p.typename_basename() not in Tokenizer.fundamentals() and p.form != EpiProperty.Form.Pointer and attr_writecallback.param_named_of('SuppressRef') is None:
-                builder.line(f'void ({clss.name}::*Set{p.name}_FuncPtr)(const {p.typename()}&) {{ &{clss.name}::Set{p.name} }}; \\')
-            else:
-                builder.line(f'void ({clss.name}::*Set{p.name}_FuncPtr)({p.typename()}) {{ &{clss.name}::Set{p.name} }}; \\')
+            if attr_writecallback is not None:
+
+                if p.typename_basename() not in Tokenizer.fundamentals() and p.form != EpiProperty.Form.Pointer and attr_writecallback.param_named_of('SuppressRef') is None:
+                    builder.line(f'void ({clss.name}::*Set{p.name}_FuncPtr)(const {p.typename()}&) {{ &{clss.name}::Set{p.name} }}; \\')
+                else:
+                    builder.line(f'void ({clss.name}::*Set{p.name}_FuncPtr)({p.typename()}) {{ &{clss.name}::Set{p.name} }}; \\')
 
     builder.line_empty()
     builder.line_empty()

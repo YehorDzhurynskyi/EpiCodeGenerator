@@ -42,7 +42,7 @@ MetaClass A::EmitMetaClass()
             /* Name */ "PName",
             /* PtrRead */ (void*)offsetof(A, m_PName),
             /* PtrWrite */ (void*)offsetof(A, m_PName),
-            /* Flags */ {{}},
+            /* Flags */ {},
             /* typeID */ epiHashCompileTime(epiS32),
             /* nestedTypeID */ MetaTypeID_None
         );
@@ -54,7 +54,7 @@ MetaClass A::EmitMetaClass()
             /* Name */ "Text",
             /* PtrRead */ (void*)offsetof(A, m_Text),
             /* PtrWrite */ (void*)offsetof(A, m_Text),
-            /* Flags */ {{}},
+            /* Flags */ {},
             /* typeID */ epiHashCompileTime(epiString),
             /* nestedTypeID */ MetaTypeID_None
         );
@@ -65,8 +65,8 @@ MetaClass A::EmitMetaClass()
         MetaProperty m = epiMetaProperty(
             /* Name */ "VirtualFloats",
             /* PtrRead */ (void*)offsetof(A, GetVirtualFloats_FuncPtr),
-            /* PtrWrite */ nullptr,
-            /* Flags */ {{MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskReadOnly}},
+            /* PtrWrite */ (void*)nullptr,
+            /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskReadOnly},
             /* typeID */ epiHashCompileTime(epiArray),
             /* nestedTypeID */ epiHashCompileTime(epiFloat)
         );
@@ -78,19 +78,7 @@ MetaClass A::EmitMetaClass()
             /* Name */ "VirtualFloat",
             /* PtrRead */ (void*)offsetof(A, GetVirtualFloat_FuncPtr),
             /* PtrWrite */ (void*)offsetof(A, SetVirtualFloat_FuncPtr),
-            /* Flags */ {{MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback | MetaProperty::Flags::MaskReadOnly}},
-            /* typeID */ epiHashCompileTime(epiFloat),
-            /* nestedTypeID */ MetaTypeID_None
-        );
-        data.AddProperty(epiHashCompileTime(VirtualFloat), std::move(m));
-    }
-
-    {
-        MetaProperty m = epiMetaProperty(
-            /* Name */ "VirtualFloat",
-            /* PtrRead */ (void*)offsetof(A, GetVirtualFloat_FuncPtr),
-            /* PtrWrite */ (void*)offsetof(A, SetVirtualFloat_FuncPtr),
-            /* Flags */ {{MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback | MetaProperty::Flags::MaskReadOnly}},
+            /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiFloat),
             /* nestedTypeID */ MetaTypeID_None
         );
@@ -102,7 +90,7 @@ MetaClass A::EmitMetaClass()
             /* Name */ "ProjMat",
             /* PtrRead */ (void*)offsetof(A, GetProjMat_FuncPtr),
             /* PtrWrite */ (void*)offsetof(A, SetProjMat_FuncPtr),
-            /* Flags */ {{MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback | MetaProperty::Flags::MaskReadOnly}},
+            /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiMat4x4f),
             /* nestedTypeID */ MetaTypeID_None
         );
@@ -114,7 +102,7 @@ MetaClass A::EmitMetaClass()
             /* Name */ "Value1",
             /* PtrRead */ (void*)offsetof(A, m_Value1),
             /* PtrWrite */ (void*)offsetof(A, m_Value1),
-            /* Flags */ {{}},
+            /* Flags */ {},
             /* typeID */ epiHashCompileTime(epiDouble),
             /* nestedTypeID */ MetaTypeID_None
         );
@@ -126,7 +114,7 @@ MetaClass A::EmitMetaClass()
             /* Name */ "Value2",
             /* PtrRead */ (void*)offsetof(A, m_Value2),
             /* PtrWrite */ (void*)offsetof(A, m_Value2),
-            /* Flags */ {{}},
+            /* Flags */ {},
             /* typeID */ epiHashCompileTime(epiDouble),
             /* nestedTypeID */ MetaTypeID_None
         );
@@ -138,7 +126,7 @@ MetaClass A::EmitMetaClass()
             /* Name */ "Value3",
             /* PtrRead */ (void*)offsetof(A, m_Value3),
             /* PtrWrite */ (void*)offsetof(A, m_Value3),
-            /* Flags */ {{}},
+            /* Flags */ {},
             /* typeID */ epiHashCompileTime(epiDouble),
             /* nestedTypeID */ MetaTypeID_None
         );
@@ -150,11 +138,23 @@ MetaClass A::EmitMetaClass()
             /* Name */ "Value4",
             /* PtrRead */ (void*)offsetof(A, m_Value4),
             /* PtrWrite */ (void*)offsetof(A, m_Value4),
-            /* Flags */ {{}},
-            /* typeID */ epiHashCompileTime(epiDouble),
+            /* Flags */ {},
+            /* typeID */ epiHashCompileTime(epiU32),
             /* nestedTypeID */ MetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Value4), std::move(m));
+    }
+
+    {
+        MetaProperty m = epiMetaProperty(
+            /* Name */ "NonSiblingVirtual",
+            /* PtrRead */ (void*)offsetof(A, GetNonSiblingVirtual_FuncPtr),
+            /* PtrWrite */ (void*)offsetof(A, SetNonSiblingVirtual_FuncPtr),
+            /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
+            /* typeID */ MetaTypeID_Ptr,
+            /* nestedTypeID */ epiHashCompileTime(epiFloat)
+        );
+        data.AddProperty(epiHashCompileTime(NonSiblingVirtual), std::move(m));
     }
 
     return MetaClass(std::move(data), epiHashCompileTime(A), epiHashCompileTime(Object), sizeof(A), "A");

@@ -7,6 +7,19 @@ from epi_code_generator.tokenizer import Token
 from epi_code_generator.tokenizer import TokenType
 
 
+_EPIATTRIBUTE_CONFLICT_TABLE = {
+    TokenType.WriteCallback: [TokenType.ReadOnly],
+    TokenType.ReadCallback: [TokenType.WriteOnly],
+    TokenType.Virtual: [],
+    TokenType.ReadOnly: [TokenType.WriteOnly, TokenType.WriteCallback, TokenType.Min, TokenType.Max],
+    TokenType.WriteOnly: [TokenType.ReadOnly, TokenType.ReadCallback],
+    TokenType.Transient: [],
+    TokenType.Min: [TokenType.ReadOnly],
+    TokenType.Max: [TokenType.ReadOnly]
+}
+# NOTE: The number of conflicting attributes should be equal to the number of occurrence of this attribute in other conflict lists
+assert all(len(conflicts) == sum([conflicts_.count(a) for conflicts_ in _EPIATTRIBUTE_CONFLICT_TABLE.values()]) for a, conflicts in _EPIATTRIBUTE_CONFLICT_TABLE.items())
+
 class EpiAttribute:
 
     def __init__(self, tokentype: TokenType, token: Token = None):
@@ -32,6 +45,14 @@ class EpiAttribute:
         params_positional = '\n'.join([repr(p) for p in self.__params_positional])
         params_named = '\n'.join([f'{k} => {repr(p)}' for k, p in self.__params_named.items()])
         return f'tokentype=({repr(self.tokentype)}), params positional: {params_positional}, params named: {params_named}'
+
+    def conflicts(self, attr) -> bool:
+
+        assert self.tokentype in _EPIATTRIBUTE_CONFLICT_TABLE
+        assert attr.tokentype in _EPIATTRIBUTE_CONFLICT_TABLE
+
+        return attr.tokentype in _EPIATTRIBUTE_CONFLICT_TABLE[self.tokentype]
+
 
     @property
     def params(self):
@@ -115,9 +136,7 @@ class EpiSymbol(abc.ABC):
         getattr(idlattr, f'introduce_{attr.tokentype.name}')(attr, self)
 
         duplicates = [a for a in self.__attrs if attr.tokentype == a.tokentype]
-        assert len(duplicates) <= 1
-
-        if len(duplicates) == 1:
+        for duplicate in duplicates:
 
             # NOTE: there could be a case when a duplicating attribute is implied indirectly
             # for example: [Virtual, ReadCallback(SuppressRef=true)], looking on this example
@@ -125,9 +144,21 @@ class EpiSymbol(abc.ABC):
             # ReadCallback attribute, so the collision occurs, but the user-defined attributes
             # couldn't collide and such collision is invalid
 
-            assert duplicates[0].is_implied_indirectly
+            assert duplicate.is_implied_indirectly
+            self.__attrs.remove(duplicate)
 
-            self.__attrs.remove(duplicates[0])
+        assert len(duplicates) <= 1
+
+        conflicts = [a for a in self.__attrs if attr.conflicts(a)]
+        for conflict in conflicts:
+
+            # NOTE: there could be a case when a conflicting attribute is implied indirectly
+            # for example: [Virtual, ReadOnly], looking on this example
+            # Virtual attribute implies WriteCallback, but later parser stumbles on user-provided
+            # ReadOnly attribute, so the conflict occurs
+
+            assert conflict.is_implied_indirectly
+            self.__attrs.remove(conflict)
 
         self.__attrs.append(attr)
 
@@ -158,7 +189,7 @@ class EpiProperty(EpiSymbol):
         self.__tokenvalue = None
 
     def typename_basename(self):
-        return self.tokentype.text.rstrip('*&')
+        return self.tokentype.text
 
     def typename(self):
 
@@ -170,6 +201,11 @@ class EpiProperty(EpiSymbol):
         typename = self.tokentype.text
         if nested_len != 0:
             typename = f'{typename}<{",".join(n.text for n in self.tokens_nested)}>'
+
+        if self.form == EpiProperty.Form.Pointer:
+
+            # NOTE: works only for single-depth pointers
+            typename = f'{typename}*'
 
         return typename
 

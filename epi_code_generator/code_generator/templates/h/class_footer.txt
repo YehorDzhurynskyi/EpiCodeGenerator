@@ -1,2 +1,1 @@
-
 EPI_GENREGION_END(${class_name})

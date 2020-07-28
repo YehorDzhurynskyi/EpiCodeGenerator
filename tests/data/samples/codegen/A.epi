@@ -25,6 +25,9 @@ class A
 
     [Min(0, Force=true), Max(54, Force=true)]
     epiU32 Value4;
+
+    [Virtual]
+    epiFloat* NonSiblingVirtual;
 };
 
 class AA : A {};

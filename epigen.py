@@ -125,24 +125,35 @@ def epigen(config: EpiGenConfig, manifest: EpiGenManifest):
     linker = ln.Linker()
 
     modules = manifest.modules[:]
+
+    def modulepath_dir_input(p: str) -> str:
+
+        p = os.path.relpath(p, config.dir_input)
+        p = os.path.join(os.path.basename(config.dir_input), p)
+        p = os.path.normpath(p)
+
+        return p
+
+    modules = [modulepath_dir_input(m) for m in modules]
     modules.sort(reverse=True)
-    modules = [os.path.abspath(m) for m in modules]
     for abspath in epigen_dependencies(config):
 
         relpath = os.path.relpath(abspath, config.dir_input)
         relpath = os.path.normpath(relpath)
 
-        module = next((m for m in modules if m in abspath), None)
+        relpath_dir_input = os.path.join(os.path.basename(config.dir_input), relpath)
+
+        module = next((m for m in modules if m in relpath_dir_input), None)
         if module is None:
 
-            logger.fatal(f"Error while defining a module for `{relpath}`")
+            logger.fatal(f"Error while defining a module for `{relpath_dir_input}`")
             exit(-1)
 
-        modulepath = os.path.relpath(abspath, module)
+        modulepath = os.path.relpath(relpath_dir_input, module)
         modulepath = os.path.normpath(modulepath)
         modulepath = os.path.join(os.path.basename(module), modulepath)
 
-        logger.info(f'Parsing: `{modulepath}`')
+        logger.info(f'Parsing: `{modulepath}` (`{relpath_dir_input}`)')
 
         tokenizer = Tokenizer(abspath, relpath, modulepath)
         tokens = tokenizer.tokenize()

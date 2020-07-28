@@ -17,28 +17,17 @@ class EpiAttributeValidationError(Exception):
         self.err_code = err_code
 
 
-__EPI_ATTRIBUTE_CONFLICT_TABLE = {
-    TokenType.WriteCallback: [TokenType.ReadOnly],
-    TokenType.ReadCallback: [TokenType.WriteOnly],
-    TokenType.Virtual: [],
-    TokenType.ReadOnly: [TokenType.WriteOnly],
-    TokenType.WriteOnly: [TokenType.ReadOnly],
-    TokenType.Transient: [],
-    TokenType.Min: [TokenType.ReadOnly],
-    TokenType.Max: [TokenType.ReadOnly]
-}
-
-
 def __validate_conflicts(attr: EpiAttribute, target: EpiSymbol):
 
     for a in target.attrs:
 
-        if a.tokentype == attr.tokentype and not a.is_implied_indirectly:
+        if a.is_implied_indirectly:
+            continue
+
+        if a.tokentype == attr.tokentype:
             raise EpiAttributeValidationError(f'It duplicates {a.tokentype.name}', attr.token, idl.IDLSyntaxErrorCode.AttributeConflict)
 
-        assert attr.tokentype in __EPI_ATTRIBUTE_CONFLICT_TABLE
-
-        if a.tokentype in __EPI_ATTRIBUTE_CONFLICT_TABLE[attr.tokentype]:
+        if attr.conflicts(a):
             raise EpiAttributeValidationError(f'It conflicts with {a.tokentype.name}', attr.token, idl.IDLSyntaxErrorCode.AttributeConflict)
 
 
@@ -115,6 +104,19 @@ def __validate_target_type(attr: EpiAttribute, target: EpiSymbol, acceptable_tar
         if target.tokentype.tokentype not in acceptable_targets:
 
             msg = f'An attribute applied to the wrong target-type (should be applied to: { " or ".join(t.name for t in acceptable_targets) })'
+            raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidTarget)
+
+    else:
+        assert False, 'Unhandled case!'
+
+
+def __validate_target_form(attr: EpiAttribute, target: EpiSymbol, acceptable_forms: list):
+
+    if isinstance(target, EpiProperty):
+
+        if target.form not in acceptable_forms:
+
+            msg = f'An attribute applied to the wrong target-form (should be applied to: { " or ".join(t.name for t in acceptable_forms) })'
             raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidTarget)
 
     else:
@@ -241,6 +243,7 @@ def introduce_Min(attr: EpiAttribute, target: EpiSymbol):
                                           TokenType.UInt64Type,
                                           TokenType.ByteType,
                                           TokenType.SizeTType])
+    __validate_target_form(attr, target, [EpiProperty.Form.Plain])
     __validate_parameters_positional(attr, [TokenType.literals_of(target.tokentype.tokentype)])
     __validate_parameters_named(attr, {
         'Force': [TokenType.TrueLiteral, TokenType.FalseLiteral]
@@ -264,6 +267,7 @@ def introduce_Max(attr: EpiAttribute, target: EpiSymbol):
                                           TokenType.UInt64Type,
                                           TokenType.ByteType,
                                           TokenType.SizeTType])
+    __validate_target_form(attr, target, [EpiProperty.Form.Plain])
     __validate_parameters_positional(attr, [TokenType.literals_of(target.tokentype.tokentype)])
     __validate_parameters_named(attr, {
         'Force': [TokenType.TrueLiteral, TokenType.FalseLiteral]

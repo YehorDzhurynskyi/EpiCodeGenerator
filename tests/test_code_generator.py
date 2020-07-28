@@ -12,6 +12,13 @@ class TestCodeGenerator:
 
     @pytest.mark.parametrize('dirpath,modules', [
         (
+            'tests/data/samples/codegen',
+            [
+                'tests/data/samples/codegen',
+                os.path.abspath('tests/data/samples/codegen/subfolder/subfolder')
+            ]
+        ),
+        (
             os.path.abspath('tests/data/samples/codegen/subfolder/subfolder'),
             [
                 'tests/data/samples/codegen/subfolder/subfolder'
@@ -40,13 +47,6 @@ class TestCodeGenerator:
             [
                 'tests/data/samples/codegen',
                 'tests/data/samples/codegen/subfolder/subfolder'
-            ]
-        ),
-        (
-            'tests/data/samples/codegen',
-            [
-                'tests/data/samples/codegen',
-                os.path.abspath('tests/data/samples/codegen/subfolder/subfolder')
             ]
         ),
         (
@@ -102,4 +102,4 @@ class TestCodeGenerator:
                 with open(abspath, 'r') as f:
                     content = f.read()
 
-                assert content == content_exp
+                assert content == content_exp, f'Checking {abspath} (len={len(content)} == len-exp={len(content_exp)})'

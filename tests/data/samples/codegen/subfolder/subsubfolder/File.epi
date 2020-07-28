@@ -6,7 +6,4 @@ class B : A
 
     B* Sibling;
     epiFloat* NonSibling;
-
-    [Virtual]
-    epiFloat* NonSiblingVirtual;
 };
