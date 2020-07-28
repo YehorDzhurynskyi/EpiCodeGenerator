@@ -1,4 +1,3 @@
-EPI_GENREGION_BEGIN(${class_name})
 
 EPI_GENHIDDEN_${class_name}()
 

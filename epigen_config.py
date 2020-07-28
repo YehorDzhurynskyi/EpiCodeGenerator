@@ -14,6 +14,7 @@ class EpiGenConfig:
 
     debug: bool = False
     backup: bool = False
+    caching: bool = True
 
     ignore_list: List[str] = field(default_factory=list)
 

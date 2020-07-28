@@ -57,7 +57,7 @@ class CodeGenerator:
         self.__cache_files_generated = {}
         self.__cache_files_storebuff = {}
 
-        if os.path.exists(f'{self.__config.dir_output_build}/epigen-cache.bin'):
+        if self.__config.caching and os.path.exists(f'{self.__config.dir_output_build}/epigen-cache.bin'):
 
             with open(f'{self.__config.dir_output_build}/epigen-cache.bin', 'rb') as f:
                 self.__cache_files_generated = pickle.load(f)
@@ -69,10 +69,12 @@ class CodeGenerator:
             with open(path, 'w') as f:
                 f.write(content)
 
-            self.__cache_files_generated[path] = hashlib.md5(content.encode()).hexdigest()
+            if self.__config.caching:
+                self.__cache_files_generated[path] = hashlib.md5(content.encode()).hexdigest()
 
-        with open(f'{self.__config.dir_output_build}/epigen-cache.bin', 'wb') as f:
-            pickle.dump(self.__cache_files_generated, f)
+        if self.__config.caching:
+            with open(f'{self.__config.dir_output_build}/epigen-cache.bin', 'wb') as f:
+                pickle.dump(self.__cache_files_generated, f)
 
     def _content_load(self, basename: str, ext: str) -> str:
 
@@ -275,7 +277,10 @@ class CodeGenerator:
             if self._is_dirty(basename, 'h'):
                 self._code_generate_h(symbol, basename, module_basename)
 
-            filepath = self._filepath_of(basename, 'epi')
-            self.__cache_files_generated[filepath] = self._file_checksum(filepath)
+            if self.__config.caching:
+
+                # TODO: move in the other place
+                filepath = self._filepath_of(basename, 'epi')
+                self.__cache_files_generated[filepath] = self._file_checksum(filepath)
 
         return self.__codegen_erros

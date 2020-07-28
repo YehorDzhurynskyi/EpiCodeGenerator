@@ -110,6 +110,7 @@ def epigen(config: EpiGenConfig, manifest: EpiGenManifest):
     logger.info(f'Output Dir: {config.dir_output}')
     logger.info(f'Output CXX HXX Dir: {config.dir_output_build}')
     logger.info(f'Ignore-list: {";".join(config.ignore_list)}')
+    logger.debug(f'Caching is enabled: {config.caching}')
     logger.debug(f'Modules: {";".join(manifest.modules)}')
 
     if config.backup:
@@ -232,6 +233,11 @@ if __name__ == "__main__":
     )
 
     grp_optional.add_argument(
+        '--no-caching',
+        action='store_true'
+    )
+
+    grp_optional.add_argument(
         '--ignore-list',
         action="extend",
         nargs="+",
@@ -261,6 +267,7 @@ if __name__ == "__main__":
     config.ignore_list = args.ignore_list
     config.debug = args.debug
     config.backup = args.backup
+    config.caching = args.no_caching is None or not args.no_caching
 
     manifest = EpiGenManifest()
     with open(args.manifest) as manifest_file:

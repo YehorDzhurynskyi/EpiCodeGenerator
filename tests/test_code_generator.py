@@ -66,40 +66,43 @@ class TestCodeGenerator:
     ])
     def test_sequence(self, tmpdir: str, dirpath: str, modules: list):
 
-        config = EpiGenConfig()
-        config.dir_input = dirpath
-        config.dir_output = tmpdir
-        config.dir_output_build = tmpdir
-        config.ignore_list = []
-        config.debug = True
-        config.backup = False
+        for iteration in range(4):
 
-        manifest = EpiGenManifest()
-        manifest.modules = modules
+            config = EpiGenConfig()
+            config.dir_input = dirpath
+            config.dir_output = tmpdir
+            config.dir_output_build = tmpdir
+            config.ignore_list = []
+            config.debug = True
+            config.backup = False
+            config.caching = iteration not in [0, 1]
 
-        epigen(config, manifest)
+            manifest = EpiGenManifest()
+            manifest.modules = modules
 
-        for root, _, files in os.walk(tmpdir):
+            epigen(config, manifest)
 
-            for f in filter(lambda f: f.endswith('h') or f.endswith('hxx') or f.endswith('cpp') or f.endswith('cxx'), files):
+            for root, _, files in os.walk(tmpdir):
 
-                abspath = os.path.join(os.path.relpath(root, tmpdir), f)
-                abspath = os.path.normpath(abspath)
-                abspath = os.path.join(tmpdir, abspath)
-                abspath = os.path.abspath(abspath)
+                for f in filter(lambda f: f.endswith('h') or f.endswith('hxx') or f.endswith('cpp') or f.endswith('cxx'), files):
 
-                relpath = os.path.relpath(abspath, tmpdir)
-                relpath = os.path.normpath(relpath)
+                    abspath = os.path.join(os.path.relpath(root, tmpdir), f)
+                    abspath = os.path.normpath(abspath)
+                    abspath = os.path.join(tmpdir, abspath)
+                    abspath = os.path.abspath(abspath)
 
-                abspath_exp = os.path.join(config.dir_input, relpath)
-                filename = os.path.splitext(abspath_exp)[0]
-                ext = os.path.splitext(abspath_exp)[1]
-                abspath_exp = f'{filename}.ref{ext}'
+                    relpath = os.path.relpath(abspath, tmpdir)
+                    relpath = os.path.normpath(relpath)
 
-                with open(abspath_exp, 'r') as expected_f:
-                    content_exp = expected_f.read()
+                    abspath_exp = os.path.join(config.dir_input, relpath)
+                    filename = os.path.splitext(abspath_exp)[0]
+                    ext = os.path.splitext(abspath_exp)[1]
+                    abspath_exp = f'{filename}.ref{ext}'
 
-                with open(abspath, 'r') as f:
-                    content = f.read()
+                    with open(abspath_exp, 'r') as expected_f:
+                        content_exp = expected_f.read()
 
-                assert content == content_exp, f'Checking {abspath} (len={len(content)} == len-exp={len(content_exp)})'
+                    with open(abspath, 'r') as f:
+                        content = f.read()
+
+                    assert content == content_exp, f'Checking {abspath} (len={len(content)} == len-exp={len(content_exp)})'

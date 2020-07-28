@@ -225,8 +225,6 @@ def emit_class_declaration(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
     properties_non_virtual = [p for p in clss.properties if p.attr_find(TokenType.Virtual) is None]
     emit_properties(properties_non_virtual, 'protected', builder)
 
-    builder.template('h/class_footer', class_name=clss.name)
-
     return builder
 
 def emit_skeleton_class(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
@@ -234,10 +232,12 @@ def emit_skeleton_class(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
     clss_parent = clss.parent if clss.parent is not None else 'Object'
     builder.line(f'class {clss.name} : public {clss_parent}')
     builder.line('{')
+    builder.anchor_gen_region(clss.name)
 
     builder = emit_class_declaration(clss, builder)
 
     builder.tab(-1)
+    builder.anchor_gen_endregion(clss.name)
     builder.line('};')
     builder.line_empty()
 
