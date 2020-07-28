@@ -201,8 +201,8 @@ class Token:
         self.text = text
         self.line = None
         self.column = None
-        self.abspath = None
         self.relpath = None
+        self.modulepath = None
 
     def __eq__(self, rhs):
 
@@ -212,7 +212,7 @@ class Token:
         return self.tokentype == rhs.tokentype and self.text == rhs.text
 
     def __str__(self):
-        return f'[{self.relpath}' '(l:{:4d}, c:{:4d})]: '.format(self.line, self.column) + f'"{self.text}" ({self.tokentype})'
+        return f'[{self.modulepath}' '(l:{:4d}, c:{:4d})]: '.format(self.line, self.column) + f'"{self.text}" ({self.tokentype})'
 
     def __repr__(self):
         return f'text={self.text}, tokentype={self.tokentype}'
@@ -386,7 +386,7 @@ class Tokenizer:
         # TBD: 'Category': TokenType.Category,
     }
 
-    def __init__(self, abspath: str, relpath: str):
+    def __init__(self, abspath: str, relpath: str, modulepath: str):
 
         with open(abspath, 'r') as f:
             self.content = f.read()
@@ -395,8 +395,8 @@ class Tokenizer:
         self.__at = 0
         self.__line = 1
         self.__column = 1
-        self.__abspath = abspath
         self.__relpath = relpath
+        self.__modulepath = modulepath
         self.tokens = []
 
     def _ch(self, offset: int = 0) -> chr:
@@ -411,8 +411,8 @@ class Tokenizer:
 
         token.line = self.__line
         token.column = self.__column
-        token.abspath = self.__abspath
         token.relpath = self.__relpath
+        token.modulepath = self.__modulepath
 
         return token
 

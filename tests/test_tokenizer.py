@@ -102,7 +102,7 @@ class TestTokenizer:
         with open(path, 'w') as f:
             f.write('')
 
-        tokenizer = Tokenizer(path, path)
+        tokenizer = Tokenizer(path, path, path)
         tokens = tokenizer.tokenize()
 
         assert len(tokens) == 0
@@ -111,7 +111,7 @@ class TestTokenizer:
 
         path = 'tests/data/samples/tokens.epi'
 
-        tokenizer = Tokenizer(path, path)
+        tokenizer = Tokenizer(path, path, path)
         tokens = tokenizer.tokenize()
 
         for t1, t2 in zip(TestTokenizer.__TOKEN_AVAILABLE, tokens):
@@ -271,7 +271,7 @@ class TestTokenizer:
         with open(path, 'w') as f:
             f.write(text)
 
-        tokenizer = Tokenizer(path, path)
+        tokenizer = Tokenizer(path, path, path)
         tokens = tokenizer.tokenize()
 
         assert len(tokens) == len(expected_text)

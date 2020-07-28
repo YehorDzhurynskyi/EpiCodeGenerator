@@ -72,12 +72,12 @@ class InheritanceTree:
 
                         if lhs[0].name == rhs[0].name:
 
-                            tip = f'The symbol has been already defined in `{rhs[0].token.relpath}`'
+                            tip = f'The symbol has been already defined in `{rhs[0].token.modulepath}`'
                             linker._push_error(lhs[0], ln.LinkerErrorCode.DuplicatingSymbol, tip)
 
                         elif lhs[1] == rhs[1]:
 
-                            tip = f'Hash collision with `{rhs[0].name}` defined in `{rhs[0].token.relpath}`'
+                            tip = f'Hash collision with `{rhs[0].name}` defined in `{rhs[0].token.modulepath}`'
                             linker._push_error(lhs[0], ln.LinkerErrorCode.HashCollision, tip)
 
                 pids = _pids(prts)

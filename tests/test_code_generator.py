@@ -4,6 +4,7 @@ from epigen_config import EpiGenConfig
 from epigen_config import EpiGenManifest
 
 import pytest
+import os
 
 
 @pytest.mark.order(3)
@@ -11,16 +12,55 @@ class TestCodeGenerator:
 
     @pytest.mark.parametrize('dirpath,modules', [
         (
-            'tests/data/samples/codegen/subfolder/subfolder_module',
+            os.path.abspath('tests/data/samples/codegen/subfolder/subfolder'),
             [
-                'tests/data/samples/codegen/subfolder/subfolder_module'
+                'tests/data/samples/codegen/subfolder/subfolder'
+            ]
+        ),
+        (
+            'tests/data/samples/codegen/subfolder/subfolder',
+            [
+                'tests/data/samples/codegen/subfolder/subfolder'
+            ]
+        ),
+        (
+            os.path.abspath('tests/data/samples/codegen/subfolder/subfolder'),
+            [
+                os.path.abspath('tests/data/samples/codegen/subfolder/subfolder')
+            ]
+        ),
+        (
+            'tests/data/samples/codegen/subfolder/subfolder',
+            [
+                os.path.abspath('tests/data/samples/codegen/subfolder/subfolder')
             ]
         ),
         (
             'tests/data/samples/codegen',
             [
                 'tests/data/samples/codegen',
-                'tests/data/samples/codegen/subfolder/subfolder_module'
+                'tests/data/samples/codegen/subfolder/subfolder'
+            ]
+        ),
+        (
+            'tests/data/samples/codegen',
+            [
+                'tests/data/samples/codegen',
+                os.path.abspath('tests/data/samples/codegen/subfolder/subfolder')
+            ]
+        ),
+        (
+            os.path.abspath('tests/data/samples/codegen'),
+            [
+                'tests/data/samples/codegen',
+                'tests/data/samples/codegen/subfolder/subfolder'
+            ]
+        ),
+        (
+            os.path.abspath('tests/data/samples/codegen'),
+            [
+                'tests/data/samples/codegen',
+                os.path.abspath('tests/data/samples/codegen/subfolder/subfolder')
             ]
         ),
     ])
@@ -38,3 +78,12 @@ class TestCodeGenerator:
         manifest.modules = modules
 
         epigen(config, manifest)
+
+        for root, _, files in os.walk(tmpdir):
+
+            for f in filter(lambda f: f.endswith('h') or f.endswith('hxx') or f.endswith('cpp') or f.endswith('cxx'), files):
+
+                relpath = os.path.join(os.path.relpath(root, tmpdir), f)
+                relpath = os.path.normpath(relpath)
+
+                abspath = os.path.join(tmpdir, relpath)

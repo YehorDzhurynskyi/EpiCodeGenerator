@@ -104,14 +104,12 @@ class CodeGenerator:
 
         assert ext == 'h' or ext == 'cpp' or ext == 'hxx' or ext == 'cxx' or ext == 'epi'
 
-        if ext == 'epi':
-            return f'{basename}.epi'
-
         outdirs = {
             'cxx': self.__config.dir_output_build,
             'hxx': self.__config.dir_output_build,
             'cpp': self.__config.dir_output,
-            'h': self.__config.dir_output
+            'h': self.__config.dir_output,
+            'epi': self.__config.dir_input
         }
 
         return f'{os.path.join(outdirs[ext], basename)}.{ext}'
@@ -262,7 +260,7 @@ class CodeGenerator:
 
             assert isinstance(symbol, EpiClass)
 
-            basename = os.path.splitext(symbol.token.abspath)[0]
+            basename = os.path.splitext(symbol.token.relpath)[0]
 
             os.makedirs(os.path.dirname(os.path.join(self.__config.dir_output, basename)), exist_ok=True)
             os.makedirs(os.path.dirname(os.path.join(self.__config.dir_output_build, basename)), exist_ok=True)

@@ -74,13 +74,13 @@ class Linker:
                 if lhs[0].name == rhs[0].name:
 
                     valid = False
-                    tip = f'The symbol has been already defined in `{rhs[0].token.relpath}`'
+                    tip = f'The symbol has been already defined in `{rhs[0].token.modulepath}`'
                     self._push_error(lhs[0], LinkerErrorCode.DuplicatingSymbol, tip)
 
                 elif lhs[1] == rhs[1]:
 
                     valid = False
-                    tip = f'Hash collision with `{rhs[0].name}` defined in `{rhs[0].token.relpath}`'
+                    tip = f'Hash collision with `{rhs[0].name}` defined in `{rhs[0].token.modulepath}`'
                     self._push_error(lhs[0], LinkerErrorCode.HashCollision, tip)
 
             return valid

@@ -31,7 +31,9 @@ def epigen_dependencies(config: EpiGenConfig) -> list:
                 logger.debug(f'Ignoring: `{relpath}`')
                 continue
 
-            dependencies.append(os.path.join(config.dir_input, relpath))
+            abspath = os.path.join(config.dir_input, relpath)
+            abspath = os.path.abspath(abspath)
+            dependencies.append(abspath)
 
     return dependencies
 
@@ -108,6 +110,7 @@ def epigen(config: EpiGenConfig, manifest: EpiGenManifest):
     logger.info(f'Output Dir: {config.dir_output}')
     logger.info(f'Output CXX HXX Dir: {config.dir_output_build}')
     logger.info(f'Ignore-list: {";".join(config.ignore_list)}')
+    logger.debug(f'Modules: {";".join(manifest.modules)}')
 
     if config.backup:
 
@@ -123,21 +126,25 @@ def epigen(config: EpiGenConfig, manifest: EpiGenManifest):
 
     modules = manifest.modules[:]
     modules.sort(reverse=True)
+    modules = [os.path.abspath(m) for m in modules]
     for abspath in epigen_dependencies(config):
 
-        modulepath = next((m for m in modules if m in abspath), None)
-        if modulepath is None:
+        relpath = os.path.relpath(abspath, config.dir_input)
+        relpath = os.path.normpath(relpath)
 
-            logger.fatal(f"Error while defining a module for `{abspath}`")
+        module = next((m for m in modules if m in abspath), None)
+        if module is None:
+
+            logger.fatal(f"Error while defining a module for `{relpath}`")
             exit(-1)
 
-        relpath = os.path.relpath(abspath, modulepath)
-        relpath = os.path.normpath(relpath)
-        relpath = f'{os.path.basename(modulepath)}/{relpath}'
+        modulepath = os.path.relpath(abspath, module)
+        modulepath = os.path.normpath(modulepath)
+        modulepath = os.path.join(os.path.basename(module), modulepath)
 
-        logger.info(f'Parsing: `{relpath}`')
+        logger.info(f'Parsing: `{modulepath}`')
 
-        tokenizer = Tokenizer(abspath, relpath)
+        tokenizer = Tokenizer(abspath, relpath, modulepath)
         tokens = tokenizer.tokenize()
 
         for t in tokens:
