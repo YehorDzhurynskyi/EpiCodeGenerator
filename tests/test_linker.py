@@ -384,7 +384,7 @@ class TestLinker:
             with open(path, 'w') as f:
                 f.write(content)
 
-            tokenizer = Tokenizer(path, path)
+            tokenizer = Tokenizer(path, path, path)
             tokens = tokenizer.tokenize()
 
             parser = idl.IDLParser(tokens)
