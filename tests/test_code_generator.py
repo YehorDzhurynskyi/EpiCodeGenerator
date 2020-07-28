@@ -83,7 +83,23 @@ class TestCodeGenerator:
 
             for f in filter(lambda f: f.endswith('h') or f.endswith('hxx') or f.endswith('cpp') or f.endswith('cxx'), files):
 
-                relpath = os.path.join(os.path.relpath(root, tmpdir), f)
+                abspath = os.path.join(os.path.relpath(root, tmpdir), f)
+                abspath = os.path.normpath(abspath)
+                abspath = os.path.join(tmpdir, abspath)
+                abspath = os.path.abspath(abspath)
+
+                relpath = os.path.relpath(abspath, tmpdir)
                 relpath = os.path.normpath(relpath)
 
-                abspath = os.path.join(tmpdir, relpath)
+                abspath_exp = os.path.join(config.dir_input, relpath)
+                filename = os.path.splitext(abspath_exp)[0]
+                ext = os.path.splitext(abspath_exp)[1]
+                abspath_exp = f'{filename}.ref{ext}'
+
+                with open(abspath_exp, 'r') as expected_f:
+                    content_exp = expected_f.read()
+
+                with open(abspath, 'r') as f:
+                    content = f.read()
+
+                assert content == content_exp

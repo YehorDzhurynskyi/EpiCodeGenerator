@@ -28,7 +28,9 @@ def pytest_assertrepr_compare(op, left, right):
 
     import difflib
 
-    diffs = [diff for diff in difflib.ndiff(repr_left.splitlines(keepends=False), repr_right.splitlines(keepends=False)) if diff[0] != ' ']
+    ndiffs = difflib.ndiff(repr_left.splitlines(keepends=False), repr_right.splitlines(keepends=False))
+    diffs = [diff for diff in ndiffs if diff[0] != ' ']
+
     return diffs
 
 def pytest_collection_modifyitems(session: Session, config, items: List[Item]):
