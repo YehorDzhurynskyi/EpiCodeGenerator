@@ -262,6 +262,10 @@ class CodeGenerator:
             basename = os.path.splitext(symbol.token.relpath)[0]
             module_basename = os.path.splitext(symbol.token.modulepath)[0]
 
+            # TODO: do the OS-independent file path adoption in a smarter way
+            basename = basename.replace('\\', '/')
+            module_basename = module_basename.replace('\\', '/')
+
             os.makedirs(os.path.dirname(os.path.join(self.__config.dir_output, basename)), exist_ok=True)
             os.makedirs(os.path.dirname(os.path.join(self.__config.dir_output_build, basename)), exist_ok=True)
 
