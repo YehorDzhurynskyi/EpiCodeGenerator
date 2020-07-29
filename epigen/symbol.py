@@ -2,9 +2,9 @@ import abc
 import sys
 from enum import Enum, auto
 
-from epi_code_generator.tokenizer import Tokenizer
-from epi_code_generator.tokenizer import Token
-from epi_code_generator.tokenizer import TokenType
+from epigen.tokenizer import Tokenizer
+from epigen.tokenizer import Token
+from epigen.tokenizer import TokenType
 
 
 _EPIATTRIBUTE_CONFLICT_TABLE = {
@@ -131,7 +131,7 @@ class EpiSymbol(abc.ABC):
 
     def attr_push(self, attr: EpiAttribute):
 
-        from epi_code_generator.idlparser import idlparser_attr as idlattr
+        from epigen.idlparser import idlparser_attr as idlattr
 
         getattr(idlattr, f'introduce_{attr.tokentype.name}')(attr, self)
 

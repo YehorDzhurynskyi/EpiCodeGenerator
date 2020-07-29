@@ -1,11 +1,11 @@
-from epi_code_generator.symbol import EpiSymbol
-from epi_code_generator.symbol import EpiAttribute
-from epi_code_generator.symbol import EpiProperty
+from epigen.symbol import EpiSymbol
+from epigen.symbol import EpiAttribute
+from epigen.symbol import EpiProperty
 
-from epi_code_generator.tokenizer import Token
-from epi_code_generator.tokenizer import TokenType
+from epigen.tokenizer import Token
+from epigen.tokenizer import TokenType
 
-from epi_code_generator.idlparser import idlparser_base as idl
+from epigen.idlparser import idlparser_base as idl
 
 
 class EpiAttributeValidationError(Exception):

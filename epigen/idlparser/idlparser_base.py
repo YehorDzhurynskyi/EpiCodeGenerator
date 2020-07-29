@@ -1,6 +1,6 @@
-from epi_code_generator.tokenizer import Token
-from epi_code_generator.tokenizer import Tokenizer
-from epi_code_generator.tokenizer import TokenType
+from epigen.tokenizer import Token
+from epigen.tokenizer import Tokenizer
+from epigen.tokenizer import TokenType
 
 from enum import Enum, auto
 
@@ -166,7 +166,7 @@ class IDLParser:
 
     def parse(self) -> (dict, list):
 
-        from epi_code_generator.idlparser import idlparser_class as idlclass
+        from epigen.idlparser import idlparser_class as idlclass
 
         self.syntax_errors = [IDLSyntaxError(t, IDLSyntaxErrorCode.UnknownToken, '') for t in self.tokens if t.tokentype == TokenType.Unknown]
         if len(self.syntax_errors) > 0:

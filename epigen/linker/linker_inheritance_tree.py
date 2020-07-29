@@ -1,7 +1,7 @@
-from epi_code_generator.linker import linker as ln
+from epigen.linker import linker as ln
 
-from epi_code_generator.symbol import EpiSymbol
-from epi_code_generator.symbol import EpiClass
+from epigen.symbol import EpiSymbol
+from epigen.symbol import EpiClass
 
 import zlib
 

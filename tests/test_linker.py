@@ -1,14 +1,14 @@
-from epi_code_generator.tokenizer import Tokenizer, TokenType
+from epigen.tokenizer import Tokenizer, TokenType
 
-from epi_code_generator.symbol import EpiClass
-from epi_code_generator.symbol import EpiClassBuilder
-from epi_code_generator.symbol import EpiProperty
-from epi_code_generator.symbol import EpiPropertyBuilder
-from epi_code_generator.symbol import EpiAttribute
-from epi_code_generator.symbol import EpiAttributeBuilder
+from epigen.symbol import EpiClass
+from epigen.symbol import EpiClassBuilder
+from epigen.symbol import EpiProperty
+from epigen.symbol import EpiPropertyBuilder
+from epigen.symbol import EpiAttribute
+from epigen.symbol import EpiAttributeBuilder
 
-from epi_code_generator.idlparser import idlparser_base as idl
-from epi_code_generator.linker import linker as ln
+from epigen.idlparser import idlparser_base as idl
+from epigen.linker import linker as ln
 
 import pytest
 

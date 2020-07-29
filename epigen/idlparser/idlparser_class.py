@@ -1,16 +1,16 @@
-from epi_code_generator.idlparser import idlparser_base as idl
+from epigen.idlparser import idlparser_base as idl
 
-from epi_code_generator.tokenizer import TokenType
+from epigen.tokenizer import TokenType
 
-from epi_code_generator.symbol import EpiClass
-from epi_code_generator.symbol import EpiProperty
-from epi_code_generator.symbol import EpiAttribute
+from epigen.symbol import EpiClass
+from epigen.symbol import EpiProperty
+from epigen.symbol import EpiAttribute
 
 
 def _parse_scope(parser: idl.IDLParser, attrs_inherited: list = []) -> list:
 
-    from epi_code_generator.idlparser import idlparser_property as idlprty
-    from epi_code_generator.idlparser import idlparser_attr as idlattr
+    from epigen.idlparser import idlparser_property as idlprty
+    from epigen.idlparser import idlparser_attr as idlattr
 
     parser._test(parser._next(), expected=[TokenType.OpenBrace], err_code=idl.IDLSyntaxErrorCode.NoBodyOnDeclaration)
 

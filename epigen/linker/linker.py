@@ -1,7 +1,7 @@
-from epi_code_generator.tokenizer import TokenType
+from epigen.tokenizer import TokenType
 
-from epi_code_generator.symbol import EpiSymbol
-from epi_code_generator.symbol import EpiProperty
+from epigen.symbol import EpiSymbol
+from epigen.symbol import EpiProperty
 
 from enum import Enum, auto
 import zlib
@@ -109,7 +109,7 @@ class Linker:
 
     def link(self) -> list:
 
-        from epi_code_generator.linker import linker_inheritance_tree as lntree
+        from epigen.linker import linker_inheritance_tree as lntree
 
         if len(self.__linker_errors) > 0:
             return self.__linker_errors

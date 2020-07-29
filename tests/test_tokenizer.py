@@ -1,6 +1,6 @@
 import pytest
 
-from epi_code_generator.tokenizer import Tokenizer, TokenType
+from epigen.tokenizer import Tokenizer, TokenType
 
 
 @pytest.mark.order(0)

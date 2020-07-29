@@ -1,0 +1,4 @@
+graft epigen/code_generator/templates
+
+global-exclude *.py[cod]
+global-exclude *$py.class

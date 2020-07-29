@@ -1,7 +1,7 @@
 from epigen import epigen
 
-from epigen_config import EpiGenConfig
-from epigen_config import EpiGenManifest
+from epigen.config import EpiGenConfig
+from epigen.config import EpiGenManifest
 
 import pytest
 import os
@@ -68,19 +68,15 @@ class TestCodeGenerator:
 
         for iteration in range(4):
 
-            config = EpiGenConfig()
-            config.dir_input = dirpath
-            config.dir_output = tmpdir
-            config.dir_output_build = tmpdir
+            config = EpiGenConfig(dirpath, tmpdir, tmpdir)
             config.ignore_list = []
-            config.debug = True
+            config.debug = False
             config.backup = False
             config.caching = iteration not in [0, 1]
 
-            manifest = EpiGenManifest()
-            manifest.modules = modules
+            manifest = EpiGenManifest(**{'modules': modules})
 
-            epigen(config, manifest)
+            epigen.epigen(config, manifest)
 
             for root, _, files in os.walk(tmpdir):
 

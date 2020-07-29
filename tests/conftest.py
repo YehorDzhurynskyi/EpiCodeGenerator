@@ -2,7 +2,7 @@ import pytest
 from pytest import Session
 from pytest import Item
 
-from epi_code_generator.symbol import EpiSymbol
+from epigen.symbol import EpiSymbol
 
 from typing import List
 

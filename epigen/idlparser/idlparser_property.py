@@ -1,8 +1,8 @@
-from epi_code_generator.idlparser import idlparser_base as idl
+from epigen.idlparser import idlparser_base as idl
 
-from epi_code_generator.tokenizer import TokenType
+from epigen.tokenizer import TokenType
 
-from epi_code_generator.symbol import EpiProperty
+from epigen.symbol import EpiProperty
 
 
 def parse_property(parser: idl.IDLParser) -> EpiProperty:
