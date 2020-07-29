@@ -109,8 +109,8 @@ def epigen(config: EpiGenConfig, manifest: EpiGenManifest):
     logger.info(f'Output Dir: {config.dir_output}')
     logger.info(f'Output CXX HXX Dir: {config.dir_output_build}')
     logger.info(f'Ignore-list: {";".join(config.ignore_list)}')
-    logger.debug(f'Caching is enabled: {config.caching}')
-    logger.debug(f'Modules: {";".join(manifest.modules)}')
+    logger.info(f'Caching is enabled: {config.caching}')
+    logger.info(f'Modules: {";".join(manifest.modules)}')
 
     if config.backup:
 
@@ -136,6 +136,8 @@ def epigen(config: EpiGenConfig, manifest: EpiGenManifest):
 
     modules = [modulepath_dir_input(m) for m in modules]
     modules.sort(reverse=True)
+
+    parsing_is_successful = True
     for abspath in epigen_dependencies(config):
 
         relpath = os.path.relpath(abspath, config.dir_input)
@@ -167,15 +169,20 @@ def epigen(config: EpiGenConfig, manifest: EpiGenManifest):
         for e in errors_syntax:
 
             logger.error(str(e))
-            exit(-1)
+            parsing_is_successful = False
 
         linker.register(registry_local)
 
+    if not parsing_is_successful:
+        exit(-1)
+
     errors_linkage = linker.link()
 
-    for e in errors_linkage:
+    if len(errors_linkage) > 0:
 
-        logger.error(str(e))
+        for e in errors_linkage:
+            logger.error(str(e))
+
         exit(-1)
 
     symbols = list(linker.registry.values())

@@ -6,7 +6,7 @@ from epigen.config import EpiGenManifest
 import argparse
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     class ExtendAction(argparse.Action):
 
