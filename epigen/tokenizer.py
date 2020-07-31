@@ -402,7 +402,7 @@ class Tokenizer:
     def _ch(self, offset: int = 0) -> chr:
         return self.content[self.at + offset] if self.at + offset < self.content_len else '\0'
 
-    def _substring_until_at(self, start: int) -> str:
+    def _substring_until_from(self, start: int) -> str:
         return self.content[start:min(self.at, self.content_len)]
 
     def _token_create(self, tokentype: TokenType) -> Token:
@@ -523,7 +523,7 @@ class Tokenizer:
         else:
             token.tokentype_expected.append(tokentype_suspected)
 
-        token.text = self._substring_until_at(begin)
+        token.text = self._substring_until_from(begin)
         self.tokens.append(token)
 
     def _tokenize_char_literal(self):
@@ -555,7 +555,7 @@ class Tokenizer:
         else:
             token.tokentype_expected.append(tokentype_suspected)
 
-        token.text = self._substring_until_at(begin)
+        token.text = self._substring_until_from(begin)
         self.tokens.append(token)
 
     def _tokenize_term(self):
@@ -565,7 +565,7 @@ class Tokenizer:
         tokentype_suspected = TokenType.Identifier
         begin = self.at
 
-        if self._ch().isalpha() and self._ch().isupper():
+        if self._ch().isalpha():
             token.tokentype = TokenType.Identifier
         else:
             token.tokentype_expected.append(tokentype_suspected)
@@ -573,7 +573,7 @@ class Tokenizer:
         while self._ch().isalnum() or self._ch() == '_':
             self.at += 1
 
-        token.text = self._substring_until_at(begin)
+        token.text = self._substring_until_from(begin)
         self.tokens.append(token)
 
     def _tokenize_numeric_literal(self):
@@ -587,34 +587,28 @@ class Tokenizer:
         if self._ch() == '-' or self._ch() == '+':
             self.at += 1
 
-        while self._ch().isnumeric():
+        while not self._ch().isspace() and self._ch() not in ['\0', ';', ')', ',']:
+
+            if self._ch() == '.' and self._ch(1).isnumeric() and tokentype_suspected == TokenType.IntegerLiteral:
+
+                tokentype_expected = TokenType.DoubleFloatingLiteral
+                tokentype_suspected = TokenType.DoubleFloatingLiteral
+
+            elif self._ch() == 'f' and tokentype_suspected == TokenType.DoubleFloatingLiteral:
+
+                tokentype_expected = TokenType.SingleFloatingLiteral
+                tokentype_suspected = TokenType.SingleFloatingLiteral
+
+            elif not self._ch().isnumeric() or tokentype_suspected == TokenType.SingleFloatingLiteral:
+                tokentype_suspected = TokenType.Unknown
 
             self.at += 1
-            if self._ch() == '.':
 
-                self.at += 1
-
-                if self._ch().isnumeric() and tokentype_suspected == TokenType.IntegerLiteral:
-
-                    tokentype_expected = TokenType.DoubleFloatingLiteral
-                    tokentype_suspected = TokenType.DoubleFloatingLiteral
-
-                else:
-                    tokentype_suspected = TokenType.Unknown
-
-        if self._ch() == 'f' and tokentype_suspected == TokenType.DoubleFloatingLiteral:
-
-            tokentype_expected = TokenType.SingleFloatingLiteral
-            tokentype_suspected = TokenType.SingleFloatingLiteral
-            self.at += 1
-
-        if self._ch().isspace() or self._ch() in ['\0', ';', ')', ',']:
-            token.tokentype = tokentype_suspected
-
+        token.tokentype = tokentype_suspected
         if token.tokentype == TokenType.Unknown:
             token.tokentype_expected.append(tokentype_expected)
 
-        token.text = self._substring_until_at(begin)
+        token.text = self._substring_until_from(begin)
         self.tokens.append(token)
 
     @staticmethod

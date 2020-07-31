@@ -6,95 +6,6 @@ from epigen.tokenizer import Tokenizer, TokenType
 @pytest.mark.order(0)
 class TestTokenizer:
 
-    __TOKEN_AVAILABLE = [
-        TokenType.OpenBrace,
-        TokenType.CloseBrace,
-        TokenType.OpenAngleBracket,
-        TokenType.CloseAngleBracket,
-        TokenType.OpenBracket,
-        TokenType.CloseBracket,
-        TokenType.OpenSqBracket,
-        TokenType.CloseSqBracket,
-        TokenType.Assing,
-        TokenType.Comma,
-        TokenType.Asterisk,
-        TokenType.Ampersand,
-        TokenType.Colon,
-        TokenType.Semicolon,
-        TokenType.CharLiteral,
-        TokenType.WCharLiteral,
-        TokenType.StringLiteral,
-        TokenType.WStringLiteral,
-        TokenType.IntegerLiteral,
-        TokenType.IntegerLiteral,
-        TokenType.IntegerLiteral,
-        TokenType.IntegerLiteral,
-        TokenType.SingleFloatingLiteral,
-        TokenType.SingleFloatingLiteral,
-        TokenType.SingleFloatingLiteral,
-        TokenType.SingleFloatingLiteral,
-        TokenType.SingleFloatingLiteral,
-        TokenType.SingleFloatingLiteral,
-        TokenType.DoubleFloatingLiteral,
-        TokenType.DoubleFloatingLiteral,
-        TokenType.DoubleFloatingLiteral,
-        TokenType.DoubleFloatingLiteral,
-        TokenType.DoubleFloatingLiteral,
-        TokenType.DoubleFloatingLiteral,
-        TokenType.TrueLiteral,
-        TokenType.FalseLiteral,
-        TokenType.CharType,
-        TokenType.WCharType,
-        TokenType.BoolType,
-        TokenType.ByteType,
-        TokenType.SizeTType,
-        TokenType.HashTType,
-        TokenType.UInt8Type,
-        TokenType.UInt16Type,
-        TokenType.UInt32Type,
-        TokenType.UInt64Type,
-        TokenType.Int8Type,
-        TokenType.Int16Type,
-        TokenType.Int32Type,
-        TokenType.Int64Type,
-        TokenType.StringType,
-        TokenType.WStringType,
-        TokenType.ArrayType,
-        TokenType.PtrArrayType,
-        TokenType.SingleFloatingType,
-        TokenType.DoubleFloatingType,
-        TokenType.Vec2FType,
-        TokenType.Vec2DType,
-        TokenType.Vec2SType,
-        TokenType.Vec2UType,
-        TokenType.Vec3FType,
-        TokenType.Vec3DType,
-        TokenType.Vec3SType,
-        TokenType.Vec3UType,
-        TokenType.Vec4FType,
-        TokenType.Vec4DType,
-        TokenType.Vec4SType,
-        TokenType.Vec4UType,
-        TokenType.Mat2x2FType,
-        TokenType.Mat3x3FType,
-        TokenType.Mat4x4FType,
-        TokenType.Rect2FType,
-        TokenType.Rect2DType,
-        TokenType.Rect2SType,
-        TokenType.Rect2UType,
-        TokenType.ClassType,
-        TokenType.ReadOnly,
-        TokenType.WriteOnly,
-        TokenType.WriteCallback,
-        TokenType.ReadCallback,
-        TokenType.Virtual,
-        TokenType.Min,
-        TokenType.Max,
-        TokenType.Transient,
-        TokenType.Identifier,
-        TokenType.Identifier
-    ]
-
     def test_empty(self, tmpdir: str):
 
         path = f'{tmpdir}/test.epi'
@@ -107,32 +18,22 @@ class TestTokenizer:
 
         assert len(tokens) == 0
 
-    def test_available(self):
-
-        path = 'tests/data/samples/tokens.epi'
-
-        tokenizer = Tokenizer(path, path, path)
-        tokens = tokenizer.tokenize()
-
-        for t1, t2 in zip(TestTokenizer.__TOKEN_AVAILABLE, tokens):
-            assert t1 == t2.tokentype
-
     @pytest.mark.parametrize('text,expected_type,expected_text', [
         # Identifiers
         ('Name', [TokenType.Identifier], ['Name']),
-        ('name', [TokenType.Unknown], ['name']),
-        ('1name', [TokenType.Unknown, TokenType.Unknown], ['1', 'name']),
+        ('name', [TokenType.Identifier], ['name']),
+        ('1name', [TokenType.Unknown], ['1name']),
         ('_Name', [TokenType.Unknown, TokenType.Identifier], ['_', 'Name']),
-        ('1Name', [TokenType.Unknown, TokenType.Identifier], ['1', 'Name']),
+        ('1Name', [TokenType.Unknown], ['1Name']),
         ('Name AnotherName', [TokenType.Identifier, TokenType.Identifier], ['Name', 'AnotherName']),
         ('NameWithDigits12', [TokenType.Identifier], ['NameWithDigits12']),
-        ('12NameWithDigits12', [TokenType.Unknown, TokenType.Identifier], ['12', 'NameWithDigits12']),
+        ('12NameWithDigits12', [TokenType.Unknown], ['12NameWithDigits12']),
         ('NameWith_Underscore', [TokenType.Identifier], ['NameWith_Underscore']),
         ('NameWith_UnderscoreOnEnd_', [TokenType.Identifier], ['NameWith_UnderscoreOnEnd_']),
         ('NameWith12Digits_And_Undersc0reOnEnd_', [TokenType.Identifier], ['NameWith12Digits_And_Undersc0reOnEnd_']),
         ('NameWith12And_Undersc0reDigitsOnEnd_071', [TokenType.Identifier], ['NameWith12And_Undersc0reDigitsOnEnd_071']),
-        ('Name 12NameWithDigits12', [TokenType.Identifier, TokenType.Unknown, TokenType.Identifier], ['Name', '12', 'NameWithDigits12']),
-        ('   12NameWithDigits12 12 ', [TokenType.Unknown, TokenType.Identifier, TokenType.IntegerLiteral], ['12', 'NameWithDigits12', '12']),
+        ('Name 12NameWithDigits12', [TokenType.Identifier, TokenType.Unknown], ['Name', '12NameWithDigits12']),
+        ('   12NameWithDigits12  12 ', [TokenType.Unknown, TokenType.IntegerLiteral], ['12NameWithDigits12', '12']),
 
         # Literals Valid
         ("'c'", [TokenType.CharLiteral], ["'c'"]),
@@ -181,8 +82,15 @@ class TestTokenizer:
         ('false', [TokenType.FalseLiteral], ['false']),
 
         # Literals Invalid
-        ('42f', [TokenType.Unknown, TokenType.Unknown], ['42', 'f']),
-        ('42foo', [TokenType.Unknown, TokenType.Unknown], ['42', 'foo']),
+        ('42f', [TokenType.Unknown], ['42f']),
+        ('42.0ff', [TokenType.Unknown], ['42.0ff']),
+        ('42foo', [TokenType.Unknown], ['42foo']),
+        ('420.05.00f;', [TokenType.Unknown, TokenType.Semicolon], ['420.05.00f', ';']),
+        ('420.05.00;', [TokenType.Unknown, TokenType.Semicolon], ['420.05.00', ';']),
+        ('420.0500;', [TokenType.DoubleFloatingLiteral, TokenType.Semicolon], ['420.0500', ';']),
+        ('420.0500', [TokenType.DoubleFloatingLiteral], ['420.0500']),
+        ('420.0500f;', [TokenType.SingleFloatingLiteral, TokenType.Semicolon], ['420.0500f', ';']),
+        ('420.0500f', [TokenType.SingleFloatingLiteral], ['420.0500f']),
         ("L'", [TokenType.Unknown], ["L'"]),
         ('L"', [TokenType.Unknown], ['L"']),
         ("L'a epiString", [TokenType.Unknown, TokenType.StringType], ["L'a", 'epiString']),
@@ -192,7 +100,10 @@ class TestTokenizer:
         ('L "String epiS32', [TokenType.Identifier, TokenType.Unknown], ['L', '"String epiS32']),
         ('L "String; epiS32', [TokenType.Identifier, TokenType.Unknown], ['L', '"String; epiS32']),
 
+        ('.52', [TokenType.Unknown, TokenType.IntegerLiteral], ['.', '52']),
         ('42.', [TokenType.Unknown], ['42.']),
+        ('42.f', [TokenType.Unknown], ['42.f']),
+        ('42.0f0', [TokenType.Unknown], ['42.0f0']),
         ('+42.', [TokenType.Unknown], ['+42.']),
         ('-42.', [TokenType.Unknown], ['-42.']),
         ('--0', [TokenType.Unknown, TokenType.IntegerLiteral], ['-', '-0']),

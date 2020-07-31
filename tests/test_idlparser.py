@@ -62,7 +62,7 @@ class TestIDLParser:
         (
             'clas A {}',
             {},
-            [idl.IDLSyntaxErrorCode.UnknownToken]
+            [idl.IDLSyntaxErrorCode.MissingTypeDeclaration]
         ),
         (
             'class A {}',
@@ -111,8 +111,14 @@ class TestIDLParser:
         ),
         (
             'class A : name {};',
-            {},
-            [idl.IDLSyntaxErrorCode.UnknownToken]
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .parent('name')
+                        .build()
+            },
+            []
         ),
         (
             'class A : epiFloat {};',
@@ -232,7 +238,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [idl.IDLSyntaxErrorCode.UnknownToken] * 2
+            [idl.IDLSyntaxErrorCode.UnknownToken]
         ),
         (
             '''
@@ -252,7 +258,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [idl.IDLSyntaxErrorCode.UnknownToken] * 2
+            [idl.IDLSyntaxErrorCode.UnknownToken]
         ),
         (
             '''
@@ -364,7 +370,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [idl.IDLSyntaxErrorCode.UnknownToken] * 3
+            [idl.IDLSyntaxErrorCode.UnknownToken] * 2
         ),
         (
             '''
@@ -385,7 +391,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [idl.IDLSyntaxErrorCode.UnknownToken] * 3
+            [idl.IDLSyntaxErrorCode.UnknownToken] * 2
         ),
         (
             '''
@@ -1009,7 +1015,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [idl.IDLSyntaxErrorCode.UnknownToken]
+            [idl.IDLSyntaxErrorCode.AttributeInvalidParameters] * 2
         ),
         (
             '''
