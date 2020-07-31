@@ -26,35 +26,34 @@ def _property_getter(prty: EpiProperty, **kwargs) -> str:
     if not any(a.tokentype in [TokenType.ReadCallback] for a in prty.attrs):
         signature = 'inline '
 
+    attr_readcallback = prty.attr_find(TokenType.ReadCallback)
+
+    # NOTE: has no effect for value-return types
+    if attr_readcallback is not None and not const:
+        return None
+
     if prty.form == EpiProperty.Form.Pointer:
 
-        if not const:
-            return None # TODO: add a attribute/parameter
+        signature = f'{signature}const ' if const else signature
+        signature = f'{signature}{prty.typename()} '
 
-        signature = f'{signature}const {prty.typename()} '
+    elif prty.typename_basename() in Tokenizer.fundamentals():
 
-    elif prty.typename_basename() not in Tokenizer.fundamentals():
-
-        attr_readcallback = prty.attr_find(TokenType.ReadCallback)
-
-        # NOTE: has no effect for value-return types
-        if attr_readcallback is not None and not const:
-            return None
-
-        if attr_readcallback is not None and attr_readcallback.param_named_of('SuppressRef') is not None:
-            signature = f'{signature}{prty.typename()} '
-        else:
-
-            signature = f'{signature}const ' if const else signature
-            signature = f'{signature}{prty.typename()}& '
-
-    else:
+        assert prty.form == EpiProperty.Form.Plain
 
         # NOTE: has no effect for plain types
         if not const:
             return None
 
         signature = f'{signature}{prty.typename()} '
+
+    elif attr_readcallback is not None and attr_readcallback.param_named_of('SuppressRef') is not None:
+        signature = f'{signature}{prty.typename()} '
+
+    else:
+
+        signature = f'{signature}const ' if const else signature
+        signature = f'{signature}{prty.typename()}& '
 
     signature = f'{signature}Get{prty.name}{suffix}()'
     signature = f'{signature} const' if const else signature

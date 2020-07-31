@@ -35,8 +35,10 @@ inline void SetBBs(const epiPtrArray<B>& value) { m_BBs = value; } \
 inline epiSize_t GetSize() const { return m_Size; } \
 inline void SetSize(epiSize_t value) { m_Size = value; } \
 inline const B* GetSibling() const { return m_Sibling; } \
+inline B* GetSibling() { return m_Sibling; } \
 inline void SetSibling(B* value) { m_Sibling = value; } \
 inline const epiFloat* GetNonSibling() const { return m_NonSibling; } \
+inline epiFloat* GetNonSibling() { return m_NonSibling; } \
 inline void SetNonSibling(epiFloat* value) { m_NonSibling = value; } \
  \
 enum B_PIDXs \
