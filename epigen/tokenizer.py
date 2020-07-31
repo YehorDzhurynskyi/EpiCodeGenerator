@@ -84,7 +84,7 @@ class TokenType(Enum):
     ReadOnly = auto()
     WriteOnly = auto()
     # Private = auto()
-    ReadCallback = auto()
+    ReadCallback = auto() # SuppressConst
     WriteCallback = auto()
     Virtual = auto()
     Min = auto()

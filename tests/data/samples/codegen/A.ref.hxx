@@ -32,6 +32,7 @@ void Deserialization(const json_t& json) override; \
 inline epiS32 GetPName() const { return m_PName; } \
 inline void SetPName(epiS32 value) { m_PName = value; } \
 inline const epiString& GetText() const { return m_Text; } \
+inline epiString& GetText() { return m_Text; } \
 inline void SetText(const epiString& value) { m_Text = value; } \
 const epiArray<epiFloat>& GetVirtualFloats() const { return GetVirtualFloats_Callback(); } \
 epiFloat GetVirtualFloat() const { return GetVirtualFloat_Callback(); } \

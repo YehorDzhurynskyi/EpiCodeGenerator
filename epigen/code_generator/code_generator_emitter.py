@@ -14,9 +14,11 @@ def _property_getter(prty: EpiProperty, **kwargs) -> str:
     if prty.attr_find(TokenType.WriteOnly) is not None:
         return None
 
+    const = kwargs['const'] if 'const' in kwargs else True
     body = kwargs['body'] if 'body' in kwargs else True
     suffix = kwargs['suffix'] if 'suffix' in kwargs else ''
 
+    assert isinstance(const, bool)
     assert isinstance(body, bool)
     assert isinstance(suffix, str)
 
@@ -25,20 +27,37 @@ def _property_getter(prty: EpiProperty, **kwargs) -> str:
         signature = 'inline '
 
     if prty.form == EpiProperty.Form.Pointer:
+
+        if not const:
+            return None # TODO: add a attribute/parameter
+
         signature = f'{signature}const {prty.typename()} '
 
     elif prty.typename_basename() not in Tokenizer.fundamentals():
 
         attr_readcallback = prty.attr_find(TokenType.ReadCallback)
+
+        # NOTE: has no effect for value-return types
+        if attr_readcallback is not None and not const:
+            return None
+
         if attr_readcallback is not None and attr_readcallback.param_named_of('SuppressRef') is not None:
             signature = f'{signature}{prty.typename()} '
         else:
-            signature = f'{signature}const {prty.typename()}& '
+
+            signature = f'{signature}const ' if const else signature
+            signature = f'{signature}{prty.typename()}& '
 
     else:
+
+        # NOTE: has no effect for plain types
+        if not const:
+            return None
+
         signature = f'{signature}{prty.typename()} '
 
-    signature = f'{signature}Get{prty.name}{suffix}() const'
+    signature = f'{signature}Get{prty.name}{suffix}()'
+    signature = f'{signature} const' if const else signature
 
     if not body:
         return signature
@@ -359,9 +378,13 @@ def emit_class_declaration_hidden(clss: EpiClass, builder: bld.Builder) -> bld.B
         # getters/setters
         for p in clss.properties:
 
-            p_getter = _property_getter(p)
-            if p_getter is not None:
-                builder.line(f'{p_getter} \\')
+            p_getter1 = _property_getter(p)
+            if p_getter1 is not None:
+                builder.line(f'{p_getter1} \\')
+
+            p_getter2 = _property_getter(p, const=False)
+            if p_getter2 is not None:
+                builder.line(f'{p_getter2} \\')
 
             p_setter = _property_setter(p)
             if p_setter is not None:

@@ -155,7 +155,7 @@ def epigen(config: EpiGenConfig, manifest: EpiGenManifest):
         modulepath = os.path.normpath(modulepath)
         modulepath = os.path.join(os.path.basename(module), modulepath)
 
-        logger.info(f'Parsing: `{modulepath}` (`{relpath_dir_input}`)')
+        logger.info(f'Parsing: `{modulepath}`')
 
         tokenizer = Tokenizer(abspath, relpath, modulepath)
         tokens = tokenizer.tokenize()

@@ -30,6 +30,7 @@ void Serialization(json_t& json) override; \
 void Deserialization(const json_t& json) override; \
  \
 inline const epiPtrArray<B>& GetBBs() const { return m_BBs; } \
+inline epiPtrArray<B>& GetBBs() { return m_BBs; } \
 inline void SetBBs(const epiPtrArray<B>& value) { m_BBs = value; } \
 inline epiSize_t GetSize() const { return m_Size; } \
 inline void SetSize(epiSize_t value) { m_Size = value; } \
