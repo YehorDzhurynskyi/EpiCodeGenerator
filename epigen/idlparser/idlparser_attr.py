@@ -8,15 +8,6 @@ from epigen.tokenizer import TokenType
 from epigen.idlparser import idlparser_base as idl
 
 
-class EpiAttributeValidationError(Exception):
-
-    def __init__(self, msg: str, token: Token, err_code: idl.IDLSyntaxErrorCode):
-
-        super().__init__(msg)
-        self.token = token
-        self.err_code = err_code
-
-
 def __validate_conflicts(attr: EpiAttribute, target: EpiSymbol):
 
     for a in target.attrs:
@@ -25,10 +16,10 @@ def __validate_conflicts(attr: EpiAttribute, target: EpiSymbol):
             continue
 
         if a.tokentype == attr.tokentype:
-            raise EpiAttributeValidationError(f'It duplicates {a.tokentype.name}', attr.token, idl.IDLSyntaxErrorCode.AttributeConflict)
+            raise idl.IDLParserError(f'It duplicates {a.tokentype.name}', attr.token, idl.IDLSyntaxErrorCode.AttributeConflict)
 
         if attr.conflicts(a):
-            raise EpiAttributeValidationError(f'It conflicts with {a.tokentype.name}', attr.token, idl.IDLSyntaxErrorCode.AttributeConflict)
+            raise idl.IDLParserError(f'It conflicts with {a.tokentype.name}', attr.token, idl.IDLSyntaxErrorCode.AttributeConflict)
 
 
 def __validate_parameters_positional(attr: EpiAttribute, positional: list):
@@ -36,14 +27,14 @@ def __validate_parameters_positional(attr: EpiAttribute, positional: list):
     if len(positional) != len(attr.params_positional):
 
         msg = f'Number of arguments should be {len(positional)} but {len(attr.params_positional)} was provided'
-        raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
+        raise idl.IDLParserError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
 
     for tokenparam, ptypes in zip(attr.params_positional, positional):
 
         if tokenparam.tokentype not in ptypes:
 
             msg = f'{tokenparam.text} positional parameter has a wrong type (the type should be {" or ".join(p.name for p in ptypes)})'
-            raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
+            raise idl.IDLParserError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
 
 
 def __validate_parameters_named(attr: EpiAttribute, named: dict):
@@ -53,13 +44,13 @@ def __validate_parameters_named(attr: EpiAttribute, named: dict):
         if name not in named:
 
             msg = f'Invalid named parameter {name} was provided'
-            raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
+            raise idl.IDLParserError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
 
         ptypes = named[name]
         if tokenparam.tokentype not in ptypes:
 
             msg = f'Invalid named parameter type {tokenparam.tokentype} was provided (but should be {" or ".join(p.name for p in ptypes)})'
-            raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
+            raise idl.IDLParserError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
 
 
 def __validate_parameters_named_target_type(attr: EpiAttribute, target: EpiSymbol, named: dict):
@@ -74,7 +65,7 @@ def __validate_parameters_named_target_type(attr: EpiAttribute, target: EpiSymbo
         if target.tokentype.tokentype not in ptypes:
 
             msg = f"An attribute couldn't be applied to the following target={target.tokentype.tokentype.name}"
-            raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
+            raise idl.IDLParserError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidParameters)
 
 
 def __validate_target(attr: EpiAttribute, target: EpiSymbol, acceptable_targets: list):
@@ -84,7 +75,7 @@ def __validate_target(attr: EpiAttribute, target: EpiSymbol, acceptable_targets:
     if not any(isinstance(target, t) for t in acceptable_targets):
 
         msg = f'An attribute applied to the wrong target (should be applied to: { " or ".join(acceptable_targets) })'
-        raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidTarget)
+        raise idl.IDLParserError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidTarget)
 
 
 def __validate_target_unassigned(attr: EpiAttribute, target: EpiSymbol):
@@ -94,7 +85,7 @@ def __validate_target_unassigned(attr: EpiAttribute, target: EpiSymbol):
     if target.value_is_assigned():
 
         msg = f'`{attr.tokentype.name}` attribute target is unassignable'
-        raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.IncorrectValueAssignment)
+        raise idl.IDLParserError(msg, attr.token, idl.IDLSyntaxErrorCode.IncorrectValueAssignment)
 
 
 def __validate_target_type(attr: EpiAttribute, target: EpiSymbol, acceptable_targets: list):
@@ -104,7 +95,7 @@ def __validate_target_type(attr: EpiAttribute, target: EpiSymbol, acceptable_tar
         if target.tokentype.tokentype not in acceptable_targets:
 
             msg = f'An attribute applied to the wrong target-type (should be applied to: { " or ".join(t.name for t in acceptable_targets) })'
-            raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidTarget)
+            raise idl.IDLParserError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidTarget)
 
     else:
         assert False, 'Unhandled case!'
@@ -117,7 +108,7 @@ def __validate_target_form(attr: EpiAttribute, target: EpiSymbol, acceptable_for
         if target.form not in acceptable_forms:
 
             msg = f'An attribute applied to the wrong target-form (should be applied to: { " or ".join(t.name for t in acceptable_forms) })'
-            raise EpiAttributeValidationError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidTarget)
+            raise idl.IDLParserError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidTarget)
 
     else:
         assert False, 'Unhandled case!'
@@ -130,7 +121,7 @@ def __validate_target_value_greater_eq(attr: EpiAttribute, target: EpiSymbol, va
     if target.value_of() < value:
 
         msg = f"{attr.token} restricts target's value to be >= {value}"
-        raise EpiAttributeValidationError(msg, target.token, idl.IDLSyntaxErrorCode.IncorrectValueAssignment)
+        raise idl.IDLParserError(msg, target.token, idl.IDLSyntaxErrorCode.IncorrectValueAssignment)
 
 
 def __validate_target_value_less_eq(attr: EpiAttribute, target: EpiSymbol, value):
@@ -140,7 +131,7 @@ def __validate_target_value_less_eq(attr: EpiAttribute, target: EpiSymbol, value
     if target.value_of() > value:
 
         msg = f"{attr.token} restricts target's value to be <= {value}"
-        raise EpiAttributeValidationError(msg, target.token, idl.IDLSyntaxErrorCode.IncorrectValueAssignment)
+        raise idl.IDLParserError(msg, target.token, idl.IDLSyntaxErrorCode.IncorrectValueAssignment)
 
 
 def __implies(tokentype: TokenType, target: EpiSymbol):
@@ -151,7 +142,7 @@ def __implies(tokentype: TokenType, target: EpiSymbol):
 
         target.attr_push(attr)
 
-    except EpiAttributeValidationError:
+    except idl.IDLParserError:
         pass
 
 

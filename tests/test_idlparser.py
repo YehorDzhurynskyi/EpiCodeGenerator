@@ -80,6 +80,16 @@ class TestIDLParser:
             [idl.IDLSyntaxErrorCode.NoBodyOnDeclaration]
         ),
         (
+            'class Scope::A : B {};',
+            {},
+            [idl.IDLSyntaxErrorCode.WrongIdentifierContext]
+        ),
+        (
+            'class A :: B {};',
+            {},
+            [idl.IDLSyntaxErrorCode.UnexpectedToken]
+        ),
+        (
             'class A :',
             {},
             [idl.IDLSyntaxErrorCode.UnexpectedEOF]
@@ -189,6 +199,70 @@ class TestIDLParser:
             ''',
             {},
             [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            '''
+            class A::ClassName : B
+            {
+                epiS32 Name::Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.WrongIdentifierContext] * 2
+        ),
+        (
+            '''
+            class A : B
+            {
+                B::C Name::Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.WrongIdentifierContext]
+        ),
+        (
+            '''
+            class A : B
+            {
+                B::C Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .parent('B')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.Identifier, 'B::C')
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class A : B
+            {
+                B::Nested::C Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiClassBuilder()
+                        .name('A')
+                        .parent('B')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.Identifier, 'B::Nested::C')
+                                .build()
+                        )
+                        .build()
+            },
+            []
         ),
         (
             '''

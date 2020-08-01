@@ -19,6 +19,9 @@ class TestTokenizer:
         assert len(tokens) == 0
 
     @pytest.mark.parametrize('text,expected_type,expected_text', [
+        ('class', [TokenType.ClassType], ['class']),
+        ('enum', [TokenType.EnumType], ['enum']),
+
         # Identifiers
         ('Name', [TokenType.Identifier], ['Name']),
         ('name', [TokenType.Identifier], ['name']),
@@ -120,6 +123,7 @@ class TestTokenizer:
         (';', [TokenType.Semicolon], [';']),
         (';;;;', [TokenType.Semicolon], [';']),
         ('  ; ; ; ; ;  ', [TokenType.Semicolon], [';']),
+        (':', [TokenType.Colon], [':']),
         ('::', [TokenType.Colon, TokenType.Colon], [':', ':']),
         ('**', [TokenType.Asterisk, TokenType.Asterisk], ['*', '*']),
         ('&&', [TokenType.Ampersand, TokenType.Ampersand], ['&', '&']),
@@ -131,6 +135,13 @@ class TestTokenizer:
         ('==', [TokenType.Assing, TokenType.Assing], ['=', '=']),
         ("'", [TokenType.Unknown], ["'"]),
         ('"', [TokenType.Unknown], ['"']),
+        ('EnumName::EnumEntryName', [TokenType.Identifier], ['EnumName::EnumEntryName']),
+        ('EnumName:', [TokenType.Identifier, TokenType.Colon], ['EnumName', ':']),
+        ('EnumName::', [TokenType.Identifier, TokenType.Colon, TokenType.Colon], ['EnumName', ':', ':']),
+        ('::EnumName', [TokenType.Colon, TokenType.Colon, TokenType.Identifier], [':', ':', 'EnumName']),
+        ('::EnumName::EnumEntryName', [TokenType.Colon, TokenType.Colon, TokenType.Identifier], [':', ':', 'EnumName::EnumEntryName']),
+        ('EnumName EnumName::EnumEntryName', [TokenType.Identifier, TokenType.Identifier], ['EnumName', 'EnumName::EnumEntryName']),
+        ('EnumName ClassScope::EnumName::EnumEntryName', [TokenType.Identifier, TokenType.Identifier], ['EnumName', 'ClassScope::EnumName::EnumEntryName']),
         ('epiFloat* Name', [TokenType.SingleFloatingType, TokenType.Asterisk, TokenType.Identifier], ['epiFloat', '*', 'Name']),
         ('epiFloat * Name', [TokenType.SingleFloatingType, TokenType.Asterisk, TokenType.Identifier], ['epiFloat', '*', 'Name']),
         ('epiFloat *Name', [TokenType.SingleFloatingType, TokenType.Asterisk, TokenType.Identifier], ['epiFloat', '*', 'Name']),

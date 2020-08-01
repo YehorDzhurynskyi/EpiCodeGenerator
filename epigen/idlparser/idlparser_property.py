@@ -49,6 +49,11 @@ def parse_property(parser: idl.IDLParser) -> EpiProperty:
     t = parser._next()
     parser._test(t, expected=[TokenType.Identifier], err_code=idl.IDLSyntaxErrorCode.UnexpectedToken, fatal=False)
 
+    if not t.is_declaration_identifier():
+
+        tip = 'A property declaration identifier was expected'
+        parser._push_error(t, idl.IDLSyntaxErrorCode.WrongIdentifierContext, tip, fatal=False)
+
     prty = EpiProperty(t, tokentype, form)
 
     if prty.form == EpiProperty.Form.Template:

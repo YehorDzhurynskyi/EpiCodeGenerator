@@ -20,7 +20,6 @@ class TokenType(Enum):
     Asterisk = auto()
     Ampersand = auto()
     Colon = auto()
-    # DoubleColon = auto()
     Semicolon = auto()
 
     CharLiteral = auto()
@@ -32,6 +31,7 @@ class TokenType(Enum):
     DoubleFloatingLiteral = auto()
     TrueLiteral = auto()
     FalseLiteral = auto()
+    EnumLiteral = auto()
 
     CharType = auto()
     WCharType = auto()
@@ -76,8 +76,8 @@ class TokenType(Enum):
     Identifier = auto()
 
     ClassType = auto()
+    EnumType = auto()
     # StructType = auto()
-    # EnumType = auto()
     # InterfaceType = auto()
 
     # Owner = auto()
@@ -106,6 +106,22 @@ class TokenType(Enum):
                 return k
 
         return None
+
+    @staticmethod
+    def is_integer(tokentype) -> bool:
+        return tokentype in [
+            TokenType.Int8Type,
+            TokenType.Int16Type,
+            TokenType.Int32Type,
+            TokenType.Int64Type,
+            TokenType.UInt8Type,
+            TokenType.UInt16Type,
+            TokenType.UInt32Type,
+            TokenType.UInt64Type,
+            TokenType.ByteType,
+            TokenType.SizeTType,
+            TokenType.HashTType
+        ]
 
     @staticmethod
     def builtin_types() -> list:
@@ -255,19 +271,7 @@ class Token:
         return self.tokentype == TokenType.Identifier or self.is_builtin_type()
 
     def is_integer(self) -> bool:
-        return self.tokentype in [
-            TokenType.Int8Type,
-            TokenType.Int16Type,
-            TokenType.Int32Type,
-            TokenType.Int64Type,
-            TokenType.UInt8Type,
-            TokenType.UInt16Type,
-            TokenType.UInt32Type,
-            TokenType.UInt64Type,
-            TokenType.ByteType,
-            TokenType.SizeTType,
-            TokenType.HashTType
-        ]
+        return TokenType.is_integer(self.tokentype)
 
     def is_templated(self) -> bool:
         return self.text in Tokenizer.BUILTIN_TEMPLATED_TYPES
@@ -275,9 +279,13 @@ class Token:
     def is_usertype(self) -> bool:
         return self.text in Tokenizer.BUILTIN_USER_TYPES
 
+    def is_declaration_identifier(self) -> bool:
+        return self.tokentype == TokenType.Identifier and self.text.find('::') == -1
+
 
 class Tokenizer:
 
+    # NOTE: put longer tokens on top to match reverse sort by `len` key pattern
     SPECIAL_SYMBOL_TOKEN_TYPES = {
         '{': TokenType.OpenBrace,
         '}': TokenType.CloseBrace,
@@ -291,10 +299,14 @@ class Tokenizer:
         '*': TokenType.Asterisk,
         '&': TokenType.Ampersand,
         ',': TokenType.Comma,
-        # '::': TokenType.DoubleColon,
         ':': TokenType.Colon,
         ';': TokenType.Semicolon
     }
+
+    # NOTE: to avoid interpreting '&&' token as  '&'
+    assert list(SPECIAL_SYMBOL_TOKEN_TYPES.keys()) == \
+           sorted(SPECIAL_SYMBOL_TOKEN_TYPES.keys(), reverse=True, key=len)
+
 
     BUILTIN_VALUES = {
         'true': TokenType.TrueLiteral,
@@ -355,8 +367,8 @@ class Tokenizer:
 
     BUILTIN_USER_TYPES = {
         'class': TokenType.ClassType,
+        'enum': TokenType.EnumType,
         # 'struct': TokenType.StructType,
-        # 'enum': TokenType.EnumType,
         # 'interface': TokenType.InterfaceType
     }
 
@@ -570,7 +582,15 @@ class Tokenizer:
         else:
             token.tokentype_expected.append(tokentype_suspected)
 
-        while self._ch().isalnum() or self._ch() == '_':
+        is_term = lambda ch: ch.isalnum() or ch == '_'
+        while True:
+
+            if self._ch() == ':' and self._ch(1) == ':' and is_term(self._ch(2)):
+                self.at += 2
+
+            if not is_term(self._ch()):
+                break
+
             self.at += 1
 
         token.text = self._substring_until_from(begin)

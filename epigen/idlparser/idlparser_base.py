@@ -2,9 +2,10 @@ from epigen.tokenizer import Token
 from epigen.tokenizer import Tokenizer
 from epigen.tokenizer import TokenType
 
-from enum import Enum, auto
+from enum import Enum, auto, unique
 
 
+@unique
 class IDLSyntaxErrorCode(Enum):
 
     NoMatchingClosingBrace = auto()
@@ -25,6 +26,7 @@ class IDLSyntaxErrorCode(Enum):
     AttributeInvalidTarget = auto()
     DuplicatingSymbol = auto()
     MultiDepthPointer = auto()
+    WrongIdentifierContext = auto()
 
     # TODO: move here incomplete type error checking from linking stage
 
@@ -48,7 +50,8 @@ class IDLSyntaxError:
         IDLSyntaxErrorCode.AttributeInvalidParameters: 'Invalid attribute parameters',
         IDLSyntaxErrorCode.AttributeInvalidTarget: 'An attribute was applied to the wrong target',
         IDLSyntaxErrorCode.DuplicatingSymbol: "The symbol's name duplicates other symbol's name",
-        IDLSyntaxErrorCode.MultiDepthPointer: 'Only single-depth pointers are allowed'
+        IDLSyntaxErrorCode.MultiDepthPointer: 'Only single-depth pointers are allowed',
+        IDLSyntaxErrorCode.WrongIdentifierContext: 'An identifier was used in the wrong context'
     }
 
     def __init__(self, token: Token, err_code: IDLSyntaxErrorCode, tip: str):
@@ -73,6 +76,16 @@ class IDLSyntaxError:
 
     def __repr__(self):
         return f'{repr(self.__err_code)}: {repr(self.__token)} {self.__tip}'
+
+
+class IDLParserError(Exception):
+
+    def __init__(self, msg: str, token: Token, err_code: IDLSyntaxErrorCode):
+
+        super().__init__(msg)
+
+        self.token = token
+        self.err_code = err_code
 
 
 class IDLParserErrorFatal(Exception):
@@ -167,6 +180,7 @@ class IDLParser:
     def parse(self) -> (dict, list):
 
         from epigen.idlparser import idlparser_class as idlclass
+        from epigen.idlparser import idlparser_enum as idlenum
 
         self.syntax_errors = [IDLSyntaxError(t, IDLSyntaxErrorCode.UnknownToken, '') for t in self.tokens if t.tokentype == TokenType.Unknown]
         if len(self.syntax_errors) > 0:
@@ -181,16 +195,20 @@ class IDLParser:
                 t = self._curr()
                 self._test(t, expected=list(Tokenizer.BUILTIN_USER_TYPES.values()), err_code=IDLSyntaxErrorCode.MissingTypeDeclaration)
 
-                assert t.tokentype == TokenType.ClassType, 'Handle other usertypes'
+                assert t.tokentype in [TokenType.ClassType, TokenType.EnumType], 'Handle other usertypes'
 
-                clss = idlclass.parse_class(self)
+                if t.tokentype == TokenType.ClassType:
+                    sym = idlclass.parse_class(self)
 
-                if clss.name in registry:
+                elif t.tokentype == TokenType.EnumType:
+                    sym = idlenum.parse_enum(self)
 
-                    tip = f'The symbol `{clss.name}` has already been defined in the current file!'
-                    self._push_error(clss.token, IDLSyntaxErrorCode.DuplicatingSymbol, tip, fatal=False)
+                if sym.name in registry:
 
-                registry[clss.name] = clss
+                    tip = f'The symbol `{sym.name}` has already been defined in the current file!'
+                    self._push_error(sym.token, IDLSyntaxErrorCode.DuplicatingSymbol, tip, fatal=False)
+
+                registry[sym.name] = sym
 
         except IDLParserErrorFatal:
             pass

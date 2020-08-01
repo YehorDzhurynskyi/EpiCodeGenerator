@@ -1,5 +1,4 @@
 from epigen.symbol import EpiSymbol
-from epigen.symbol import EpiClass
 
 from epigen.code_generator import code_generator_emitter as emmiter
 from epigen.code_generator import code_generator_builder as bld
@@ -255,8 +254,6 @@ class CodeGenerator:
     def code_generate(self) -> list:
 
         for symbol in self.__symbols:
-
-            assert isinstance(symbol, EpiClass)
 
             # TODO: move these functions to the Token class
             basename = os.path.splitext(symbol.token.relpath)[0]

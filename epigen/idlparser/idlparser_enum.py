@@ -2,9 +2,8 @@ from epigen.idlparser import idlparser_base as idl
 
 from epigen.tokenizer import TokenType
 
-from epigen.symbol import EpiClass
-from epigen.symbol import EpiProperty
-from epigen.symbol import EpiAttribute
+from epigen.symbol import EpiEnum
+from epigen.symbol import EpiEnumEntry
 
 
 def _parse_scope(parser: idl.IDLParser, attrs_inherited: list = []) -> list:
@@ -39,7 +38,7 @@ def _parse_scope(parser: idl.IDLParser, attrs_inherited: list = []) -> list:
                 if prty.form in [EpiProperty.Form.Pointer]:
                     prty.attr_push(EpiAttribute(TokenType.Transient))
 
-            except idl.IDLParserError as e:
+            except idlattr.EpiAttributeValidationError as e:
                 parser._push_error(e.token, e.err_code, str(e), fatal=False)
 
             scope.append(prty)
@@ -53,19 +52,14 @@ def _parse_scope(parser: idl.IDLParser, attrs_inherited: list = []) -> list:
     return scope
 
 
-def parse_class(parser: idl.IDLParser) -> EpiClass:
+def parse_enum(parser: idl.IDLParser) -> EpiEnum:
 
     assert parser._curr().tokentype == TokenType.ClassType, 'This method should be called on `class` token'
 
     t = parser._next(2)
     parser._test(t, expected=[TokenType.Identifier], err_code=idl.IDLSyntaxErrorCode.UnexpectedToken)
 
-    if not t.is_declaration_identifier():
-
-        tip = 'A class declaration identifier was expected'
-        parser._push_error(t, idl.IDLSyntaxErrorCode.WrongIdentifierContext, tip, fatal=False)
-
-    clss = EpiClass(t)
+    clss = EpiEnum(t)
 
     t = parser._curr()
     if parser._test(t, expected=[TokenType.Colon]):

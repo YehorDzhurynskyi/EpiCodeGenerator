@@ -181,7 +181,7 @@ class EpiProperty(EpiSymbol):
 
     def __init__(self, token: Token, tokentype: Token, form):
 
-        super(EpiProperty, self).__init__(token)
+        super().__init__(token)
 
         self.tokentype = tokentype
         self.form = form
@@ -267,7 +267,7 @@ class EpiProperty(EpiSymbol):
             return False
 
         return \
-            super(EpiProperty, self).__eq__(rhs) and \
+            super().__eq__(rhs) and \
             self.form == rhs.form and \
             self.__tokenvalue == rhs.__tokenvalue and \
             self.tokentype == rhs.tokentype and \
@@ -276,16 +276,16 @@ class EpiProperty(EpiSymbol):
     def __repr__(self):
 
         rtokentype_nested = ', '.join([repr(t) for t in self.tokens_nested])
-        r = f'{super(EpiProperty, self).__repr__()}, tokentype=({repr(self.tokentype)}), form={self.form}, value={repr(self.__tokenvalue)}, tokentype_nested={rtokentype_nested}'
+        r = f'{super().__repr__()}, tokentype=({repr(self.tokentype)}), form={self.form}, value={repr(self.__tokenvalue)}, tokentype_nested={rtokentype_nested}'
 
         return r
 
 
 class EpiClass(EpiSymbol):
 
-    def __init__(self, token):
+    def __init__(self, token: Token):
 
-        super(EpiClass, self).__init__(token)
+        super().__init__(token)
 
         self.parent = None
         self.properties = []
@@ -296,15 +296,80 @@ class EpiClass(EpiSymbol):
             return False
 
         return \
-            super(EpiClass, self).__eq__(rhs) and \
+            super().__eq__(rhs) and \
             self.parent == rhs.parent and \
             self.properties == rhs.properties
 
     def __repr__(self):
 
-        r = f'{super(EpiClass, self).__repr__()}, parent={self.parent}, properties-len={len(self.properties)}'
+        r = f'{super().__repr__()}, parent={self.parent}, properties-len={len(self.properties)}'
         rproperties = '\n'.join([repr(p) for p in self.properties])
         r = f'{r}:{rproperties}'
+
+        return r
+
+
+class EpiEnumEntry(EpiSymbol):
+
+    def __init__(self, token: Token):
+
+        super().__init__(token)
+
+        self.value = None
+
+    def __eq__(self, rhs):
+
+        if not isinstance(rhs, EpiEnumEntry):
+            return False
+
+        return \
+            super().__eq__(rhs) and \
+            self.value == rhs.value
+
+    def __repr__(self):
+        return f'{super().__repr__()}, value={self.value}'
+
+
+class EpiEnum(EpiSymbol):
+
+    def __init__(self, token: Token):
+
+        super().__init__(token)
+
+        self.__base = None
+        self.__entries = []
+
+    def entry_push(self, entry: EpiEnumEntry):
+
+        entry.value = len(self.__entries)
+        self.__entries.append(entry)
+
+    @property
+    def base(self):
+        return self.__base
+
+    @base.setter
+    def base(self, tokentype: TokenType):
+
+        assert TokenType.is_integer(tokentype)
+
+        self.__base = tokentype
+
+    def __eq__(self, rhs):
+
+        if not isinstance(rhs, EpiEnum):
+            return False
+
+        return \
+            super().__eq__(rhs) and \
+            self.__base == rhs.__base and \
+            self.__entries == rhs.__entries
+
+    def __repr__(self):
+
+        r = f'{super().__repr__()}, base={self.__base}, entries-len={len(self.__entries)}'
+        rentries = '\n'.join([repr(p) for p in self.__entries])
+        r = f'{r}:{rentries}'
 
         return r
 
@@ -462,3 +527,70 @@ class EpiClassBuilder:
         clss.properties = self.__properties
 
         return clss
+
+
+class EpiEnumEntryBuilder:
+
+    def __init__(self):
+
+        self.__name = None
+        self.__value = None
+
+    def name(self, name: str):
+
+        self.__name = name
+        return self
+
+    def value(self, value: str):
+
+        self.__value = value
+        return self
+
+    def build(self) -> EpiEnumEntry:
+
+        assert self.__name is not None
+        assert self.__value is not None
+
+        token = Token(TokenType.Identifier, self.__name)
+
+        entry = EpiEnumEntry(token)
+        entry.name = self.__name
+        entry.value = self.__value
+
+        return entry
+
+
+class EpiEnumBuilder:
+
+    def __init__(self):
+
+        self.__name = None
+        self.__base = None
+        self.__entries = []
+
+    def name(self, name: str):
+
+        self.__name = name
+        return self
+
+    def base(self, base: str):
+
+        self.__base = base
+        return self
+
+    def entry(self, entry: EpiEnumEntry):
+
+        self.__entries.append(entry)
+        return self
+
+    def build(self) -> EpiEnum:
+
+        assert self.__name is not None
+
+        token = Token(TokenType.Identifier, self.__name)
+
+        enum = EpiEnum(token)
+        enum.base = self.__base
+        enum.entries = self.__entries
+
+        return enum
