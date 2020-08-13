@@ -75,6 +75,18 @@ MetaClass A::EmitMetaClass()
 
     {
         MetaProperty m = epiMetaProperty(
+            /* Name */ "VirtualFloats1",
+            /* PtrRead */ (void*)offsetof(A, GetVirtualFloats1_FuncPtr),
+            /* PtrWrite */ (void*)nullptr,
+            /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskReadOnly},
+            /* typeID */ epiHashCompileTime(epiArray),
+            /* nestedTypeID */ epiHashCompileTime(epiFloat)
+        );
+        data.AddProperty(epiHashCompileTime(VirtualFloats1), std::move(m));
+    }
+
+    {
+        MetaProperty m = epiMetaProperty(
             /* Name */ "VirtualFloat",
             /* PtrRead */ (void*)offsetof(A, GetVirtualFloat_FuncPtr),
             /* PtrWrite */ (void*)offsetof(A, SetVirtualFloat_FuncPtr),

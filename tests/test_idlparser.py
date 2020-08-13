@@ -569,6 +569,21 @@ class TestIDLParser:
         ),
         (
             '''
+            class A
+            {
+                [Virtual]
+                enum A : epiHash_t
+                {
+                    Value1,
+                    Value2
+                };
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.AttributeInvalidTarget]
+        ),
+        (
+            '''
             enum A : epiHash_t
             {
                 Value1,
@@ -610,6 +625,69 @@ class TestIDLParser:
             ''',
             {},
             [idl.IDLSyntaxErrorCode.NoMatchingClosingBrace]
+        ),
+        (
+            '''
+            enum A
+            {
+                Value1 = +0
+            };
+
+            class ClassName : B
+            {
+                enum A : epiHash_t
+                {
+                    Value1,
+                    Value2 = 32,
+                    Value3,
+
+                    [DisplayName("Val1")]
+                    Value4,
+
+                    Value5
+                };
+
+                epiS32 Name1;
+                epiString Name2 = "Text";
+            };
+            ''',
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .entry(EpiEnumEntryBuilder().name('Value1').value('+0').build())
+                        .build(),
+                'ClassName':
+                    EpiClassBuilder()
+                        .name('ClassName')
+                        .parent('B')
+                        .inner(
+                            EpiEnumBuilder()
+                                .name('A')
+                                .base(TokenType.HashTType)
+                                .entry(EpiEnumEntryBuilder().name('Value1').build())
+                                .entry(EpiEnumEntryBuilder().name('Value2').value('32').build())
+                                .entry(EpiEnumEntryBuilder().name('Value3').build())
+                                .entry(EpiEnumEntryBuilder().name('Value4').attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"Val1"').build()).build())
+                                .entry(EpiEnumEntryBuilder().name('Value5').build())
+                                .build()
+                        )
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name1')
+                                .tokentype_type(TokenType.Int32Type)
+                                .build()
+                        )
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name2')
+                                .tokentype_type(TokenType.StringType)
+                                .value('"Text"')
+                                .build()
+                        )
+                        .build()
+            },
+            []
         ),
         (
             '''
@@ -1523,6 +1601,21 @@ class TestIDLParser:
         ),
         (
             '''
+            enum EnumName
+            {
+                Value1
+            };
+
+            enum EnumName
+            {
+                Value1
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.DuplicatingSymbol]
+        ),
+        (
+            '''
             class ClassName
             {
                 epiFloat* Name;
@@ -1567,6 +1660,161 @@ class TestIDLParser:
                                 .attr(
                                     EpiAttributeBuilder()
                                         .tokentype(TokenType.Transient)
+                                        .build()
+                                )
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class ClassName
+            {
+                [Transient]
+                epiFloat * Name;
+            };
+            ''',
+            {
+                'ClassName':
+                    EpiClassBuilder()
+                        .name('ClassName')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.SingleFloatingType)
+                                .form(EpiProperty.Form.Pointer)
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Transient)
+                                        .build()
+                                )
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class ClassName
+            {
+                [Virtual, ReadOnly]
+                epiS32 Name;
+            };
+            ''',
+            {
+                'ClassName':
+                    EpiClassBuilder()
+                        .name('ClassName')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.Int32Type)
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Transient)
+                                        .build()
+                                )
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.ReadCallback)
+                                        .build()
+                                )
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Virtual)
+                                        .build()
+                                )
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.ReadOnly)
+                                        .build()
+                                )
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class ClassName
+            {
+                [ReadOnly, Virtual]
+                epiS32 Name;
+            };
+            ''',
+            {
+                'ClassName':
+                    EpiClassBuilder()
+                        .name('ClassName')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.Int32Type)
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.ReadOnly)
+                                        .build()
+                                )
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Transient)
+                                        .build()
+                                )
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.ReadCallback)
+                                        .build()
+                                )
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Virtual)
+                                        .build()
+                                )
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            class ClassName
+            {
+                [ReadOnly, ReadCallback(SuppressRef=true), Virtual]
+                C Name;
+            };
+            ''',
+            {
+                'ClassName':
+                    EpiClassBuilder()
+                        .name('ClassName')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Name')
+                                .tokentype_type(TokenType.Identifier, 'C')
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.ReadOnly)
+                                        .build()
+                                )
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.ReadCallback)
+                                        .param_named('SuppressRef', TokenType.TrueLiteral, 'true')
+                                        .build()
+                                )
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Transient)
+                                        .build()
+                                )
+                                .attr(
+                                    EpiAttributeBuilder()
+                                        .tokentype(TokenType.Virtual)
                                         .build()
                                 )
                                 .build()
@@ -1858,8 +2106,29 @@ class TestIDLParser:
     @pytest.mark.parametrize('content', [
         (
             '''
+            enum EnumName
+            {
+                Value1,
+                Value2 = 123,
+
+                [DisplayName("V1")]
+                {
+                    Value3 = 123,
+                    Value4 = 42
+                }
+
+                [DisplayName("V2")]
+                Value5 = -23
+            };
+
             class ParentClassName
             {
+                enum InnerEnumName : epiS32
+                {
+                    Value1,
+                    Value2
+                };
+
                 [Transient, WriteOnly]
                 {
                     [Max(5, Force=true)]
@@ -1937,8 +2206,23 @@ class TestIDLParser:
         ),
         (
             '''
+                        enum EnumName {
+                Value1, # COMMENT
+                # ANOTHER COMMENT
+
+                Value2 =                       123      ,     
+
+                [DisplayName("V1")]
+                { Value3 = 123, Value4 = 42 }
+
+                [DisplayName("V2")] Value5 = -23
+            };
+
+
             class ParentClassName
             {
+                enum InnerEnumName : epiS32 { Value1, Value2 };
+
                 [Transient, WriteOnly]
                 {
                     [Max(5, Force=true)] { epiS32 A = 1; }
@@ -2001,9 +2285,26 @@ class TestIDLParser:
 
         expected_errors = []
         expected_registry = {
+            'EnumName':
+                EpiEnumBuilder()
+                    .name('EnumName')
+                    .entry(EpiEnumEntryBuilder().name('Value1').build())
+                    .entry(EpiEnumEntryBuilder().name('Value2').value('123').build())
+                    .entry(EpiEnumEntryBuilder().name('Value3').value('123').attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"V1"').build()).build())
+                    .entry(EpiEnumEntryBuilder().name('Value4').value('42').attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"V1"').build()).build())
+                    .entry(EpiEnumEntryBuilder().name('Value5').value('-23').attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"V2"').build()).build())
+                    .build(),
             'ParentClassName':
                 EpiClassBuilder()
                     .name('ParentClassName')
+                    .inner(
+                        EpiEnumBuilder()
+                            .name('InnerEnumName')
+                            .base(TokenType.Int32Type)
+                            .entry(EpiEnumEntryBuilder().name('Value1').build())
+                            .entry(EpiEnumEntryBuilder().name('Value2').build())
+                            .build()
+                    )
                     .property(EpiPropertyBuilder().name('A').tokentype_type(TokenType.Int32Type)
                         .attr(
                             EpiAttributeBuilder()

@@ -8,6 +8,9 @@ class A
     [Virtual, ReadOnly]
     epiArray<epiFloat> VirtualFloats;
 
+    [ReadOnly, Virtual]
+    epiArray<epiFloat> VirtualFloats1;
+
     [Virtual]
     epiFloat VirtualFloat;
 

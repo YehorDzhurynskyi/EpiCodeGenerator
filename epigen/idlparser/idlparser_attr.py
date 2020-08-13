@@ -74,7 +74,7 @@ def __validate_target(attr: EpiAttribute, target: EpiSymbol, acceptable_targets:
 
     if not any(isinstance(target, t) for t in acceptable_targets):
 
-        msg = f'An attribute applied to the wrong target (should be applied to: { " or ".join(acceptable_targets) })'
+        msg = f'An attribute applied to the wrong target (should be applied to: { " or ".join([repr(t) for t in acceptable_targets]) })'
         raise idl.IDLParserError(msg, attr.token, idl.IDLSyntaxErrorCode.AttributeInvalidTarget)
 
 

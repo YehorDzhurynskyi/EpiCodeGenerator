@@ -4,12 +4,14 @@ from epigen.tokenizer import TokenType
 
 from epigen.symbol import EpiClass
 from epigen.symbol import EpiProperty
+from epigen.symbol import EpiEnum
 from epigen.symbol import EpiAttribute
 
 
 def __parse_scope(parser: idl.IDLParser, attrs_inherited: list = []) -> list:
 
     from epigen.idlparser import idlparser_property as idlprty
+    from epigen.idlparser import idlparser_enum as idlenum
     from epigen.idlparser import idlparser_attr as idlattr
 
     parser._test(parser._next(), expected=[TokenType.OpenBrace], err_code=idl.IDLSyntaxErrorCode.NoBodyOnDeclaration)
@@ -30,22 +32,29 @@ def __parse_scope(parser: idl.IDLParser, attrs_inherited: list = []) -> list:
             scope.append(__parse_scope(parser, attrs_merged))
 
         else:
-
-            prty = idlprty.parse_property(parser)
-
             try:
 
-                for attr in attrs_merged:
-                    prty.attr_push(attr)
+                if parser._test(parser._curr(), expected=[TokenType.EnumType]):
+                    sym = idlenum.parse_enum(parser)
 
-                # TODO: put it to the other place
-                if prty.form in [EpiProperty.Form.Pointer]:
-                    prty.attr_push(EpiAttribute(TokenType.Transient))
+                else:
+                    sym = idlprty.parse_property(parser)
+
+                    # TODO: put it to the other place
+                    if sym.form in [EpiProperty.Form.Pointer]:
+
+                        attr = EpiAttribute(TokenType.Transient)
+                        attr.is_implied_indirectly = True
+
+                        sym.attr_push(attr)
+
+                for attr in attrs_merged:
+                    sym.attr_push(attr)
 
             except idl.IDLParserError as e:
                 parser._push_error(e.token, e.err_code, str(e), fatal=False)
 
-            scope.append(prty)
+            scope.append(sym)
 
     t = parser._next()
     parser._test(t,
@@ -78,15 +87,27 @@ def parse_class(parser: idl.IDLParser) -> EpiClass:
 
         clss.parent = t.text
 
-    def unpack_scope(s):
+    def unpack_scope(scope):
 
-        for e in s:
+        for sym in scope:
 
-            if isinstance(e, EpiProperty):
-                clss.properties.append(e)
+            if isinstance(sym, EpiProperty):
+                clss.properties.append(sym)
 
-            elif isinstance(e, list):
-                unpack_scope(e)
+            elif isinstance(sym, EpiEnum):
+
+                if sym.name in clss.inner:
+
+                    tip = f'The symbol `{sym.name}` has already been defined in the {clss.name} `class` type!'
+                    parser._push_error(sym.token, idl.IDLSyntaxErrorCode.DuplicatingSymbol, tip, fatal=False)
+
+                clss.inner[sym.name] = sym
+
+            elif isinstance(sym, list):
+                unpack_scope(sym)
+
+            else:
+                assert False
 
     scope = __parse_scope(parser)
     unpack_scope(scope)

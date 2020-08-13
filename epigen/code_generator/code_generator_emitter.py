@@ -1,12 +1,8 @@
-from epigen.code_generator import code_generator_builder as bld
-
-from epigen.tokenizer import TokenType
-from epigen.tokenizer import Tokenizer
-
-from epigen.symbol import EpiClass
-from epigen.symbol import EpiProperty
-
 import zlib
+
+from epigen.code_generator import code_generator_builder as bld
+from epigen.symbol import EpiClass, EpiProperty
+from epigen.tokenizer import Tokenizer, TokenType
 
 
 def _property_getter(prty: EpiProperty, **kwargs) -> str:

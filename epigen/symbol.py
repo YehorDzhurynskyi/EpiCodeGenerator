@@ -43,9 +43,10 @@ class EpiAttribute:
 
     def __repr__(self):
 
-        params_positional = '\n'.join([repr(p) for p in self.__params_positional])
-        params_named = '\n'.join([f'{k} => {repr(p)}' for k, p in self.__params_named.items()])
-        return f'tokentype=({repr(self.tokentype)}), params positional: {params_positional}, params named: {params_named}'
+        params_positional = ', '.join([repr(p) for p in self.__params_positional])
+        params_named = ', '.join([f'{k} => {repr(p)}' for k, p in self.__params_named.items()])
+
+        return f'tokentype={{{repr(self.tokentype)}}}, params-positional=({params_positional}), params-named=({params_named})'
 
     def conflicts(self, attr) -> bool:
 
@@ -114,8 +115,8 @@ class EpiSymbol(abc.ABC):
 
     def __repr__(self):
 
-        attrs = '\n'.join(repr(a) for a in self.__attrs)
-        return f'{repr(self.token)}, attrs={attrs}'
+        attrs = ', '.join(repr(a) for a in self.__attrs)
+        return f'{{{repr(self.token)}}}, attrs-len={len(self.__attrs)}, attrs=({attrs})'
 
     def __eq__(self, rhs):
 
@@ -277,7 +278,7 @@ class EpiProperty(EpiSymbol):
     def __repr__(self):
 
         rtokentype_nested = ', '.join([repr(t) for t in self.tokens_nested])
-        r = f'{super().__repr__()}, tokentype=({repr(self.tokentype)}), form={self.form}, value={repr(self.__tokenvalue)}, tokentype_nested={rtokentype_nested}'
+        r = f'{super().__repr__()}, tokentype=({repr(self.tokentype)}), form={self.form}, value={repr(self.__tokenvalue)}, tokentype_nested=({rtokentype_nested})'
 
         return r
 
@@ -289,6 +290,7 @@ class EpiClass(EpiSymbol):
         super().__init__(token)
 
         self.parent = None
+        self.inner = {}
         self.properties = []
 
     def __eq__(self, rhs):
@@ -299,12 +301,15 @@ class EpiClass(EpiSymbol):
         return \
             super().__eq__(rhs) and \
             self.parent == rhs.parent and \
+            self.inner == rhs.inner and \
             self.properties == rhs.properties
 
     def __repr__(self):
 
-        r = f'{super().__repr__()}, parent={self.parent}, properties-len={len(self.properties)}'
-        rproperties = '\n'.join([repr(p) for p in self.properties])
+        rinner = ', '.join(repr(i) for i in self.inner.values())
+        rproperties = ', '.join([repr(p) for p in self.properties])
+
+        r = f'{super().__repr__()}, parent={self.parent}, inner=({rinner}), properties-len={len(self.properties)}'
         r = f'{r}:{rproperties}'
 
         return r
@@ -363,8 +368,8 @@ class EpiEnum(EpiSymbol):
 
     def __repr__(self):
 
-        r = f'{super().__repr__()}, base={self.__base}, entries-len={len(self.entries)}'
-        rentries = '\n'.join([repr(e) for e in self.entries])
+        r = f'{super().__repr__()}, base={{{repr(self.__base)}}}, entries-len={len(self.entries)}'
+        rentries = ', '.join([repr(e) for e in self.entries])
         r = f'{r}:{rentries}'
 
         return r
@@ -496,6 +501,7 @@ class EpiClassBuilder:
         self.__name = None
         self.__parent = None
         self.__properties = []
+        self.__inner = {}
 
     def name(self, name: str):
 
@@ -512,6 +518,13 @@ class EpiClassBuilder:
         self.__properties.append(property)
         return self
 
+    def inner(self, symbol: EpiSymbol):
+
+        assert isinstance(symbol, EpiEnum)
+
+        self.__inner[symbol.name] = symbol
+        return self
+
     def build(self) -> EpiClass:
 
         assert self.__name is not None
@@ -521,6 +534,7 @@ class EpiClassBuilder:
         clss = EpiClass(token)
         clss.parent = self.__parent
         clss.properties = self.__properties
+        clss.inner = self.__inner
 
         return clss
 

@@ -20,6 +20,7 @@ public:
         PID_PName = 0x216436f2,
         PID_Text = 0x9bb908f9,
         PID_VirtualFloats = 0x8da39f42,
+        PID_VirtualFloats1 = 0x1b836c94,
         PID_VirtualFloat = 0xa4f8c74a,
         PID_ProjMat = 0xe4669ca8,
         PID_Value1 = 0xa5d9696c,
@@ -27,11 +28,12 @@ public:
         PID_Value3 = 0x4bd70840,
         PID_Value4 = 0xd5b39de3,
         PID_NonSiblingVirtual = 0x80d41417,
-        PID_COUNT = 10
+        PID_COUNT = 11
     };
 
 protected:
     const epiArray<epiFloat>& GetVirtualFloats_Callback() const;
+    const epiArray<epiFloat>& GetVirtualFloats1_Callback() const;
     epiFloat GetVirtualFloat_Callback() const;
     void SetVirtualFloat_Callback(epiFloat value);
     epiMat4x4f GetProjMat_Callback() const;

@@ -35,6 +35,7 @@ inline const epiString& GetText() const { return m_Text; } \
 inline epiString& GetText() { return m_Text; } \
 inline void SetText(const epiString& value) { m_Text = value; } \
 const epiArray<epiFloat>& GetVirtualFloats() const { return GetVirtualFloats_Callback(); } \
+const epiArray<epiFloat>& GetVirtualFloats1() const { return GetVirtualFloats1_Callback(); } \
 epiFloat GetVirtualFloat() const { return GetVirtualFloat_Callback(); } \
 void SetVirtualFloat(epiFloat value) { SetVirtualFloat_Callback(value); } \
 epiMat4x4f GetProjMat() const { return GetProjMat_Callback(); } \
@@ -55,18 +56,20 @@ enum A_PIDXs \
     PIDX_PName = 0, \
     PIDX_Text = 1, \
     PIDX_VirtualFloats = 2, \
-    PIDX_VirtualFloat = 3, \
-    PIDX_ProjMat = 4, \
-    PIDX_Value1 = 5, \
-    PIDX_Value2 = 6, \
-    PIDX_Value3 = 7, \
-    PIDX_Value4 = 8, \
-    PIDX_NonSiblingVirtual = 9, \
-    PIDX_COUNT = 10 \
+    PIDX_VirtualFloats1 = 3, \
+    PIDX_VirtualFloat = 4, \
+    PIDX_ProjMat = 5, \
+    PIDX_Value1 = 6, \
+    PIDX_Value2 = 7, \
+    PIDX_Value3 = 8, \
+    PIDX_Value4 = 9, \
+    PIDX_NonSiblingVirtual = 10, \
+    PIDX_COUNT = 11 \
 }; \
  \
 private: \
 const epiArray<epiFloat>& (A::*GetVirtualFloats_FuncPtr)() const { &A::GetVirtualFloats }; \
+const epiArray<epiFloat>& (A::*GetVirtualFloats1_FuncPtr)() const { &A::GetVirtualFloats1 }; \
 epiFloat (A::*GetVirtualFloat_FuncPtr)() const { &A::GetVirtualFloat }; \
 void (A::*SetVirtualFloat_FuncPtr)(epiFloat) { &A::SetVirtualFloat }; \
 epiMat4x4f (A::*GetProjMat_FuncPtr)() const { &A::GetProjMat }; \
