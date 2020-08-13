@@ -146,6 +146,12 @@ def __implies(tokentype: TokenType, target: EpiSymbol):
         pass
 
 
+def introduce_DisplayName(attr: EpiAttribute, target: EpiSymbol):
+
+    __validate_conflicts(attr, target)
+    __validate_parameters_positional(attr, [[TokenType.StringLiteral]])
+
+
 def introduce_WriteCallback(attr: EpiAttribute, target: EpiSymbol):
 
     __validate_conflicts(attr, target)

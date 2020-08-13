@@ -80,6 +80,7 @@ class TokenType(Enum):
     # StructType = auto()
     # InterfaceType = auto()
 
+    DisplayName = auto()
     # Owner = auto()
     ReadOnly = auto()
     WriteOnly = auto()
@@ -109,19 +110,7 @@ class TokenType(Enum):
 
     @staticmethod
     def is_integer(tokentype) -> bool:
-        return tokentype in [
-            TokenType.Int8Type,
-            TokenType.Int16Type,
-            TokenType.Int32Type,
-            TokenType.Int64Type,
-            TokenType.UInt8Type,
-            TokenType.UInt16Type,
-            TokenType.UInt32Type,
-            TokenType.UInt64Type,
-            TokenType.ByteType,
-            TokenType.SizeTType,
-            TokenType.HashTType
-        ]
+        return tokentype in TokenType.integers()
 
     @staticmethod
     def builtin_types() -> list:
@@ -138,8 +127,25 @@ class TokenType(Enum):
     @staticmethod
     def attributes() -> list:
         return \
+            list(Tokenizer.BUILTIN_GENERAL_ATTRS.values()) + \
             list(Tokenizer.BUILTIN_CLSS_ATTRS.values()) + \
             list(Tokenizer.BUILTIN_PRTY_ATTRS.values())
+
+    @staticmethod
+    def integers() -> list:
+        return [
+            TokenType.Int8Type,
+            TokenType.Int16Type,
+            TokenType.Int32Type,
+            TokenType.Int64Type,
+            TokenType.UInt8Type,
+            TokenType.UInt16Type,
+            TokenType.UInt32Type,
+            TokenType.UInt64Type,
+            TokenType.ByteType,
+            TokenType.SizeTType,
+            TokenType.HashTType
+        ]
 
     @staticmethod
     def literals() -> list:
@@ -372,6 +378,11 @@ class Tokenizer:
         # 'interface': TokenType.InterfaceType
     }
 
+    BUILTIN_GENERAL_ATTRS = {
+        'DisplayName': TokenType.DisplayName
+        # TBD: 'Description': TokenType.Description,
+    }
+
     BUILTIN_CLSS_ATTRS = {
         # 'AdditionalInterface': TokenType.AdditionalInterface,
         # 'SerializationCallback': TokenType.SerializationCallback,
@@ -392,8 +403,6 @@ class Tokenizer:
         'Transient': TokenType.Transient,
         # 'DllEntry': TokenType.DllEntry
         # TBD: 'Hidden': TokenType.Hidden,
-        # TBD: 'DisplayName': TokenType.DisplayName,
-        # TBD: 'Description': TokenType.Description,
         # TBD: 'EventCallback': TokenType.EventCallback,
         # TBD: 'Category': TokenType.Category,
     }
@@ -638,8 +647,9 @@ class Tokenizer:
             **Tokenizer.BUILTIN_COMPOUND_TYPES,
             **Tokenizer.BUILTIN_TEMPLATED_TYPES,
             **Tokenizer.BUILTIN_USER_TYPES,
-            **Tokenizer.BUILTIN_PRTY_ATTRS,
+            **Tokenizer.BUILTIN_GENERAL_ATTRS,
             **Tokenizer.BUILTIN_CLSS_ATTRS,
+            **Tokenizer.BUILTIN_PRTY_ATTRS,
             **Tokenizer.BUILTIN_MODIFIERS,
             **Tokenizer.BUILTIN_VALUES
         }

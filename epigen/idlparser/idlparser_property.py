@@ -51,7 +51,7 @@ def parse_property(parser: idl.IDLParser) -> EpiProperty:
 
     if not t.is_declaration_identifier():
 
-        tip = 'A property declaration identifier was expected'
+        tip = 'A `property` declaration identifier was expected'
         parser._push_error(t, idl.IDLSyntaxErrorCode.WrongIdentifierContext, tip, fatal=False)
 
     prty = EpiProperty(t, tokentype, form)

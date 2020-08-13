@@ -8,6 +8,7 @@ from epigen.tokenizer import TokenType
 
 
 _EPIATTRIBUTE_CONFLICT_TABLE = {
+    TokenType.DisplayName: [],
     TokenType.WriteCallback: [TokenType.ReadOnly],
     TokenType.ReadCallback: [TokenType.WriteOnly],
     TokenType.Virtual: [],
@@ -315,7 +316,7 @@ class EpiEnumEntry(EpiSymbol):
 
         super().__init__(token)
 
-        self.value = None
+        self.tokenvalue = None
 
     def __eq__(self, rhs):
 
@@ -324,10 +325,10 @@ class EpiEnumEntry(EpiSymbol):
 
         return \
             super().__eq__(rhs) and \
-            self.value == rhs.value
+            self.tokenvalue == rhs.tokenvalue
 
     def __repr__(self):
-        return f'{super().__repr__()}, value={self.value}'
+        return f'{super().__repr__()}, value={repr(self.tokenvalue)}'
 
 
 class EpiEnum(EpiSymbol):
@@ -337,23 +338,18 @@ class EpiEnum(EpiSymbol):
         super().__init__(token)
 
         self.__base = None
-        self.__entries = []
-
-    def entry_push(self, entry: EpiEnumEntry):
-
-        entry.value = len(self.__entries)
-        self.__entries.append(entry)
+        self.entries = []
 
     @property
     def base(self):
         return self.__base
 
     @base.setter
-    def base(self, tokentype: TokenType):
+    def base(self, token: Token):
 
-        assert TokenType.is_integer(tokentype)
+        assert TokenType.is_integer(token.tokentype)
 
-        self.__base = tokentype
+        self.__base = token
 
     def __eq__(self, rhs):
 
@@ -363,12 +359,12 @@ class EpiEnum(EpiSymbol):
         return \
             super().__eq__(rhs) and \
             self.__base == rhs.__base and \
-            self.__entries == rhs.__entries
+            self.entries == rhs.entries
 
     def __repr__(self):
 
-        r = f'{super().__repr__()}, base={self.__base}, entries-len={len(self.__entries)}'
-        rentries = '\n'.join([repr(p) for p in self.__entries])
+        r = f'{super().__repr__()}, base={self.__base}, entries-len={len(self.entries)}'
+        rentries = '\n'.join([repr(e) for e in self.entries])
         r = f'{r}:{rentries}'
 
         return r
@@ -534,7 +530,8 @@ class EpiEnumEntryBuilder:
     def __init__(self):
 
         self.__name = None
-        self.__value = None
+        self.__tokenvalue = None
+        self.__attrs = []
 
     def name(self, name: str):
 
@@ -543,19 +540,26 @@ class EpiEnumEntryBuilder:
 
     def value(self, value: str):
 
-        self.__value = value
+        self.__tokenvalue = Token(TokenType.IntegerLiteral, value)
+        return self
+
+    def attr(self, attr: EpiAttribute):
+
+        self.__attrs.append(attr)
         return self
 
     def build(self) -> EpiEnumEntry:
 
         assert self.__name is not None
-        assert self.__value is not None
 
         token = Token(TokenType.Identifier, self.__name)
 
         entry = EpiEnumEntry(token)
-        entry.name = self.__name
-        entry.value = self.__value
+
+        for attr in self.__attrs:
+            entry.attr_push(attr)
+
+        entry.tokenvalue = self.__tokenvalue
 
         return entry
 
@@ -573,9 +577,9 @@ class EpiEnumBuilder:
         self.__name = name
         return self
 
-    def base(self, base: str):
+    def base(self, tokentype: TokenType):
 
-        self.__base = base
+        self.__base = Token(tokentype, TokenType.repr_of(tokentype))
         return self
 
     def entry(self, entry: EpiEnumEntry):
@@ -590,7 +594,10 @@ class EpiEnumBuilder:
         token = Token(TokenType.Identifier, self.__name)
 
         enum = EpiEnum(token)
-        enum.base = self.__base
+
+        if self.__base is not None:
+            enum.base = self.__base
+
         enum.entries = self.__entries
 
         return enum

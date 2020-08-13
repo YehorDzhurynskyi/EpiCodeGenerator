@@ -395,7 +395,8 @@ class TestLinker:
             linker.register(registry_local)
 
         errors_linkage = linker.link()
-        assert len(errors_linkage) == len(expected_errors)
 
         for err, exp_err in zip(errors_linkage, expected_errors):
             assert err.err_code == exp_err
+
+        assert len(errors_linkage) == len(expected_errors)

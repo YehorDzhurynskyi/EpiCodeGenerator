@@ -7,7 +7,7 @@ from epigen.symbol import EpiProperty
 from epigen.symbol import EpiAttribute
 
 
-def _parse_scope(parser: idl.IDLParser, attrs_inherited: list = []) -> list:
+def __parse_scope(parser: idl.IDLParser, attrs_inherited: list = []) -> list:
 
     from epigen.idlparser import idlparser_property as idlprty
     from epigen.idlparser import idlparser_attr as idlattr
@@ -25,8 +25,10 @@ def _parse_scope(parser: idl.IDLParser, attrs_inherited: list = []) -> list:
 
         if parser._test(parser._curr(), expected=[TokenType.CloseBrace]):
             break
+
         elif parser._test(parser._curr(), expected=[TokenType.OpenBrace]):
-            scope.append(_parse_scope(parser, attrs_merged))
+            scope.append(__parse_scope(parser, attrs_merged))
+
         else:
 
             prty = idlprty.parse_property(parser)
@@ -36,6 +38,7 @@ def _parse_scope(parser: idl.IDLParser, attrs_inherited: list = []) -> list:
                 for attr in attrs_merged:
                     prty.attr_push(attr)
 
+                # TODO: put it to the other place
                 if prty.form in [EpiProperty.Form.Pointer]:
                     prty.attr_push(EpiAttribute(TokenType.Transient))
 
@@ -62,7 +65,7 @@ def parse_class(parser: idl.IDLParser) -> EpiClass:
 
     if not t.is_declaration_identifier():
 
-        tip = 'A class declaration identifier was expected'
+        tip = 'A `class` declaration identifier was expected'
         parser._push_error(t, idl.IDLSyntaxErrorCode.WrongIdentifierContext, tip, fatal=False)
 
     clss = EpiClass(t)
@@ -81,10 +84,11 @@ def parse_class(parser: idl.IDLParser) -> EpiClass:
 
             if isinstance(e, EpiProperty):
                 clss.properties.append(e)
+
             elif isinstance(e, list):
                 unpack_scope(e)
 
-    scope = _parse_scope(parser)
+    scope = __parse_scope(parser)
     unpack_scope(scope)
 
     t = parser._next()
