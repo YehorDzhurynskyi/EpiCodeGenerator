@@ -21,13 +21,20 @@ def __parse_enum_entry(parser: idl.IDLParser) -> EpiEnumEntry:
 
     if parser._test(parser._curr(), expected=[TokenType.Assing]):
 
-        t = parser._next(2)
-        if parser._test(t,
-                        expected=[TokenType.IntegerLiteral],
+        parser._next()
+        if parser._test(parser._curr(),
+                        expected=TokenType.literals(),
                         err_code=idl.IDLSyntaxErrorCode.IncorrectValueAssignment,
-                        tip="The assigned value isn't an integer literal",
+                        tip="The assigned value isn't a literal",
                         fatal=False):
 
+            parser._test(parser._curr(),
+                         expected=[TokenType.IntegerLiteral],
+                         err_code=idl.IDLSyntaxErrorCode.IncorrectValueLiteral,
+                         tip="The assigned value isn't an integer literal",
+                         fatal=False)
+
+            t = parser._next()
             entry.tokenvalue = t
 
     return entry

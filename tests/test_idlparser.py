@@ -304,6 +304,67 @@ class TestIDLParser:
         ),
         (
             '''
+            enum A : epiS8
+            {
+            };
+            ''',
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .base(TokenType.Int8Type)
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            enum A : epiFloat
+            {
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.UnexpectedKeywordUsage]
+        ),
+        (
+            '''
+            enum A :
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.UnexpectedEOF]
+        ),
+        (
+            '''
+            enum A : ;
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.UnexpectedToken]
+        ),
+        (
+            '''
+            enum A;
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.NoBodyOnDeclaration]
+        ),
+        (
+            '''
+            enum A : epiS8;
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.NoBodyOnDeclaration]
+        ),
+        (
+            '''
+            enum A : epiS8 : epiFloat
+            {
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.NoBodyOnDeclaration]
+        ),
+        (
+            '''
             enum A
             {
                 Value1,
@@ -346,6 +407,60 @@ class TestIDLParser:
                         .build()
             },
             []
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1 = 0.0f,
+                Value2
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1 = "textexft",
+                Value2
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1 = EnumName::Value1,
+                Value2
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment, idl.IDLSyntaxErrorCode.NoMatchingClosingBrace]
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1 = ,
+                Value2
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value2 =
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
         ),
         (
             '''
@@ -395,7 +510,7 @@ class TestIDLParser:
                 }
 
                 Value6,
-                Value7
+                Value7 = 124
             };
             ''',
             {
@@ -409,7 +524,7 @@ class TestIDLParser:
                         .entry(EpiEnumEntryBuilder().name('Value4').build())
                         .entry(EpiEnumEntryBuilder().name('Value5').build())
                         .entry(EpiEnumEntryBuilder().name('Value6').build())
-                        .entry(EpiEnumEntryBuilder().name('Value7').build())
+                        .entry(EpiEnumEntryBuilder().name('Value7').value('124').build())
                         .build()
             },
             []
