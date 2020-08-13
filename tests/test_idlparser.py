@@ -456,6 +456,28 @@ class TestIDLParser:
             '''
             enum A : epiHash_t
             {
+                Value1 = =,
+                Value2
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment, idl.IDLSyntaxErrorCode.NoMatchingClosingBrace]
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1 = ,,
+                Value2
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment, idl.IDLSyntaxErrorCode.UnexpectedToken]
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
                 Value2 =
             };
             ''',
