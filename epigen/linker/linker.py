@@ -1,6 +1,7 @@
 from epigen.tokenizer import TokenType
 
 from epigen.symbol import EpiSymbol
+from epigen.symbol import EpiClass
 from epigen.symbol import EpiProperty
 
 from enum import Enum, auto
@@ -13,6 +14,7 @@ class LinkerErrorCode(Enum):
     NoSuchSymbol = auto()
     HashCollision = auto()
     IncompleteTypeUsage = auto()
+    IncorrectValueAssignment = auto()
 
 
 class LinkerError:
@@ -21,7 +23,8 @@ class LinkerError:
         LinkerErrorCode.DuplicatingSymbol: 'The symbol with such a name has been already defined!',
         LinkerErrorCode.NoSuchSymbol: "The symbol doesn't exists!",
         LinkerErrorCode.HashCollision: 'Hash collision has been occured!',
-        LinkerErrorCode.IncompleteTypeUsage: "This incomplete type couldn't be used in this context!"
+        LinkerErrorCode.IncompleteTypeUsage: "This incomplete type couldn't be used in this context!",
+        LinkerErrorCode.IncorrectValueAssignment: 'Incorrect value assignment'
     }
 
     def __init__(self, symbol: EpiSymbol, err_code: LinkerErrorCode, tip: str):
@@ -97,14 +100,12 @@ class Linker:
             del typeids_local_typeids_local[i + ii : typeids_local_len + ii]
             ii += i
 
-        valid = _validate_duplicates(typeids_local_typeids_local)
+        valid_locally = _validate_duplicates(typeids_local_typeids_local)
 
         typeids_global = _typeids(list(self.__registry.values()))
         typeids_local_typeids_global = [(lhs, rhs) for lhs in typeids_local for rhs in typeids_global]
 
-        valid = _validate_duplicates(typeids_local_typeids_global) and valid
-
-        if valid:
+        if _validate_duplicates(typeids_local_typeids_global) and valid_locally:
             self.__registry = { **self.__registry, **registry }
 
     def link(self) -> list:
@@ -119,6 +120,24 @@ class Linker:
         inheritance_tree.validate(self)
 
         for sym in self.__registry.values():
+
+            if not isinstance(sym, EpiClass):
+                continue
+
+            for p in (p for p in sym.properties if p.tokenvalue.is_identifier_reference()):
+
+                path = p.tokenvalue.text.split('::')
+                assert len(path) >= 2, "A path should contain at least one `::` separator, so `EnumName` isn't a correct path"
+
+                name: str = path[0]
+                if name in self.__registry:
+                    sym_lookup = self.__registry[name]
+                elif name in sym.inner:
+                    sym_lookup = sym.inner[name]
+
+                for p in path[1:]:
+                    sym_lookup
+                    # TODO: finish
 
             for p in (p for p in sym.properties if p.tokentype.tokentype == TokenType.Identifier):
 

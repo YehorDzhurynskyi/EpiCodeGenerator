@@ -11,7 +11,7 @@ from epigen.symbol import EpiAttribute
 def __parse_enum_entry(parser: idl.IDLParser) -> EpiEnumEntry:
 
     parser._test(parser._curr(), expected=[TokenType.Identifier], err_code=idl.IDLSyntaxErrorCode.UnexpectedToken)
-    if not parser._curr().is_declaration_identifier():
+    if not parser._curr().is_identifier_declaration():
 
         tip = 'An `enum entry` declaration identifier was expected'
         parser._push_error(parser._curr(), idl.IDLSyntaxErrorCode.WrongIdentifierContext, tip, fatal=False)
@@ -98,7 +98,7 @@ def parse_enum(parser: idl.IDLParser) -> EpiEnum:
     t = parser._next(2)
     parser._test(t, expected=[TokenType.Identifier], err_code=idl.IDLSyntaxErrorCode.UnexpectedToken)
 
-    if not t.is_declaration_identifier():
+    if not t.is_identifier_declaration():
 
         tip = 'An `enum` declaration identifier was expected'
         parser._push_error(t, idl.IDLSyntaxErrorCode.WrongIdentifierContext, tip, fatal=False)

@@ -49,7 +49,7 @@ def parse_property(parser: idl.IDLParser) -> EpiProperty:
     t = parser._next()
     parser._test(t, expected=[TokenType.Identifier], err_code=idl.IDLSyntaxErrorCode.UnexpectedToken, fatal=False)
 
-    if not t.is_declaration_identifier():
+    if not t.is_identifier_declaration():
 
         tip = 'A `property` declaration identifier was expected'
         parser._push_error(t, idl.IDLSyntaxErrorCode.WrongIdentifierContext, tip, fatal=False)
@@ -62,25 +62,25 @@ def parse_property(parser: idl.IDLParser) -> EpiProperty:
     t = parser._next()
     if parser._test(t, expected=[TokenType.Assing]):
 
-        t = parser._next()
-        parser._test(t,
-                    expected=TokenType.literals(),
-                    err_code=idl.IDLSyntaxErrorCode.IncorrectValueAssignment,
-                    tip="The assigned value isn't a literal",
-                    fatal=False)
+        value = parser._next()
+        parser._test(value,
+                     expected=TokenType.literals(),
+                     err_code=idl.IDLSyntaxErrorCode.IncorrectValueAssignment,
+                     tip="The assigned value isn't a literal",
+                     fatal=False)
 
-        if prty.tokentype.tokentype == TokenType.Identifier:
-            parser._push_error(t, idl.IDLSyntaxErrorCode.IncorrectValueAssignment, 'Only fundamental types are assingable', fatal=False)
+        if prty.tokentype.tokentype == TokenType.Identifier and not value.is_identifier_reference():
+            parser._push_error(value, idl.IDLSyntaxErrorCode.IncorrectValueAssignment, 'Only fundamental types are assingable', fatal=False)
         elif prty.form == EpiProperty.Form.Pointer:
-            parser._push_error(t, idl.IDLSyntaxErrorCode.IncorrectValueAssignment, 'Pointers are unassingable and are set with \'null\' by default', fatal=False)
+            parser._push_error(value, idl.IDLSyntaxErrorCode.IncorrectValueAssignment, 'Pointers are unassingable and are set with \'null\' by default', fatal=False)
         elif prty.form == EpiProperty.Form.Template:
-            parser._push_error(t, idl.IDLSyntaxErrorCode.IncorrectValueAssignment, 'Template types are unassingable', fatal=False)
+            parser._push_error(value, idl.IDLSyntaxErrorCode.IncorrectValueAssignment, 'Template types are unassingable', fatal=False)
         else:
 
             if parser._test(prty.tokentype, expected=TokenType.assignable(), err_code=idl.IDLSyntaxErrorCode.IncorrectValueAssignment, fatal=False):
-                parser._test(t, expected=TokenType.literals_of(prty.tokentype.tokentype), err_code=idl.IDLSyntaxErrorCode.IncorrectValueLiteral, fatal=False)
+                parser._test(value, expected=TokenType.literals_of(prty.tokentype.tokentype), err_code=idl.IDLSyntaxErrorCode.IncorrectValueLiteral, fatal=False)
 
-            prty.tokenvalue = t
+            prty.tokenvalue = value
 
         t = parser._next()
 

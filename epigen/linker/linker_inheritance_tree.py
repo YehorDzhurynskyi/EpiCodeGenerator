@@ -2,6 +2,7 @@ from epigen.linker import linker as ln
 
 from epigen.symbol import EpiSymbol
 from epigen.symbol import EpiClass
+from epigen.symbol import EpiEnum
 
 import zlib
 
@@ -20,7 +21,7 @@ class InheritanceTree:
 
     def __init__(self, registry: dict):
 
-        self.nodes = {}
+        self.__clss_nodes = {}
         self.__registry = registry
 
     def build(self, linker: ln.Linker):
@@ -36,24 +37,48 @@ class InheritanceTree:
                     linker._push_error(sym, ln.LinkerErrorCode.NoSuchSymbol, tip)
                 else:
 
-                    parent = self.nodes[sym.parent] if sym.parent in self.nodes else _insert(sym.parent, self.__registry[sym.parent])
+                    parent = self.__clss_nodes[sym.parent] if sym.parent in self.__clss_nodes else _insert(sym.parent, self.__registry[sym.parent])
                     parent.is_leaf = False
 
             node = InheritanceTree.Node(sym, parent)
-            self.nodes[name] = node
+            self.__clss_nodes[name] = node
 
             return node
 
-        for name, sym in self.__registry.items():
+        for name, clss in ((name, sym) for name, sym in self.__registry.items() if isinstance(sym, EpiClass)):
 
-            assert isinstance(sym, EpiClass)
-
-            if name in self.nodes:
+            if name in self.__clss_nodes:
                 continue
 
-            _insert(name, sym)
+            _insert(name, clss)
 
     def validate(self, linker: ln.Linker):
+        self._validate_enums(linker)
+        self._validate_clss(linker)
+
+    def _validate_enums(self, linker: ln.Linker):
+
+        for _, enum in ((name, sym) for name, sym in self.__registry.items() if isinstance(sym, EpiEnum)):
+
+            entries_entries = [(lhs, rhs) for lhs in enum.entries for rhs in enum.entries]
+
+            # NOTE: `entries_entries` is cartesian product A * A,
+            # so we need exclude (a0, a0), (a1, a1) and (a0, a1), (a1, a0) pairs
+            ii = 0
+            entries_len = len(enum.entries)
+            for i in range(entries_len):
+
+                del entries_entries[i + ii : entries_len + ii]
+                ii += i
+
+            for lhs, rhs in entries_entries:
+
+                if lhs.name == rhs.name:
+
+                    tip = f'The symbol has been already defined in `{rhs.token.modulepath}`'
+                    linker._push_error(lhs, ln.LinkerErrorCode.DuplicatingSymbol, tip)
+
+    def _validate_clss(self, linker: ln.Linker):
 
         memo = {}
 
@@ -115,7 +140,7 @@ class InheritanceTree:
 
             return _validate_properties(node, node.clss.properties)
 
-        leafs = { k: v for k, v in self.nodes.items() if v.is_leaf }
+        leafs = { k: v for k, v in self.__clss_nodes.items() if v.is_leaf }
 
         for k, v in leafs.items():
             _validate(k, v)

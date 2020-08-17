@@ -72,7 +72,7 @@ def parse_class(parser: idl.IDLParser) -> EpiClass:
     t = parser._next(2)
     parser._test(t, expected=[TokenType.Identifier], err_code=idl.IDLSyntaxErrorCode.UnexpectedToken)
 
-    if not t.is_declaration_identifier():
+    if not t.is_identifier_declaration():
 
         tip = 'A `class` declaration identifier was expected'
         parser._push_error(t, idl.IDLSyntaxErrorCode.WrongIdentifierContext, tip, fatal=False)

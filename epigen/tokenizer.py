@@ -158,7 +158,8 @@ class TokenType(Enum):
             TokenType.SingleFloatingLiteral,
             TokenType.DoubleFloatingLiteral,
             TokenType.TrueLiteral,
-            TokenType.FalseLiteral
+            TokenType.FalseLiteral,
+            TokenType.Identifier # TODO: split Identifiers into two groups `IdentifierRef` and `IdentifierDec`
         ]
 
     @staticmethod
@@ -181,7 +182,8 @@ class TokenType(Enum):
             TokenType.CharType,
             TokenType.WCharType,
             TokenType.StringType,
-            TokenType.WStringType
+            TokenType.WStringType,
+            TokenType.Identifier
         ]
 
     @staticmethod
@@ -206,6 +208,7 @@ class TokenType(Enum):
             TokenType.WCharType: [TokenType.WCharLiteral],
             TokenType.StringType: [TokenType.StringLiteral],
             TokenType.WStringType: [TokenType.WStringLiteral],
+            TokenType.Identifier: [TokenType.Identifier] # TODO: replace `IdentifierDec -> IdentifierRef`
         }
 
         assert len(literals) == len(TokenType.assignable())
@@ -285,8 +288,11 @@ class Token:
     def is_usertype(self) -> bool:
         return self.text in Tokenizer.BUILTIN_USER_TYPES
 
-    def is_declaration_identifier(self) -> bool:
+    def is_identifier_declaration(self) -> bool:
         return self.tokentype == TokenType.Identifier and self.text.find('::') == -1
+
+    def is_identifier_reference(self) -> bool:
+        return self.tokentype == TokenType.Identifier and self.text.find('::') != -1
 
 
 class Tokenizer:

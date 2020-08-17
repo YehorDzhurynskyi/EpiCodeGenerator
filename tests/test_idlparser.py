@@ -319,6 +319,73 @@ class TestIDLParser:
         ),
         (
             '''
+            enum A : epiS8
+            {
+                Name
+            };
+
+            class B : C
+            {
+                [Transient]
+                A a = A::Name;
+            };
+            ''',
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .base(TokenType.Int8Type)
+                        .entry(EpiEnumEntryBuilder().name('Name').build())
+                        .build(),
+                'B':
+                    EpiClassBuilder()
+                        .name('B')
+                        .parent('C')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('a')
+                                .tokentype_type(TokenType.Identifier, 'A')
+                                .value('A::Name')
+                                .attr(EpiAttributeBuilder().tokentype(TokenType.Transient).build())
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            enum A : epiS8
+            {
+                Name
+            };
+
+            class B : C
+            {
+                epiS32 a = A::Name;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            enum A : epiS8
+            {
+                Name
+            };
+
+            class B : C
+            {
+                [Transient]
+                A a = A;
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            '''
             enum A : epiFloat
             {
             };
@@ -439,7 +506,18 @@ class TestIDLParser:
             };
             ''',
             {},
-            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment, idl.IDLSyntaxErrorCode.NoMatchingClosingBrace]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1 = EnumName,
+                Value2
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral] # TODO: replace with IncorrectValueAssignment
         ),
         (
             '''

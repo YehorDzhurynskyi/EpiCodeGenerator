@@ -109,6 +109,305 @@ class TestLinker:
         (
             [
                 '''
+                enum EnumName
+                {
+                    Name
+                };
+                ''',
+                '''
+                enum EnumName
+                {
+                    Name
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.DuplicatingSymbol]
+        ),
+        (
+            [
+                '''
+                enum EnumClassName
+                {
+                    Name
+                };
+                ''',
+                '''
+                class EnumClassName
+                {
+                    epiFloat Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.DuplicatingSymbol]
+        ),
+        (
+            [
+                '''
+                enum EnumName
+                {
+                    Name
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    EnumName Name = EnumName::Name;
+                };
+                '''
+            ],
+            []
+        ),
+        (
+            [
+                '''
+                enum EnumName
+                {
+                    Name
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    EnumName Name = EnumName::Name1;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.NoSuchSymbol]
+        ),
+        (
+            [
+                '''
+                enum EnumName
+                {
+                    Name
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    EnumName Name = EnumName1::Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.NoSuchSymbol]
+        ),
+        (
+            [
+                '''
+                class Inner
+                {
+                    enum EnumName
+                    {
+                        [DisplayName("Name")]
+                        Name
+                    };
+
+                    [DisplayName("Hu")]
+                    epiFloat Name;
+
+                    EnumName Name1 = EnumName::Name;
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    Inner::EnumName Name = Inner::EnumName::Name;
+                };
+                '''
+            ],
+            []
+        ),
+        (
+            [
+                '''
+                class Inner
+                {
+                    enum EnumName
+                    {
+                        [DisplayName("Name")]
+                        Name
+                    };
+
+                    [DisplayName("Hu")]
+                    epiFloat Name;
+
+                    EnumName Name1 = Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.NoSuchSymbol]
+        ),
+        (
+            [
+                '''
+                class Inner
+                {
+                    enum EnumName
+                    {
+                        [DisplayName("Name")]
+                        Name
+                    };
+
+                    [DisplayName("Hu")]
+                    epiFloat Name;
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    EnumName Name = Inner::EnumName::Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.NoSuchSymbol]
+        ),
+        (
+            [
+                '''
+                class Inner
+                {
+                    enum EnumName
+                    {
+                        [DisplayName("Name")]
+                        Name
+                    };
+
+                    [DisplayName("Hu")]
+                    epiFloat Name;
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    Inner::EnumName Name = EnumName::Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.NoSuchSymbol]
+        ),
+        (
+            [
+                '''
+                class Inner
+                {
+                    enum EnumName
+                    {
+                        [DisplayName("Name")]
+                        Name
+                    };
+
+                    [DisplayName("Hu")]
+                    epiFloat Name;
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    Inner::EnumName Name = Inner::Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.NoSuchSymbol]
+        ),
+        (
+            [
+                '''
+                class Inner
+                {
+                    enum EnumName
+                    {
+                        [DisplayName("Name")]
+                        Name
+                    };
+
+                    [DisplayName("Hu")]
+                    epiFloat Name;
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    Inner::EnumName Name = Inner::EnumName;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            [
+                '''
+                class Inner
+                {
+                    enum EnumName
+                    {
+                        [DisplayName("Name")]
+                        Name
+                    };
+
+                    [DisplayName("Hu")]
+                    epiFloat Name;
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    EnumName Name = EnumName::Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.NoSuchSymbol]
+        ),
+        (
+            [
+                '''
+                class Inner
+                {
+                    enum EnumName
+                    {
+                        [DisplayName("Name")]
+                        Name
+                    };
+
+                    [DisplayName("Hu")]
+                    epiFloat Name;
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    EnumName Name = Inner::Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.NoSuchSymbol]
+        ),
+        (
+            [
+                '''
+                class Inner
+                {
+                    enum EnumName
+                    {
+                        [DisplayName("Name")]
+                        Name
+                    };
+
+                    [DisplayName("Hu")]
+                    epiFloat Name;
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    EnumName Name = Inner::EnumName;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            [
+                '''
                 class ClassName
                 {
                     epiArray<ClassName> Name;
@@ -234,6 +533,18 @@ class TestLinker:
                 {
                     epiS32 Name;
                     epiString Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.DuplicatingSymbol]
+        ),
+        (
+            [
+                '''
+                enum EnumName
+                {
+                    Name,
+                    Name
                 };
                 '''
             ],

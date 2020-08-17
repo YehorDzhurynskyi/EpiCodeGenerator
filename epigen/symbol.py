@@ -259,7 +259,7 @@ class EpiProperty(EpiSymbol):
             value = 'epiDEBUG_ONLY(L"Empty")'
             tokentype = TokenType.WStringLiteral
         else:
-            return None
+            assert False
 
         return Token(tokentype, value)
 
