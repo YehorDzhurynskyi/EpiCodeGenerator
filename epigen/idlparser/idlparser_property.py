@@ -69,9 +69,7 @@ def parse_property(parser: idl.IDLParser) -> EpiProperty:
                      tip="The assigned value isn't a literal",
                      fatal=False)
 
-        if prty.tokentype.tokentype == TokenType.Identifier and not value.is_identifier_reference():
-            parser._push_error(value, idl.IDLSyntaxErrorCode.IncorrectValueAssignment, 'Only fundamental types are assingable', fatal=False)
-        elif prty.form == EpiProperty.Form.Pointer:
+        if prty.form == EpiProperty.Form.Pointer:
             parser._push_error(value, idl.IDLSyntaxErrorCode.IncorrectValueAssignment, 'Pointers are unassingable and are set with \'null\' by default', fatal=False)
         elif prty.form == EpiProperty.Form.Template:
             parser._push_error(value, idl.IDLSyntaxErrorCode.IncorrectValueAssignment, 'Template types are unassingable', fatal=False)

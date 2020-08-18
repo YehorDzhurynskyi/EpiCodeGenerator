@@ -139,9 +139,7 @@ def emit_properties(properties: list, accessor_modifier: str, builder: bld.Build
     builder.tab()
 
     for p in properties:
-
-        value = f'{{{p.tokenvalue.text}}}' if p.tokenvalue is not None else ''
-        builder.line(f'{p.typename()} m_{p.name}{value};')
+        builder.line(f'{p.typename()} m_{p.name}{{{p.tokenvalue.text}}};')
 
     builder.tab(-1)
     builder.line_empty()

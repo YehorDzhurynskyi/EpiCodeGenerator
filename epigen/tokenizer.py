@@ -291,9 +291,6 @@ class Token:
     def is_identifier_declaration(self) -> bool:
         return self.tokentype == TokenType.Identifier and self.text.find('::') == -1
 
-    def is_identifier_reference(self) -> bool:
-        return self.tokentype == TokenType.Identifier and self.text.find('::') != -1
-
 
 class Tokenizer:
 

@@ -219,6 +219,11 @@ class EpiProperty(EpiSymbol):
     def tokenvalue(self, token: Token):
         self.__tokenvalue = token
 
+    def tokenvalue_typename(self):
+
+        assert self.tokentype.tokentype == TokenType.Identifier
+        return '::'.join(self.tokenvalue.text.split('::')[:-1])
+
     def value_is_assigned(self) -> bool:
         return self.__tokenvalue is not None
 

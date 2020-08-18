@@ -202,7 +202,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -381,8 +381,27 @@ class TestIDLParser:
                 A a = A;
             };
             ''',
-            {},
-            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .base(TokenType.Int8Type)
+                        .entry(EpiEnumEntryBuilder().name('Name').build())
+                        .build(),
+                'B':
+                    EpiClassBuilder()
+                        .name('B')
+                        .parent('C')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('a')
+                                .tokentype_type(TokenType.Identifier, 'A')
+                                .value('A')
+                                .attr(EpiAttributeBuilder().tokentype(TokenType.Transient).build())
+                                .build())
+                        .build()
+            },
+            []
         ),
         (
             '''
@@ -1203,7 +1222,7 @@ class TestIDLParser:
             };
             ''',
             {},
-            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -1970,7 +1989,7 @@ class TestIDLParser:
         for err, exp_err in zip(errors_syntax, expected_errors):
             assert err.err_code == exp_err
 
-        assert len(errors_syntax) == len(expected_errors), f'{errors_syntax}'
+        assert len(errors_syntax) == len(expected_errors), f'{errors_syntax} != {expected_errors}'
 
         assert list(registry_local.keys()) == list(expected_registry.keys())
 

@@ -185,6 +185,23 @@ class TestLinker:
                 '''
                 class ClassName
                 {
+                    EnumName Name = EnumName::Name::1Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.NoSuchSymbol]
+        ),
+        (
+            [
+                '''
+                enum EnumName
+                {
+                    Name
+                };
+                ''',
+                '''
+                class ClassName
+                {
                     EnumName Name = EnumName1::Name;
                 };
                 '''
@@ -259,7 +276,7 @@ class TestLinker:
                 };
                 '''
             ],
-            [ln.LinkerErrorCode.NoSuchSymbol]
+            [ln.LinkerErrorCode.NoSuchSymbol] * 2
         ),
         (
             [
@@ -344,6 +361,36 @@ class TestLinker:
                         Name
                     };
 
+                    enum EnumNameName
+                    {
+                        [DisplayName("Name")]
+                        Name
+                    };
+
+                    [DisplayName("Hu")]
+                    epiFloat Name;
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    Inner::EnumName Name = Inner::EnumNameName::Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            [
+                '''
+                class Inner
+                {
+                    enum EnumName
+                    {
+                        [DisplayName("Name")]
+                        Name
+                    };
+
                     [DisplayName("Hu")]
                     epiFloat Name;
                 };
@@ -355,7 +402,7 @@ class TestLinker:
                 };
                 '''
             ],
-            [ln.LinkerErrorCode.NoSuchSymbol]
+            [ln.LinkerErrorCode.NoSuchSymbol] * 2
         ),
         (
             [
@@ -379,7 +426,7 @@ class TestLinker:
                 };
                 '''
             ],
-            [ln.LinkerErrorCode.NoSuchSymbol]
+            [ln.LinkerErrorCode.NoSuchSymbol] * 2
         ),
         (
             [
@@ -399,11 +446,87 @@ class TestLinker:
                 '''
                 class ClassName
                 {
-                    EnumName Name = Inner::EnumName;
+                    Inner::EnumName Name = Inner::EnumName;
                 };
                 '''
             ],
             [ln.LinkerErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            [
+                '''
+                class ClassName
+                {
+                    enum EnumName { Value0, Value1 };
+                    epiArray<EnumName> Name;
+                };
+                '''
+            ],
+            []
+        ),
+        (
+            [
+                '''
+                enum EnumName
+                {
+                    Value0,
+                    Value1
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    epiArray<EnumName> Name;
+                };
+                '''
+            ],
+            []
+        ),
+        (
+            [
+                '''
+                class Inner
+                {
+                    enum EnumName
+                    {
+                        Value0,
+                        Value1
+                    };
+
+                    epiFloat FloatPrty;
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    epiArray<Inner::EnumName> Name;
+                };
+                '''
+            ],
+            []
+        ),
+        (
+            [
+                '''
+                class Inner
+                {
+                    enum EnumName
+                    {
+                        Value0,
+                        Value1
+                    };
+
+                    epiFloat FloatPrty;
+                };
+                ''',
+                '''
+                class ClassName
+                {
+                    epiArray<Inner::EnumName::Value0> Name;
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.BadTemplateArgument]
         ),
         (
             [
@@ -701,7 +824,7 @@ class TestLinker:
             parser = idl.IDLParser(tokens)
             registry_local, errors_syntax = parser.parse()
 
-            assert len(errors_syntax) == 0
+            assert len(errors_syntax) == 0, f'{errors_syntax}'
 
             linker.register(registry_local)
 
@@ -710,4 +833,4 @@ class TestLinker:
         for err, exp_err in zip(errors_linkage, expected_errors):
             assert err.err_code == exp_err
 
-        assert len(errors_linkage) == len(expected_errors)
+        assert len(errors_linkage) == len(expected_errors), f'{errors_linkage} != {expected_errors}'
