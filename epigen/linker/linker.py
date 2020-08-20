@@ -159,29 +159,6 @@ class Linker:
             if not isinstance(sym, EpiClass):
                 continue
 
-            for p in (p for p in sym.properties if p.value_is_assigned() and p.tokenvalue.tokentype == TokenType.Identifier):
-
-                if self._lookup_sym(p.tokenvalue.text, sym) is None:
-
-                    tip = f'No such symbol exists: `{ p.tokenvalue.text }`'
-                    self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
-
-                    continue
-
-                if self._lookup_sym(p.typename_basename(), sym) is None:
-
-                    tip = f'No such symbol exists: `{ p.typename_basename() }`'
-                    self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
-
-                    continue
-
-                if p.typename_basename() != p.tokenvalue_typename():
-
-                    tip = f"Couldn't assign `{p.tokenvalue_typename()}` to this type"
-                    self._push_error(p, LinkerErrorCode.IncorrectValueAssignment, tip)
-
-                    continue
-
             for p in (p for p in sym.properties if p.tokentype.tokentype == TokenType.Identifier):
 
                 if p.typename_basename() == sym.name and not p.is_polymorphic():
@@ -189,10 +166,23 @@ class Linker:
                     tip = f'The symbol should be a complete type, but not: `{p.tokentype.text}`'
                     self._push_error(p, LinkerErrorCode.IncompleteTypeUsage, tip)
 
-                elif self._lookup_sym(p.typename_basename(), sym) is None:
+                p.symbol = self._lookup_sym(p.typename_basename(), sym)
+                if p.symbol is None:
 
-                    tip = f'No such property-symbol exists: `{p.tokentype.text}`'
+                    tip = f'No such symbol exists: `{ p.typename_basename() }`'
                     self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
+
+                if p.value_is_assigned() and p.tokenvalue.tokentype == TokenType.Identifier:
+
+                    if self._lookup_sym(p.tokenvalue.text, sym) is None:
+
+                        tip = f'No such symbol exists: `{ p.tokenvalue.text }`'
+                        self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
+
+                    elif p.symbol is not None and p.typename_basename() != p.tokenvalue_typename():
+
+                        tip = f"Couldn't assign `{p.tokenvalue_typename()}` to this type"
+                        self._push_error(p, LinkerErrorCode.IncorrectValueAssignment, tip)
 
             for p in (p for p in sym.properties if p.form == EpiProperty.Form.Template):
 

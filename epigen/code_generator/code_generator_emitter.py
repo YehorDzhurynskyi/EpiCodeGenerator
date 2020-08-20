@@ -1,7 +1,7 @@
 import zlib
 
 from epigen.code_generator import code_generator_builder as bld
-from epigen.symbol import EpiClass, EpiProperty
+from epigen.symbol import EpiClass, EpiProperty, EpiEnum
 from epigen.tokenizer import Tokenizer, TokenType
 
 
@@ -29,11 +29,10 @@ def _property_getter(prty: EpiProperty, **kwargs) -> str:
         return None
 
     if prty.form == EpiProperty.Form.Pointer:
-
         signature = f'{signature}const ' if const else signature
         signature = f'{signature}{prty.typename()} '
 
-    elif prty.typename_basename() in Tokenizer.fundamentals():
+    elif prty.typename_basename() in Tokenizer.fundamentals() or isinstance(prty.symbol, EpiEnum):
 
         assert prty.form == EpiProperty.Form.Plain
 
@@ -47,7 +46,6 @@ def _property_getter(prty: EpiProperty, **kwargs) -> str:
         signature = f'{signature}{prty.typename()} '
 
     else:
-
         signature = f'{signature}const ' if const else signature
         signature = f'{signature}{prty.typename()}& '
 
@@ -82,7 +80,9 @@ def _property_setter(prty: EpiProperty, **kwargs) -> str:
         signature = 'inline '
 
     signature = f'{signature}void Set{prty.name}{suffix}('
-    if prty.form not in [EpiProperty.Form.Pointer] and prty.typename_basename() not in Tokenizer.fundamentals():
+    if prty.form not in [EpiProperty.Form.Pointer] and \
+       prty.typename_basename() not in Tokenizer.fundamentals() and \
+       not isinstance(prty.symbol, EpiEnum):
 
         attr_writecallback = prty.attr_find(TokenType.WriteCallback)
         if attr_writecallback is not None and attr_writecallback.param_named_of('SuppressRef') is not None:
@@ -139,7 +139,9 @@ def emit_properties(properties: list, accessor_modifier: str, builder: bld.Build
     builder.tab()
 
     for p in properties:
-        builder.line(f'{p.typename()} m_{p.name}{{{p.tokenvalue.text}}};')
+
+        value = f'{{{p.tokenvalue.text}}}' if p.tokenvalue is not None else ''
+        builder.line(f'{p.typename()} m_{p.name}{value};')
 
     builder.tab(-1)
     builder.line_empty()
@@ -413,15 +415,23 @@ def emit_class_declaration_hidden(clss: EpiClass, builder: bld.Builder) -> bld.B
 
                 if p.form == EpiProperty.Form.Pointer:
                     builder.line(f'const {p.typename()} ({clss.name}::*Get{p.name}_FuncPtr)() const {{ &{clss.name}::Get{p.name} }}; \\')
-                elif p.typename_basename() not in Tokenizer.fundamentals() and attr_readcallback.param_named_of('SuppressRef') is None:
+
+                elif p.typename_basename() not in Tokenizer.fundamentals() and \
+                     not isinstance(p.symbol, EpiEnum) and \
+                     attr_readcallback.param_named_of('SuppressRef') is None:
                     builder.line(f'const {p.typename()}& ({clss.name}::*Get{p.name}_FuncPtr)() const {{ &{clss.name}::Get{p.name} }}; \\')
+
                 else:
                     builder.line(f'{p.typename()} ({clss.name}::*Get{p.name}_FuncPtr)() const {{ &{clss.name}::Get{p.name} }}; \\')
 
             if attr_writecallback is not None:
 
-                if p.typename_basename() not in Tokenizer.fundamentals() and p.form != EpiProperty.Form.Pointer and attr_writecallback.param_named_of('SuppressRef') is None:
+                if p.typename_basename() not in Tokenizer.fundamentals() and \
+                   not isinstance(p.symbol, EpiEnum) and \
+                   p.form != EpiProperty.Form.Pointer and \
+                   attr_writecallback.param_named_of('SuppressRef') is None:
                     builder.line(f'void ({clss.name}::*Set{p.name}_FuncPtr)(const {p.typename()}&) {{ &{clss.name}::Set{p.name} }}; \\')
+
                 else:
                     builder.line(f'void ({clss.name}::*Set{p.name}_FuncPtr)({p.typename()}) {{ &{clss.name}::Set{p.name} }}; \\')
 

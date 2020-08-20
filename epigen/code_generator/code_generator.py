@@ -2,6 +2,7 @@ from epigen.symbol import EpiSymbol
 
 from epigen.code_generator import code_generator_emitter as emmiter
 from epigen.code_generator import code_generator_builder as bld
+from epigen.symbol import EpiClass, EpiEnum
 
 from epigen.config import EpiGenConfig
 
@@ -187,19 +188,27 @@ class CodeGenerator:
         with open(self._filepath_of(basename, 'hxx'), 'w') as f:
             f.write(emmiter.emit_sekeleton_file(module_basename, 'hxx', bld.Builder()).build())
 
-        injection = f'\n{emmiter.emit_class_declaration_hidden(symbol, bld.Builder()).build()}'
-        self._inject(injection, basename, 'hxx')
+        if isinstance(symbol, EpiClass):
+            injection = f'\n{emmiter.emit_class_declaration_hidden(symbol, bld.Builder()).build()}'
+            self._inject(injection, basename, 'hxx')
+
+        elif isinstance(symbol, EpiEnum):
+            pass
 
     def _code_generate_cxx(self, symbol: EpiSymbol, basename: str, module_basename: str):
 
         with open(self._filepath_of(basename, 'cxx'), 'w') as f:
             f.write(emmiter.emit_sekeleton_file(module_basename, 'cxx', bld.Builder()).build())
 
-        injection = f'{emmiter.emit_class_serialization(symbol, bld.Builder()).build()}\n'
-        self._inject(injection, basename, 'cxx', before='EPI_NAMESPACE_END()')
+        if isinstance(symbol, EpiClass):
+            injection = f'{emmiter.emit_class_serialization(symbol, bld.Builder()).build()}\n'
+            self._inject(injection, basename, 'cxx', before='EPI_NAMESPACE_END()')
 
-        injection = f'{emmiter.emit_class_meta(symbol, bld.Builder()).build()}\n'
-        self._inject(injection, basename, 'cxx', before='EPI_NAMESPACE_END()')
+            injection = f'{emmiter.emit_class_meta(symbol, bld.Builder()).build()}\n'
+            self._inject(injection, basename, 'cxx', before='EPI_NAMESPACE_END()')
+
+        elif isinstance(symbol, EpiEnum):
+            pass
 
     def _code_generate_cpp(self, symbol: EpiSymbol, basename: str, module_basename: str):
 
@@ -218,38 +227,42 @@ class CodeGenerator:
             with open(filepath, 'w') as f:
                 f.write(emmiter.emit_sekeleton_file(module_basename, 'h', bld.Builder()).build())
 
-        if self._lookup(f'EPI_GENREGION_END({symbol.name})', basename, 'h') == -1:
+        if isinstance(symbol, EpiClass):
+            if self._lookup(f'EPI_GENREGION_END({symbol.name})', basename, 'h') == -1:
 
-            if self._lookup(f'EPI_GENREGION_BEGIN({symbol.name})', basename, 'h') != -1:
+                if self._lookup(f'EPI_GENREGION_BEGIN({symbol.name})', basename, 'h') != -1:
 
-                tip = f'`EPI_GENREGION_END({symbol.name})` is absent while corresponding anchor `EPI_GENREGION_BEGIN({symbol.name})` is present'
-                raise CodeGenerationError(f'{basename}.h', CodeGenerationErrorCode.CorruptedAnchor, tip)
+                    tip = f'`EPI_GENREGION_END({symbol.name})` is absent while corresponding anchor `EPI_GENREGION_BEGIN({symbol.name})` is present'
+                    raise CodeGenerationError(f'{basename}.h', CodeGenerationErrorCode.CorruptedAnchor, tip)
 
-            # NOTE: symbol isn't present add it to the end
-            injection = f'{emmiter.emit_skeleton_class(symbol, bld.Builder()).build()}\n'
-            self._inject(
-                injection,
-                basename,
-                'h',
-                before='EPI_NAMESPACE_END()'
-            )
+                # NOTE: symbol isn't present add it to the end
+                injection = f'{emmiter.emit_skeleton_class(symbol, bld.Builder()).build()}\n'
+                self._inject(
+                    injection,
+                    basename,
+                    'h',
+                    before='EPI_NAMESPACE_END()'
+                )
 
-        else:
+            else:
 
-            if self._lookup(f'EPI_GENREGION_BEGIN({symbol.name})', basename, 'h') == -1:
+                if self._lookup(f'EPI_GENREGION_BEGIN({symbol.name})', basename, 'h') == -1:
 
-                tip = f'`EPI_GENREGION_BEGIN({symbol.name})` is absent while corresponding anchor `EPI_GENREGION_END({symbol.name})` is present'
-                raise CodeGenerationError(f'{basename}.h', CodeGenerationErrorCode.CorruptedAnchor, tip)
+                    tip = f'`EPI_GENREGION_BEGIN({symbol.name})` is absent while corresponding anchor `EPI_GENREGION_END({symbol.name})` is present'
+                    raise CodeGenerationError(f'{basename}.h', CodeGenerationErrorCode.CorruptedAnchor, tip)
 
-            # NOTE: symbol is present add it to the corresponding region
-            injection = f'\n{emmiter.emit_class_declaration(symbol, bld.Builder()).build()}\n'
-            self._inject(
-                injection,
-                basename,
-                'h',
-                before=f'EPI_GENREGION_END({symbol.name})',
-                after=f'EPI_GENREGION_BEGIN({symbol.name})'
-            )
+                # NOTE: symbol is present add it to the corresponding region
+                injection = f'\n{emmiter.emit_class_declaration(symbol, bld.Builder()).build()}\n'
+                self._inject(
+                    injection,
+                    basename,
+                    'h',
+                    before=f'EPI_GENREGION_END({symbol.name})',
+                    after=f'EPI_GENREGION_BEGIN({symbol.name})'
+                )
+
+        elif isinstance(symbol, EpiEnum):
+            pass
 
     def code_generate(self) -> list:
 

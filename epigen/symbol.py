@@ -188,6 +188,7 @@ class EpiProperty(EpiSymbol):
         self.tokentype = tokentype
         self.form = form
         self.tokens_nested = []
+        self.symbol = None
         self.__tokenvalue = None
 
     def typename_basename(self):
@@ -264,7 +265,7 @@ class EpiProperty(EpiSymbol):
             value = 'epiDEBUG_ONLY(L"Empty")'
             tokentype = TokenType.WStringLiteral
         else:
-            assert False
+            return None
 
         return Token(tokentype, value)
 

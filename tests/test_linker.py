@@ -87,7 +87,7 @@ class TestLinker:
                 };
                 '''
             ],
-            [ln.LinkerErrorCode.NoSuchSymbol, ln.LinkerErrorCode.NoSuchSymbol]
+            [ln.LinkerErrorCode.NoSuchSymbol] * 2
         ),
         (
             [
@@ -276,7 +276,7 @@ class TestLinker:
                 };
                 '''
             ],
-            [ln.LinkerErrorCode.NoSuchSymbol] * 2
+            [ln.LinkerErrorCode.NoSuchSymbol]
         ),
         (
             [

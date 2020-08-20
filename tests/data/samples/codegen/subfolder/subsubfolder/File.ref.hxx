@@ -9,6 +9,32 @@
 /*        |_|                                           */
 /*                                                      */
 
+#define EPI_GENHIDDEN_Inner() \
+public: \
+using super = Object; \
+ \
+static MetaClass EmitMetaClass(); \
+ \
+const MetaClass& GetMetaClass() const override \
+{ \
+    super::GetMetaClass(); \
+    return ClassRegistry_GetMetaClass<Inner>(); \
+} \
+ \
+epiBool Is(MetaTypeID rhs) const override \
+{ \
+    return rhs == Inner::TypeID || super::Is(rhs); \
+} \
+ \
+void Serialization(json_t& json) override; \
+void Deserialization(const json_t& json) override; \
+ \
+enum Inner_PIDXs \
+{ \
+    PIDX_COUNT = 0 \
+}; \
+
+
 #define EPI_GENHIDDEN_B() \
 public: \
 using super = A; \
@@ -40,6 +66,18 @@ inline void SetSibling(B* value) { m_Sibling = value; } \
 inline const epiFloat* GetNonSibling() const { return m_NonSibling; } \
 inline epiFloat* GetNonSibling() { return m_NonSibling; } \
 inline void SetNonSibling(epiFloat* value) { m_NonSibling = value; } \
+inline Inner::E GetEnum0() const { return m_Enum0; } \
+inline void SetEnum0(Inner::E value) { m_Enum0 = value; } \
+inline Inner::E GetEnum1() const { return m_Enum1; } \
+inline void SetEnum1(Inner::E value) { m_Enum1 = value; } \
+E1 GetEnum2() const { return GetEnum2_Callback(); } \
+void SetEnum2(E1 value) { SetEnum2_Callback(value); } \
+inline const epiArray<Inner::E>& GetEnums0() const { return m_Enums0; } \
+inline epiArray<Inner::E>& GetEnums0() { return m_Enums0; } \
+inline void SetEnums0(const epiArray<Inner::E>& value) { m_Enums0 = value; } \
+inline const epiArray<E0>& GetEnums1() const { return m_Enums1; } \
+inline epiArray<E0>& GetEnums1() { return m_Enums1; } \
+inline void SetEnums1(const epiArray<E0>& value) { m_Enums1 = value; } \
  \
 enum B_PIDXs \
 { \
@@ -47,6 +85,15 @@ enum B_PIDXs \
     PIDX_Size = 1, \
     PIDX_Sibling = 2, \
     PIDX_NonSibling = 3, \
-    PIDX_COUNT = 4 \
+    PIDX_Enum0 = 4, \
+    PIDX_Enum1 = 5, \
+    PIDX_Enum2 = 6, \
+    PIDX_Enums0 = 7, \
+    PIDX_Enums1 = 8, \
+    PIDX_COUNT = 9 \
 }; \
+ \
+private: \
+E1 (B::*GetEnum2_FuncPtr)() const { &B::GetEnum2 }; \
+void (B::*SetEnum2_FuncPtr)(E1) { &B::SetEnum2 }; \
 

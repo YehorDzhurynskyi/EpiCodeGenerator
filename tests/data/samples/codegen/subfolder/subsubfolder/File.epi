@@ -1,9 +1,39 @@
+class Inner
+{
+    enum E : epiS32
+    {
+        [DisplayName("Value 0")]
+        Value0,
+
+        {
+            Value1,
+            Value2
+        }
+    };
+};
+
+enum E0 {};
+
 class B : A
 {
+    enum E1
+    {
+        Value0
+    };
+
     epiPtrArray<B> BBs;
 
     epiSize_t Size = 13;
 
     B* Sibling;
     epiFloat* NonSibling;
+
+    Inner::E Enum0;
+    Inner::E Enum1 = Inner::E::Value1;
+
+    [Virtual]
+    E1 Enum2;
+
+    epiArray<Inner::E> Enums0;
+    epiArray<E0> Enums1;
 };
