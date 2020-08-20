@@ -210,6 +210,25 @@ def emit_sekeleton_file(module_basename: str, ext: str, builder: bld.Builder) ->
 
 def emit_class_declaration(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
 
+    assert isinstance(clss, EpiClass)
+
+    if len(clss.inner) == 0:
+        builder.line_empty()
+
+    else:
+        builder.line_empty()
+        builder.line('public:')
+        builder.tab()
+
+        for symbol_inner in clss.inner.values():
+
+            assert isinstance(symbol_inner, EpiEnum)
+
+            symfullname = f'{clss.name}::{symbol_inner.name}'
+            emit_skeleton_enum(symbol_inner, symfullname, builder)
+
+        builder.tab(-1)
+
     clss_typeid = hex(zlib.crc32(clss.name.encode()) & 0xffffffff)
     builder.template('h/class_header', class_name=clss.name, class_typeid=clss_typeid)
     builder.line_empty()
@@ -243,21 +262,55 @@ def emit_class_declaration(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
 
 def emit_skeleton_class(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
 
+    assert isinstance(clss, EpiClass)
+
     clss_parent = clss.parent if clss.parent is not None else 'Object'
     builder.line(f'class {clss.name} : public {clss_parent}')
     builder.line('{')
     builder.anchor_gen_region(clss.name)
-
-    builder = emit_class_declaration(clss, builder)
-
-    builder.tab(-1)
     builder.anchor_gen_endregion(clss.name)
     builder.line('};')
     builder.line_empty()
 
     return builder
 
+def emit_enum_declaration(enum: EpiEnum, builder: bld.Builder) -> bld.Builder:
+
+    assert isinstance(enum, EpiEnum)
+
+    builder.tab()
+
+    value = 0
+    for i, e in enumerate(enum.entries):
+
+        value = value if e.tokenvalue is None else int(e.tokenvalue.text)
+        sep = ',' if i != len(enum.entries) - 1 else ''
+        builder.line(f'{e.name} = {value}{sep}')
+
+        value += 1
+
+    builder.tab(-1)
+
+    return builder
+
+def emit_skeleton_enum(enum: EpiEnum, symfullname: str, builder: bld.Builder) -> bld.Builder:
+
+    assert isinstance(enum, EpiEnum)
+
+    enum_base = f' : {enum.base.text}' if enum.base is not None else ''
+
+    builder.line(f'enum class {enum.name}{enum_base}')
+    builder.line('{')
+    builder.anchor_gen_region(symfullname)
+    builder.anchor_gen_endregion(symfullname)
+    builder.line('};')
+    builder.line_empty()
+
+    return builder
+
 def emit_class_serialization(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
+
+    assert isinstance(clss, EpiClass)
 
     properties_non_transient = [p for p in clss.properties if p.attr_find(TokenType.Transient) is None]
 
@@ -293,6 +346,8 @@ def emit_class_serialization(clss: EpiClass, builder: bld.Builder) -> bld.Builde
     return builder
 
 def emit_class_meta(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
+
+    assert isinstance(clss, EpiClass)
 
     builder.template('cxx/class_meta_header', class_name=clss.name)
     builder.line_empty()
@@ -363,6 +418,8 @@ def emit_class_meta(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
     return builder
 
 def emit_class_declaration_hidden(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
+
+    assert isinstance(clss, EpiClass)
 
     clss_parent = clss.parent if clss.parent is not None else 'Object'
     builder.template('hxx/class_hidden_header', class_name=clss.name, class_parent_name=clss_parent)

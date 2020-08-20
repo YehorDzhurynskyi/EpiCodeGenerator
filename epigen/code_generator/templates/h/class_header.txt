@@ -1,4 +1,3 @@
-
 EPI_GENHIDDEN_${class_name}()
 
 public:

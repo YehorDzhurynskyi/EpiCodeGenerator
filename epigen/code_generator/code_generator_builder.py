@@ -6,25 +6,39 @@ class Builder:
         self.lines = []
 
     def line(self, line):
+
         self.lines.append(f'{"    " * self.indent}{line}')
+        return self
 
     def line_empty(self, n: int = 1):
+
         for _ in range(n): self.lines.append('')
+        return self
 
     def tab(self, t: int = 1):
+
         self.indent = max(0, self.indent + t)
+        return self
 
     def anchor_namespace_begin(self):
-        self.lines.append('EPI_NAMESPACE_BEGIN()')
+
+        self.line('EPI_NAMESPACE_BEGIN()')
+        return self
 
     def anchor_namespace_end(self):
-        self.lines.append('EPI_NAMESPACE_END()')
+
+        self.line('EPI_NAMESPACE_END()')
+        return self
 
     def anchor_gen_region(self, caption):
-        self.lines.append(f'EPI_GENREGION_BEGIN({caption})')
+
+        self.line(f'EPI_GENREGION_BEGIN({caption})')
+        return self
 
     def anchor_gen_endregion(self, caption):
-        self.lines.append(f'EPI_GENREGION_END({caption})')
+
+        self.line(f'EPI_GENREGION_END({caption})')
+        return self
 
     def template(self, name: str, **kwargs):
 
@@ -44,6 +58,8 @@ class Builder:
                 line = line.replace(f'${{{k}}}', v)
 
             self.line(line)
+
+        return self
 
     def build(self):
         return '\n'.join(self.lines)

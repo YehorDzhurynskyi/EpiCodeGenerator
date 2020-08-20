@@ -6,7 +6,7 @@ class Inner
         Value0,
 
         {
-            Value1,
+            Value1 = 0,
             Value2
         }
     };
@@ -17,6 +17,11 @@ enum E0 {};
 class B : A
 {
     enum E1
+    {
+        Value0 = -1
+    };
+
+    enum E2
     {
         Value0
     };

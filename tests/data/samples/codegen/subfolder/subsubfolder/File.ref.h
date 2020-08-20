@@ -10,6 +10,16 @@ class Inner : public Object
 {
 EPI_GENREGION_BEGIN(Inner)
 
+public:
+    enum class E : epiS32
+    {
+    EPI_GENREGION_BEGIN(Inner::E)
+        Value0 = 0,
+        Value1 = 0,
+        Value2 = 1
+    EPI_GENREGION_END(Inner::E)
+    };
+
 EPI_GENHIDDEN_Inner()
 
 public:
@@ -23,9 +33,30 @@ public:
 EPI_GENREGION_END(Inner)
 };
 
+enum class E0
+{
+EPI_GENREGION_BEGIN(E0)
+EPI_GENREGION_END(E0)
+};
+
 class B : public A
 {
 EPI_GENREGION_BEGIN(B)
+
+public:
+    enum class E1
+    {
+    EPI_GENREGION_BEGIN(B::E1)
+        Value0 = -1
+    EPI_GENREGION_END(B::E1)
+    };
+
+    enum class E2
+    {
+    EPI_GENREGION_BEGIN(B::E2)
+        Value0 = 0
+    EPI_GENREGION_END(B::E2)
+    };
 
 EPI_GENHIDDEN_B()
 
