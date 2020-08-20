@@ -14,6 +14,12 @@ class Inner
 
 enum E0 {};
 
+enum E1
+{
+    Value0 = 1,
+    Value1
+};
+
 class B : A
 {
     enum E1
@@ -23,7 +29,6 @@ class B : A
 
     enum E2
     {
-        Value0
     };
 
     epiPtrArray<B> BBs;

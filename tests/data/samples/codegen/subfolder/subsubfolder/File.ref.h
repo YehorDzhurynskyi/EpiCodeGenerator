@@ -39,6 +39,14 @@ EPI_GENREGION_BEGIN(E0)
 EPI_GENREGION_END(E0)
 };
 
+enum class E1
+{
+EPI_GENREGION_BEGIN(E1)
+    Value0 = 1,
+    Value1 = 2
+EPI_GENREGION_END(E1)
+};
+
 class B : public A
 {
 EPI_GENREGION_BEGIN(B)
@@ -54,7 +62,6 @@ public:
     enum class E2
     {
     EPI_GENREGION_BEGIN(B::E2)
-        Value0 = 0
     EPI_GENREGION_END(B::E2)
     };
 

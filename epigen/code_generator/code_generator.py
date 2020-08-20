@@ -292,7 +292,7 @@ class CodeGenerator:
         elif isinstance(symbol, EpiEnum):
 
             injection_skeleton = f'{emmiter.emit_skeleton_enum(symbol, symbol.name, bld.Builder()).build()}\n'
-            injection_content = f'{emmiter.emit_enum_declaration(symbol, bld.Builder()).build()}\n'
+            injection_content = f'\n{emmiter.emit_enum_declaration(symbol, bld.Builder()).line("").build()}'
             self._inject_symbol(symbol.name, basename, 'h', injection_skeleton, injection_content)
 
     def code_generate(self) -> list:
