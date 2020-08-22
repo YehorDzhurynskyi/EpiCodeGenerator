@@ -188,23 +188,46 @@ def emit_sekeleton_file(module_basename: str, ext: str, builder: bld.Builder) ->
 
     if ext == 'h':
 
-        builder.template('h/header', module_basename=module_basename)
+        builder.template('h/header')
+        builder.line_empty()
+        builder.anchor_gen_region('include')
+        emit_include_section(module_basename, ext, builder)
+        builder.anchor_gen_endregion('include')
+        builder.line_empty()
+        builder.anchor_namespace_begin()
         builder.line_empty()
 
     elif ext == 'cpp':
 
         import pathlib
-
         module_name = pathlib.Path(module_basename).parts[0]
-        builder.template('cpp/header', module_name=module_name, module_basename=module_basename)
+
+        builder.template('cpp/header', module_name=module_name)
+        builder.line_empty()
+        builder.anchor_gen_region('include')
+        emit_include_section(module_basename, ext, builder)
+        builder.anchor_gen_endregion('include')
+        builder.line_empty()
+        builder.anchor_namespace_begin()
 
     elif ext == 'cxx':
-
         builder.template('cxx/header')
         builder.line_empty()
 
     builder.template('footer')
     builder.line_empty()
+
+    return builder
+
+def emit_include_section(module_basename: str, ext: str, builder: bld.Builder) -> bld.Builder:
+
+    assert ext in ['h', 'cpp']
+
+    if ext == 'h':
+        builder.template('h/include', module_basename=module_basename)
+
+    elif ext == 'cpp':
+        builder.template('cpp/include', module_basename=module_basename)
 
     return builder
 

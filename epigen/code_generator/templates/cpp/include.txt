@@ -1,0 +1,2 @@
+#include "${module_basename}.h"
+#include "${module_basename}.cxx"

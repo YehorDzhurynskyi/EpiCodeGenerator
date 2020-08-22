@@ -16,9 +16,9 @@ import fnmatch
 logger = logging.getLogger()
 
 
-def epigen_dependencies(config: EpiGenConfig) -> list:
+def epigen_inputs(config: EpiGenConfig) -> list:
 
-    dependencies = []
+    inputs = []
     for root, _, files in os.walk(config.dir_input):
 
         for epifile in filter(lambda f: f.endswith('epi'), files):
@@ -32,9 +32,9 @@ def epigen_dependencies(config: EpiGenConfig) -> list:
 
             abspath = os.path.join(config.dir_input, relpath)
             abspath = os.path.abspath(abspath)
-            dependencies.append(abspath)
+            inputs.append(abspath)
 
-    return dependencies
+    return inputs
 
 
 def epigen_outputs(config: EpiGenConfig) -> list:
@@ -60,6 +60,10 @@ def epigen_outputs(config: EpiGenConfig) -> list:
             outputs += [f'{basename_output_build}.{ext}' for ext in ['hxx','cxx']]
 
     return outputs
+
+
+def epigen_dependencies(config: EpiGenConfig) -> list:
+    return epigen_inputs(config) + epigen_outputs(config)
 
 
 def _ignore_on_copy(dirname, files):
@@ -138,7 +142,7 @@ def epigen(config: EpiGenConfig, manifest: EpiGenManifest):
     modules.sort(reverse=True)
 
     parsing_is_successful = True
-    for abspath in epigen_dependencies(config):
+    for abspath in epigen_inputs(config):
 
         relpath = os.path.relpath(abspath, config.dir_input)
         relpath = os.path.normpath(relpath)
@@ -187,7 +191,11 @@ def epigen(config: EpiGenConfig, manifest: EpiGenManifest):
 
     symbols = list(linker.registry.values())
     codegen = cgen.CodeGenerator(symbols, config)
-    errors_codegen = codegen.code_generate()
+
+    try:
+        errors_codegen = codegen.code_generate()
+    except cgen.CodeGenerationErrorFatal:
+        pass
 
     for e in errors_codegen:
 

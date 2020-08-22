@@ -1,7 +1,1 @@
 #pragma once
-
-EPI_GENREGION_BEGIN(include)
-#include "${module_basename}.hxx"
-EPI_GENREGION_END(include)
-
-EPI_NAMESPACE_BEGIN()

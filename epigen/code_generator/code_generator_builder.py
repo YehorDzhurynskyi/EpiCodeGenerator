@@ -15,6 +15,11 @@ class Builder:
         for _ in range(n): self.lines.append('')
         return self
 
+    def nl(self):
+
+        self.line('')
+        return self
+
     def tab(self, t: int = 1):
 
         self.indent = max(0, self.indent + t)

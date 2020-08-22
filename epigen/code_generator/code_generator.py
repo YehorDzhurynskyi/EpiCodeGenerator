@@ -14,14 +14,12 @@ from enum import Enum, auto
 
 class CodeGenerationErrorCode(Enum):
 
-    CorruptedFile = auto()
     CorruptedAnchor = auto()
 
 
-class CodeGenerationError(Exception):
+class CodeGenerationError:
 
     __CODE_GENERATION_ERROR_MSGS = {
-        CodeGenerationErrorCode.CorruptedFile: 'File corrupted',
         CodeGenerationErrorCode.CorruptedAnchor: 'Anchor corrupted'
     }
 
@@ -43,6 +41,10 @@ class CodeGenerationError(Exception):
     @property
     def err_code(self):
         return self.__err_code
+
+
+class CodeGenerationErrorFatal(Exception):
+    pass
 
 
 class CodeGenerator:
@@ -75,6 +77,10 @@ class CodeGenerator:
         if self.__config.caching:
             with open(f'{self.__config.dir_output_build}/epigen-cache.bin', 'wb') as f:
                 pickle.dump(self.__cache_files_generated, f)
+
+    def _push_error(self, basename: str, err_code: CodeGenerationErrorCode, tip: str = ''):
+        self.__codegen_erros.append(CodeGenerationError(basename, err_code, tip))
+        raise CodeGenerationErrorFatal()
 
     def _content_load(self, basename: str, ext: str) -> str:
 
@@ -161,24 +167,29 @@ class CodeGenerator:
             rbound = len(content)
         else:
             if before is not None and after is not None:
-
                 lbound = content.find(after) + len(after)
                 rbound = content.find(before)
 
             elif before is not None:
-
                 rbound = content.find(before)
                 lbound = rbound
 
             elif after is not None:
-
                 lbound = content.find(after) + len(after)
                 rbound = lbound
+
+            if before is not None and content[rbound + len(before):].find(before) != -1:
+                tip = f'There is a duplicating anchor: `{before}`'
+                self._push_error(f'{basename}.{ext}', CodeGenerationErrorCode.CorruptedAnchor, tip)
+
+            if after is not None and content[lbound + len(after):].find(after) != -1:
+                tip = f'There is a duplicating anchor: `{after}`'
+                self._push_error(f'{basename}.{ext}', CodeGenerationErrorCode.CorruptedAnchor, tip)
 
         if rbound == -1 or lbound == -1:
 
             tip = f'Can\'t find `{before if before is not None else after}` anchor'
-            raise CodeGenerationError(f'{basename}.{ext}', CodeGenerationErrorCode.CorruptedFile, tip)
+            self._push_error(f'{basename}.{ext}', CodeGenerationErrorCode.CorruptedAnchor, tip)
 
         newcontent = content[:lbound] + inj + content[rbound:]
         self._content_store(newcontent, basename, ext)
@@ -192,7 +203,7 @@ class CodeGenerator:
             if self._lookup(f'EPI_GENREGION_BEGIN({symbolname})', basename, ext) != -1:
 
                 tip = f'`EPI_GENREGION_END({symbolname})` is absent while corresponding anchor `EPI_GENREGION_BEGIN({symbolname})` is present'
-                raise CodeGenerationError(f'{basename}.{ext}', CodeGenerationErrorCode.CorruptedAnchor, tip)
+                self._push_error(f'{basename}.{ext}', CodeGenerationErrorCode.CorruptedAnchor, tip)
 
             # NOTE: symbol isn't present add it to the end
             self._inject(
@@ -205,12 +216,12 @@ class CodeGenerator:
         if self._lookup(f'EPI_GENREGION_BEGIN({symbolname})', basename, ext) == -1:
 
             tip = f'`EPI_GENREGION_BEGIN({symbolname})` is absent'
-            raise CodeGenerationError(f'{basename}.{ext}', CodeGenerationErrorCode.CorruptedAnchor, tip)
+            self._push_error(f'{basename}.{ext}', CodeGenerationErrorCode.CorruptedAnchor, tip)
 
         if self._lookup(f'EPI_GENREGION_END({symbolname})', basename, ext) == -1:
 
             tip = f'`EPI_GENREGION_END({symbolname})` is absent'
-            raise CodeGenerationError(f'{basename}.{ext}', CodeGenerationErrorCode.CorruptedAnchor, tip)
+            self._push_error(f'{basename}.{ext}', CodeGenerationErrorCode.CorruptedAnchor, tip)
 
         # NOTE: symbol is present add it to the corresponding region
         self._inject(
@@ -255,8 +266,12 @@ class CodeGenerator:
             with open(filepath, 'w') as f:
                 f.write(emmiter.emit_sekeleton_file(module_basename, 'cpp', bld.Builder()).build())
 
-        # NOTE: fake injection to force cache its content
-        self._inject('', basename, 'cpp', before='EPI_NAMESPACE_END()')
+        injection = f'\n{emmiter.emit_include_section(module_basename, "cpp", bld.Builder()).nl().build()}'
+        self._inject(injection,
+                     basename,
+                     'cpp',
+                     before='EPI_GENREGION_END(include)',
+                     after='EPI_GENREGION_BEGIN(include)')
 
     def _code_generate_h(self, symbol: EpiSymbol, basename: str, module_basename: str):
 
@@ -264,6 +279,13 @@ class CodeGenerator:
         if not os.path.exists(filepath):
             with open(filepath, 'w') as f:
                 f.write(emmiter.emit_sekeleton_file(module_basename, 'h', bld.Builder()).build())
+
+        injection = f'\n{emmiter.emit_include_section(module_basename, "h", bld.Builder()).nl().build()}'
+        self._inject(injection,
+                     basename,
+                     'h',
+                     before='EPI_GENREGION_END(include)',
+                     after='EPI_GENREGION_BEGIN(include)')
 
         if isinstance(symbol, EpiClass):
 
@@ -280,7 +302,7 @@ class CodeGenerator:
                 builder = bld.Builder()
                 builder.tab()
 
-                injection = f'\n{emmiter.emit_enum_declaration(symbol_inner, builder).line("").build()}'
+                injection = f'\n{emmiter.emit_enum_declaration(symbol_inner, builder).nl().build()}'
                 self._inject(
                     injection,
                     basename,
@@ -292,7 +314,7 @@ class CodeGenerator:
         elif isinstance(symbol, EpiEnum):
 
             injection_skeleton = f'{emmiter.emit_skeleton_enum(symbol, symbol.name, bld.Builder()).build()}\n'
-            injection_content = f'\n{emmiter.emit_enum_declaration(symbol, bld.Builder()).line("").build()}'
+            injection_content = f'\n{emmiter.emit_enum_declaration(symbol, bld.Builder()).nl().build()}'
             self._inject_symbol(symbol.name, basename, 'h', injection_skeleton, injection_content)
 
     def code_generate(self) -> list:
