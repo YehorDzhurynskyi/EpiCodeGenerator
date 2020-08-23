@@ -1,6 +1,7 @@
 from epigen.symbol import EpiSymbol
 from epigen.symbol import EpiAttribute
 from epigen.symbol import EpiProperty
+from epigen.symbol import EpiEnum
 
 from epigen.tokenizer import Token
 from epigen.tokenizer import TokenType
@@ -270,6 +271,18 @@ def introduce_Max(attr: EpiAttribute, target: EpiSymbol):
         'Force': [TokenType.TrueLiteral, TokenType.FalseLiteral]
     })
     __validate_target_value_less_eq(attr, target, attr.param_positional_at(0).value())
+
+
+def introduce_FlagMask(attr: EpiAttribute, target: EpiSymbol):
+
+    __validate_conflicts(attr, target)
+    __validate_target(attr, target, [EpiEnum])
+
+    for e in target.entries:
+
+        incorrect = next((e for v in e.valuetokens if v.tokentype not in [TokenType.Identifier, TokenType.VSlash]), None)
+        if incorrect is not None:
+            raise idl.IDLParserError(f'Flags could be assigned only with an `identifiers`', incorrect, idl.IDLSyntaxErrorCode.IncorrectValueLiteral)
 
 
 def __parse_attr(parser: idl.IDLParser) -> EpiAttribute:

@@ -7,7 +7,10 @@ class Inner
 
         {
             Value1 = 0,
-            Value2
+            Value2 = 2,
+            Value3 = 5,
+            Value4 = Value2 | Value3,
+            Value5
         }
     };
 };
@@ -24,7 +27,7 @@ class B : A
 {
     enum E1
     {
-        Value0 = -1
+        Value2 = -1
     };
 
     enum E2
@@ -41,8 +44,10 @@ class B : A
     Inner::E Enum0;
     Inner::E Enum1 = Inner::E::Value1;
 
+    E1 Enum2 = E1::Value2;
+
     [Virtual]
-    E1 Enum2;
+    E2 Enum3;
 
     epiArray<Inner::E> Enums0;
     epiArray<E0> Enums1;

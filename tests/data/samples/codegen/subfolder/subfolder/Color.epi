@@ -1,5 +1,27 @@
+[FlagMask]
+enum EMask
+{
+    Value0,
+    Value1,
+    Value2,
+    Value3,
+    Value012 = Value0 | Value1 | Value2,
+    Value4
+};
+
 class Color
 {
+    [FlagMask]
+    enum EInnerMask
+    {
+        Value0,
+        Value1,
+        Value2,
+        Value3,
+        Value012 = Value0 | Value1 | Value2,
+        Value4
+    };
+
     [Virtual]
     {
         epiU8 Ru;
@@ -20,4 +42,8 @@ class Color
 
     [ReadCallback, WriteCallback]
     epiVec4f Color;
+
+    EInnerMask Enum0 = EInnerMask::Value012;
+    EMask Enum1 = EMask::Value4;
+    EInnerMask Enum2 = Color::EInnerMask::Value012;
 };

@@ -524,8 +524,16 @@ class TestIDLParser:
                 Value2
             };
             ''',
-            {},
-            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .base(TokenType.HashTType)
+                        .entry(EpiEnumEntryBuilder().name('Value1').value([(TokenType.Identifier, 'EnumName::Value1')]).build())
+                        .entry(EpiEnumEntryBuilder().name('Value2').build())
+                        .build()
+            },
+            []
         ),
         (
             '''
@@ -535,8 +543,246 @@ class TestIDLParser:
                 Value2
             };
             ''',
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .base(TokenType.HashTType)
+                        .entry(EpiEnumEntryBuilder().name('Value1').value([(TokenType.Identifier, 'EnumName')]).build())
+                        .entry(EpiEnumEntryBuilder().name('Value2').build())
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1,
+                Value2 = A
+            };
+            ''',
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .base(TokenType.HashTType)
+                        .entry(EpiEnumEntryBuilder().name('Value1').build())
+                        .entry(EpiEnumEntryBuilder().name('Value2').value([(TokenType.Identifier, 'A')]).build())
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1,
+                Value2 = A::Value1
+            };
+            ''',
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .base(TokenType.HashTType)
+                        .entry(EpiEnumEntryBuilder().name('Value1').build())
+                        .entry(EpiEnumEntryBuilder().name('Value2').value([(TokenType.Identifier, 'A::Value1')]).build())
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1,
+                Value2,
+                Value3 = A::Value1 | Value2
+            };
+            ''',
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .base(TokenType.HashTType)
+                        .entry(EpiEnumEntryBuilder().name('Value1').build())
+                        .entry(EpiEnumEntryBuilder().name('Value2').build())
+                        .entry(EpiEnumEntryBuilder().name('Value3').value([(TokenType.Identifier, 'A::Value1'), (TokenType.VSlash, '|'), (TokenType.Identifier, 'Value2')]).build())
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1,
+                Value2,
+                Value3 = A::Value1 | Value4,
+                Value4
+            };
+            ''',
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .base(TokenType.HashTType)
+                        .entry(EpiEnumEntryBuilder().name('Value1').build())
+                        .entry(EpiEnumEntryBuilder().name('Value2').build())
+                        .entry(EpiEnumEntryBuilder().name('Value3').value([(TokenType.Identifier, 'A::Value1'), (TokenType.VSlash, '|'), (TokenType.Identifier, 'Value4')]).build())
+                        .entry(EpiEnumEntryBuilder().name('Value4').build())
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1,
+                Value2,
+                Value3 = A::Value1 | B::Value1,
+                Value4
+            };
+            ''',
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .base(TokenType.HashTType)
+                        .entry(EpiEnumEntryBuilder().name('Value1').build())
+                        .entry(EpiEnumEntryBuilder().name('Value2').build())
+                        .entry(EpiEnumEntryBuilder().name('Value3').value([(TokenType.Identifier, 'A::Value1'), (TokenType.VSlash, '|'), (TokenType.Identifier, 'B::Value1')]).build())
+                        .entry(EpiEnumEntryBuilder().name('Value4').build())
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1,
+                Value2,
+                Value3 = Value1 | B::Value1 | Value2,
+                Value4
+            };
+            ''',
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .base(TokenType.HashTType)
+                        .entry(EpiEnumEntryBuilder().name('Value1').build())
+                        .entry(EpiEnumEntryBuilder().name('Value2').build())
+                        .entry(EpiEnumEntryBuilder().name('Value3').value([(TokenType.Identifier, 'Value1'), (TokenType.VSlash, '|'), (TokenType.Identifier, 'B::Value1'), (TokenType.VSlash, '|'), (TokenType.Identifier, 'Value2')]).build())
+                        .entry(EpiEnumEntryBuilder().name('Value4').build())
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1,
+                Value2,
+                Value3 = Value1 | B::Value2,
+                Value4
+            };
+            ''',
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .base(TokenType.HashTType)
+                        .entry(EpiEnumEntryBuilder().name('Value1').build())
+                        .entry(EpiEnumEntryBuilder().name('Value2').build())
+                        .entry(EpiEnumEntryBuilder().name('Value3').value([(TokenType.Identifier, 'Value1'), (TokenType.VSlash, '|'), (TokenType.Identifier, 'B::Value2')]).build())
+                        .entry(EpiEnumEntryBuilder().name('Value4').build())
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1,
+                Value2,
+                Value3 = Value1 | B::Value2 |,
+                Value4
+            };
+            ''',
             {},
-            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral] # TODO: replace with IncorrectValueAssignment
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            '''
+            enum A : epiHash_t
+            {
+                Value1,
+                Value2,
+                Value3 = | Value1 | B::Value2,
+                Value4
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            '''
+            [FlagMask]
+            enum A : epiHash_t
+            {
+                Value1,
+                Value2,
+                Value3 = Value1 | B::Value2,
+                Value4 = Value2
+            };
+            ''',
+            {
+                'A':
+                    EpiEnumBuilder()
+                        .name('A')
+                        .base(TokenType.HashTType)
+                        .entry(EpiEnumEntryBuilder().name('Value1').build())
+                        .entry(EpiEnumEntryBuilder().name('Value2').build())
+                        .entry(EpiEnumEntryBuilder().name('Value3').value([(TokenType.Identifier, 'Value1'), (TokenType.VSlash, '|'), (TokenType.Identifier, 'B::Value2')]).build())
+                        .entry(EpiEnumEntryBuilder().name('Value4').value([(TokenType.Identifier, 'Value2')]).build())
+                        .attr(EpiAttributeBuilder().tokentype(TokenType.FlagMask).build())
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
+            [FlagMask]
+            enum A : epiHash_t
+            {
+                Value1 = 1,
+                Value2 = 0,
+                Value3 = Value1 | B::Value2,
+                Value4 = Value2
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
+        ),
+        (
+            '''
+            [FlagMask]
+            enum A : epiHash_t
+            {
+                Value1,
+                Value2,
+                Value3 = Value1 | 1,
+                Value4 = Value2
+            };
+            ''',
+            {},
+            [idl.IDLSyntaxErrorCode.IncorrectValueLiteral]
         ),
         (
             '''
@@ -643,7 +889,7 @@ class TestIDLParser:
                         .entry(EpiEnumEntryBuilder().name('Value4').build())
                         .entry(EpiEnumEntryBuilder().name('Value5').build())
                         .entry(EpiEnumEntryBuilder().name('Value6').build())
-                        .entry(EpiEnumEntryBuilder().name('Value7').value('124').build())
+                        .entry(EpiEnumEntryBuilder().name('Value7').value([(TokenType.IntegerLiteral, '124')]).build())
                         .build()
             },
             []
@@ -752,7 +998,7 @@ class TestIDLParser:
                 'A':
                     EpiEnumBuilder()
                         .name('A')
-                        .entry(EpiEnumEntryBuilder().name('Value1').value('+0').build())
+                        .entry(EpiEnumEntryBuilder().name('Value1').value([(TokenType.IntegerLiteral, '+0')]).build())
                         .build(),
                 'ClassName':
                     EpiClassBuilder()
@@ -763,7 +1009,7 @@ class TestIDLParser:
                                 .name('A')
                                 .base(TokenType.HashTType)
                                 .entry(EpiEnumEntryBuilder().name('Value1').build())
-                                .entry(EpiEnumEntryBuilder().name('Value2').value('32').build())
+                                .entry(EpiEnumEntryBuilder().name('Value2').value([(TokenType.IntegerLiteral, '32')]).build())
                                 .entry(EpiEnumEntryBuilder().name('Value3').build())
                                 .entry(EpiEnumEntryBuilder().name('Value4').attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"Val1"').build()).build())
                                 .entry(EpiEnumEntryBuilder().name('Value5').build())
@@ -819,12 +1065,12 @@ class TestIDLParser:
                     EpiEnumBuilder()
                         .name('A')
                         .base(TokenType.HashTType)
-                        .entry(EpiEnumEntryBuilder().name('Value1').value('1').attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"Value One Two"').build()).build())
-                        .entry(EpiEnumEntryBuilder().name('Value2').value('2').attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"Value One Two"').build()).build())
-                        .entry(EpiEnumEntryBuilder().name('Value3').value('-3').attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"Value Three"').build()).build())
-                        .entry(EpiEnumEntryBuilder().name('Value4').value('512').build())
+                        .entry(EpiEnumEntryBuilder().name('Value1').value([(TokenType.IntegerLiteral, '1')]).attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"Value One Two"').build()).build())
+                        .entry(EpiEnumEntryBuilder().name('Value2').value([(TokenType.IntegerLiteral, '2')]).attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"Value One Two"').build()).build())
+                        .entry(EpiEnumEntryBuilder().name('Value3').value([(TokenType.IntegerLiteral, '-3')]).attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"Value Three"').build()).build())
+                        .entry(EpiEnumEntryBuilder().name('Value4').value([(TokenType.IntegerLiteral, '512')]).build())
                         .entry(EpiEnumEntryBuilder().name('Value5').attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"Value Four"').build()).build())
-                        .entry(EpiEnumEntryBuilder().name('Value6').value('0').build())
+                        .entry(EpiEnumEntryBuilder().name('Value6').value([(TokenType.IntegerLiteral, '0')]).build())
                         .entry(EpiEnumEntryBuilder().name('Value7').build())
                         .build()
             },
@@ -2386,10 +2632,10 @@ class TestIDLParser:
                 EpiEnumBuilder()
                     .name('EnumName')
                     .entry(EpiEnumEntryBuilder().name('Value1').build())
-                    .entry(EpiEnumEntryBuilder().name('Value2').value('123').build())
-                    .entry(EpiEnumEntryBuilder().name('Value3').value('123').attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"V1"').build()).build())
-                    .entry(EpiEnumEntryBuilder().name('Value4').value('42').attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"V1"').build()).build())
-                    .entry(EpiEnumEntryBuilder().name('Value5').value('-23').attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"V2"').build()).build())
+                    .entry(EpiEnumEntryBuilder().name('Value2').value([(TokenType.IntegerLiteral, '123')]).build())
+                    .entry(EpiEnumEntryBuilder().name('Value3').value([(TokenType.IntegerLiteral, '123')]).attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"V1"').build()).build())
+                    .entry(EpiEnumEntryBuilder().name('Value4').value([(TokenType.IntegerLiteral, '42')]).attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"V1"').build()).build())
+                    .entry(EpiEnumEntryBuilder().name('Value5').value([(TokenType.IntegerLiteral, '-23')]).attr(EpiAttributeBuilder().tokentype(TokenType.DisplayName).param_positional(TokenType.StringLiteral, '"V2"').build()).build())
                     .build(),
             'ParentClassName':
                 EpiClassBuilder()

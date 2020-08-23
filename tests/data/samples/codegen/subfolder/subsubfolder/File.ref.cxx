@@ -36,6 +36,7 @@ void B::Serialization(json_t& json)
     epiSerialize(Size, json);
     epiSerialize(Enum0, json);
     epiSerialize(Enum1, json);
+    epiSerialize(Enum2, json);
     epiSerialize(Enums0, json);
     epiSerialize(Enums1, json);
 }
@@ -48,6 +49,7 @@ void B::Deserialization(const json_t& json)
     epiDeserialize(Size, json);
     epiDeserialize(Enum0, json);
     epiDeserialize(Enum1, json);
+    epiDeserialize(Enum2, json);
     epiDeserialize(Enums0, json);
     epiDeserialize(Enums1, json);
 }
@@ -131,13 +133,25 @@ MetaClass B::EmitMetaClass()
     {
         MetaProperty m = epiMetaProperty(
             /* Name */ "Enum2",
-            /* PtrRead */ (void*)offsetof(B, GetEnum2_FuncPtr),
-            /* PtrWrite */ (void*)offsetof(B, SetEnum2_FuncPtr),
-            /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
-            /* typeID */ epiHashCompileTime(E1),
+            /* PtrRead */ (void*)offsetof(B, m_Enum2),
+            /* PtrWrite */ (void*)offsetof(B, m_Enum2),
+            /* Flags */ {},
+            /* typeID */ epiHashCompileTime(B::E1),
             /* nestedTypeID */ MetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Enum2), std::move(m));
+    }
+
+    {
+        MetaProperty m = epiMetaProperty(
+            /* Name */ "Enum3",
+            /* PtrRead */ (void*)offsetof(B, GetEnum3_FuncPtr),
+            /* PtrWrite */ (void*)offsetof(B, SetEnum3_FuncPtr),
+            /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
+            /* typeID */ epiHashCompileTime(B::E2),
+            /* nestedTypeID */ MetaTypeID_None
+        );
+        data.AddProperty(epiHashCompileTime(Enum3), std::move(m));
     }
 
     {

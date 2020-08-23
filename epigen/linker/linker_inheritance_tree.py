@@ -53,32 +53,35 @@ class InheritanceTree:
             _insert(name, clss)
 
     def validate(self, linker: ln.Linker):
-        self._validate_enums(linker)
-        self._validate_clss(linker)
-
-    def _validate_enums(self, linker: ln.Linker):
 
         for _, enum in ((name, sym) for name, sym in self.__registry.items() if isinstance(sym, EpiEnum)):
+            self._validate_enum(enum, linker)
 
-            entries_entries = [(lhs, rhs) for lhs in enum.entries for rhs in enum.entries]
+        self._validate_classes(linker)
 
-            # NOTE: `entries_entries` is cartesian product A * A,
-            # so we need exclude (a0, a0), (a1, a1) and (a0, a1), (a1, a0) pairs
-            ii = 0
-            entries_len = len(enum.entries)
-            for i in range(entries_len):
+    def _validate_enum(self, enum: EpiEnum, linker: ln.Linker):
 
-                del entries_entries[i + ii : entries_len + ii]
-                ii += i
+        assert isinstance(enum, EpiEnum)
 
-            for lhs, rhs in entries_entries:
+        entries_entries = [(lhs, rhs) for lhs in enum.entries for rhs in enum.entries]
 
-                if lhs.name == rhs.name:
+        # NOTE: `entries_entries` is cartesian product A * A,
+        # so we need exclude (a0, a0), (a1, a1) and (a0, a1), (a1, a0) pairs
+        ii = 0
+        entries_len = len(enum.entries)
+        for i in range(entries_len):
 
-                    tip = f'The symbol has been already defined in `{rhs.token.modulepath}`'
-                    linker._push_error(lhs, ln.LinkerErrorCode.DuplicatingSymbol, tip)
+            del entries_entries[i + ii : entries_len + ii]
+            ii += i
 
-    def _validate_clss(self, linker: ln.Linker):
+        for lhs, rhs in entries_entries:
+
+            if lhs.name == rhs.name:
+
+                tip = f'The symbol has been already defined in `{rhs.token.modulepath}`'
+                linker._push_error(lhs, ln.LinkerErrorCode.DuplicatingSymbol, tip)
+
+    def _validate_classes(self, linker: ln.Linker):
 
         memo = {}
 
@@ -136,11 +139,17 @@ class InheritanceTree:
                 return memo[key]
 
             if key in memo:
-                return memo[key]
+                return
 
-            return _validate_properties(node, node.clss.properties)
+            _validate_properties(node, node.clss.properties)
 
         leafs = { k: v for k, v in self.__clss_nodes.items() if v.is_leaf }
 
         for k, v in leafs.items():
             _validate(k, v)
+
+        for node in self.__clss_nodes.values():
+
+            for inner in node.clss.inner().values():
+                self._validate_enum(inner, linker)
+

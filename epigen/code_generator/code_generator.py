@@ -293,11 +293,9 @@ class CodeGenerator:
             injection_content = f'\n{emmiter.emit_class_declaration(symbol, bld.Builder()).build()}\n'
             self._inject_symbol(symbol.name, basename, 'h', injection_skeleton, injection_content)
 
-            for symbol_inner in symbol.inner.values():
+            for symbol_inner in symbol.inner().values():
 
                 assert isinstance(symbol_inner, EpiEnum)
-
-                symfullname = f'{symbol.name}::{symbol_inner.name}'
 
                 builder = bld.Builder()
                 builder.tab()
@@ -307,8 +305,8 @@ class CodeGenerator:
                     injection,
                     basename,
                     'h',
-                    before=f'EPI_GENREGION_END({symfullname})',
-                    after=f'EPI_GENREGION_BEGIN({symfullname})'
+                    before=f'EPI_GENREGION_END({symbol_inner.fullname})',
+                    after=f'EPI_GENREGION_BEGIN({symbol_inner.fullname})'
                 )
 
         elif isinstance(symbol, EpiEnum):

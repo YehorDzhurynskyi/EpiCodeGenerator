@@ -181,6 +181,7 @@ class IDLParser:
 
         from epigen.idlparser import idlparser_class as idlclass
         from epigen.idlparser import idlparser_enum as idlenum
+        from epigen.idlparser import idlparser_attr as idlattr
 
         self.syntax_errors = [IDLSyntaxError(t, IDLSyntaxErrorCode.UnknownToken, '') for t in self.tokens if t.tokentype == TokenType.Unknown]
         if len(self.syntax_errors) > 0:
@@ -191,6 +192,8 @@ class IDLParser:
         try:
 
             while not self._eof():
+
+                attrs = idlattr.parse_attr_list(self)
 
                 t = self._curr()
                 self._test(t, expected=list(Tokenizer.BUILTIN_USER_TYPES.values()), err_code=IDLSyntaxErrorCode.MissingTypeDeclaration)
@@ -207,6 +210,13 @@ class IDLParser:
 
                     tip = f'The symbol `{sym.name}` has already been defined in the current file!'
                     self._push_error(sym.token, IDLSyntaxErrorCode.DuplicatingSymbol, tip, fatal=False)
+
+                try:
+                    for attr in attrs:
+                        sym.attr_push(attr)
+
+                except IDLParserError as e:
+                    self._push_error(e.token, e.err_code, str(e), fatal=False)
 
                 registry[sym.name] = sym
 

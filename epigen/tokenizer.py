@@ -19,6 +19,7 @@ class TokenType(Enum):
     Comma = auto()
     Asterisk = auto()
     Ampersand = auto()
+    VSlash = auto()
     Colon = auto()
     Semicolon = auto()
 
@@ -90,6 +91,7 @@ class TokenType(Enum):
     Virtual = auto()
     Min = auto()
     Max = auto()
+    FlagMask = auto()
     # NoDuplicate = auto()
     Transient = auto()
     # AdditionalInterface = auto()
@@ -126,10 +128,7 @@ class TokenType(Enum):
 
     @staticmethod
     def attributes() -> list:
-        return \
-            list(Tokenizer.BUILTIN_GENERAL_ATTRS.values()) + \
-            list(Tokenizer.BUILTIN_CLSS_ATTRS.values()) + \
-            list(Tokenizer.BUILTIN_PRTY_ATTRS.values())
+        return list(Tokenizer.BUILTIN_ATTRIBUTES.values())
 
     @staticmethod
     def integers() -> list:
@@ -308,6 +307,7 @@ class Tokenizer:
         '*': TokenType.Asterisk,
         '&': TokenType.Ampersand,
         ',': TokenType.Comma,
+        '|': TokenType.VSlash,
         ':': TokenType.Colon,
         ';': TokenType.Semicolon
     }
@@ -381,18 +381,13 @@ class Tokenizer:
         # 'interface': TokenType.InterfaceType
     }
 
-    BUILTIN_GENERAL_ATTRS = {
-        'DisplayName': TokenType.DisplayName
-        # TBD: 'Description': TokenType.Description,
-    }
-
-    BUILTIN_CLSS_ATTRS = {
+    BUILTIN_ATTRIBUTES = {
+        'DisplayName': TokenType.DisplayName,
+        # TBD: 'Docstring': TokenType.Docstring,
         # 'AdditionalInterface': TokenType.AdditionalInterface,
         # 'SerializationCallback': TokenType.SerializationCallback,
-        # 'DllEntry': TokenType.DllEntry
-    }
-
-    BUILTIN_PRTY_ATTRS = {
+        # 'DllEntry': TokenType.DllEntry,
+        'FlagMask': TokenType.FlagMask,
         # 'Owner': TokenType.Owner,
         'ReadOnly': TokenType.ReadOnly,
         'WriteOnly': TokenType.WriteOnly,
@@ -650,9 +645,7 @@ class Tokenizer:
             **Tokenizer.BUILTIN_COMPOUND_TYPES,
             **Tokenizer.BUILTIN_TEMPLATED_TYPES,
             **Tokenizer.BUILTIN_USER_TYPES,
-            **Tokenizer.BUILTIN_GENERAL_ATTRS,
-            **Tokenizer.BUILTIN_CLSS_ATTRS,
-            **Tokenizer.BUILTIN_PRTY_ATTRS,
+            **Tokenizer.BUILTIN_ATTRIBUTES,
             **Tokenizer.BUILTIN_MODIFIERS,
             **Tokenizer.BUILTIN_VALUES
         }

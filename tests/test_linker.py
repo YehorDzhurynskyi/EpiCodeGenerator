@@ -126,6 +126,21 @@ class TestLinker:
         (
             [
                 '''
+                class ClassName
+                {
+                    enum EnumName
+                    {
+                        Name,
+                        Name
+                    };
+                };
+                '''
+            ],
+            [ln.LinkerErrorCode.DuplicatingSymbol]
+        ),
+        (
+            [
+                '''
                 enum EnumClassName
                 {
                     Name
@@ -211,6 +226,15 @@ class TestLinker:
         (
             [
                 '''
+                class ParentClassName
+                {
+                    enum InheritedEnum
+                    {
+                        InheritedValue0,
+                        InheritedValue1
+                    };
+                };
+
                 class Inner
                 {
                     enum EnumName
@@ -226,9 +250,10 @@ class TestLinker:
                 };
                 ''',
                 '''
-                class ClassName
+                class ClassName : ParentClassName
                 {
-                    Inner::EnumName Name = Inner::EnumName::Name;
+                    Inner::EnumName Name0 = Inner::EnumName::Name;
+                    InheritedEnum Name1 = InheritedEnum::InheritedValue0;
                 };
                 '''
             ],
@@ -481,6 +506,117 @@ class TestLinker:
                 '''
             ],
             []
+        ),
+        (
+            [
+                '''
+                enum A : epiHash_t
+                {
+                    Value1,
+                    Value2 = A
+                };
+                ''',
+            ],
+            [ln.LinkerErrorCode.IncorrectValueAssignment]
+        ),
+        (
+            [
+                '''
+                enum A : epiHash_t
+                {
+                    Value1,
+                    Value2 = A::Value1
+                };
+                ''',
+            ],
+            []
+        ),
+        (
+            [
+                '''
+                enum A : epiHash_t
+                {
+                    Value1,
+                    Value2,
+                    Value3 = A::Value1 | Value2
+                };
+                ''',
+            ],
+            []
+        ),
+        (
+            [
+                '''
+                enum A : epiHash_t
+                {
+                    Value1,
+                    Value2,
+                    Value3 = A::Value1 | Value4,
+                    Value4
+                };
+                ''',
+            ],
+            [ln.LinkerErrorCode.NoSuchSymbol]
+        ),
+        (
+            [
+                '''
+                enum B
+                {
+                    Value1
+                };
+                ''',
+                '''
+                enum A : epiHash_t
+                {
+                    Value1,
+                    Value2,
+                    Value3 = A::Value1 | B::Value1,
+                    Value4
+                };
+                ''',
+            ],
+            []
+        ),
+        (
+            [
+                '''
+                enum B
+                {
+                    Value1
+                };
+                ''',
+                '''
+                enum A : epiHash_t
+                {
+                    Value1,
+                    Value2,
+                    Value3 = Value1 | B::Value1 | Value2,
+                    Value4
+                };
+                ''',
+            ],
+            []
+        ),
+        (
+            [
+                '''
+                enum B
+                {
+                    Value1
+                };
+                ''',
+                '''
+                enum A : epiHash_t
+                {
+                    Value1,
+                    Value2,
+                    Value3 = Value1 | B::Value2,
+                    Value4
+                };
+                ''',
+            ],
+            [ln.LinkerErrorCode.NoSuchSymbol]
         ),
         (
             [

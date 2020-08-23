@@ -6,9 +6,34 @@ EPI_GENREGION_END(include)
 
 EPI_NAMESPACE_BEGIN()
 
+enum EMask
+{
+EPI_GENREGION_BEGIN(EMask)
+    EMask_Value0 = (1 << 1),
+    EMask_Value1 = (1 << 2),
+    EMask_Value2 = (1 << 3),
+    EMask_Value3 = (1 << 4),
+    EMask_Value012 = EMask_Value0 | EMask_Value1 | EMask_Value2,
+    EMask_Value4 = (1 << 5)
+EPI_GENREGION_END(EMask)
+};
+
 class Color : public Object
 {
 EPI_GENREGION_BEGIN(Color)
+
+public:
+    enum EInnerMask
+    {
+    EPI_GENREGION_BEGIN(Color::EInnerMask)
+        Color_EInnerMask_Value0 = (1 << 1),
+        Color_EInnerMask_Value1 = (1 << 2),
+        Color_EInnerMask_Value2 = (1 << 3),
+        Color_EInnerMask_Value3 = (1 << 4),
+        Color_EInnerMask_Value012 = Color_EInnerMask_Value0 | Color_EInnerMask_Value1 | Color_EInnerMask_Value2,
+        Color_EInnerMask_Value4 = (1 << 5)
+    EPI_GENREGION_END(Color::EInnerMask)
+    };
 
 EPI_GENHIDDEN_Color()
 
@@ -30,7 +55,10 @@ public:
         PID_RGB24 = 0x3de8f258,
         PID_BGR24 = 0x412ec6aa,
         PID_Color = 0xa79767ed,
-        PID_COUNT = 13
+        PID_Enum0 = 0x29782fe9,
+        PID_Enum1 = 0x5e7f1f7f,
+        PID_Enum2 = 0xc7764ec5,
+        PID_COUNT = 16
     };
 
 protected:
@@ -63,6 +91,9 @@ protected:
 
 protected:
     epiVec4f m_Color;
+    EInnerMask m_Enum0{Color_EInnerMask_Value012};
+    EMask m_Enum1{EMask_Value4};
+    EInnerMask m_Enum2{Color_EInnerMask_Value012};
 
 EPI_GENREGION_END(Color)
 };

@@ -16,6 +16,9 @@ void Color::Serialization(json_t& json)
     super::Serialization(json);
 
     epiSerialize(Color, json);
+    epiSerialize(Enum0, json);
+    epiSerialize(Enum1, json);
+    epiSerialize(Enum2, json);
 }
 
 void Color::Deserialization(const json_t& json)
@@ -23,6 +26,9 @@ void Color::Deserialization(const json_t& json)
     super::Deserialization(json);
 
     epiDeserialize(Color, json);
+    epiDeserialize(Enum0, json);
+    epiDeserialize(Enum1, json);
+    epiDeserialize(Enum2, json);
 }
 
 MetaClass Color::EmitMetaClass()
@@ -183,6 +189,42 @@ MetaClass Color::EmitMetaClass()
             /* nestedTypeID */ MetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Color), std::move(m));
+    }
+
+    {
+        MetaProperty m = epiMetaProperty(
+            /* Name */ "Enum0",
+            /* PtrRead */ (void*)offsetof(Color, m_Enum0),
+            /* PtrWrite */ (void*)offsetof(Color, m_Enum0),
+            /* Flags */ {},
+            /* typeID */ epiHashCompileTime(Color::EInnerMask),
+            /* nestedTypeID */ MetaTypeID_None
+        );
+        data.AddProperty(epiHashCompileTime(Enum0), std::move(m));
+    }
+
+    {
+        MetaProperty m = epiMetaProperty(
+            /* Name */ "Enum1",
+            /* PtrRead */ (void*)offsetof(Color, m_Enum1),
+            /* PtrWrite */ (void*)offsetof(Color, m_Enum1),
+            /* Flags */ {},
+            /* typeID */ epiHashCompileTime(EMask),
+            /* nestedTypeID */ MetaTypeID_None
+        );
+        data.AddProperty(epiHashCompileTime(Enum1), std::move(m));
+    }
+
+    {
+        MetaProperty m = epiMetaProperty(
+            /* Name */ "Enum2",
+            /* PtrRead */ (void*)offsetof(Color, m_Enum2),
+            /* PtrWrite */ (void*)offsetof(Color, m_Enum2),
+            /* Flags */ {},
+            /* typeID */ epiHashCompileTime(Color::EInnerMask),
+            /* nestedTypeID */ MetaTypeID_None
+        );
+        data.AddProperty(epiHashCompileTime(Enum2), std::move(m));
     }
 
     return MetaClass(std::move(data), epiHashCompileTime(Color), epiHashCompileTime(Object), sizeof(Color), "Color");

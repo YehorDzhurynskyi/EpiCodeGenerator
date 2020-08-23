@@ -112,13 +112,31 @@ class Linker:
         if _validate_duplicates(typeids_local_typeids_global) and valid_locally:
             self.__registry = { **self.__registry, **registry }
 
-    def _lookup_sym(self, ref: str, sym_outer: EpiSymbol = None) -> EpiSymbol:
+
+    def lookup_symbol(self, ref: str, sym_outer: EpiSymbol = None) -> EpiSymbol:
 
         path = ref.split('::')
         assert len(path) > 1 or (len(path) == 1 and sym_outer is not None)
 
-        if sym_outer is not None and path[0] in sym_outer.inner:
-            sym_lookup = sym_outer.inner[path[0]]
+        if isinstance(sym_outer, EpiClass):
+            clss_parent = sym_outer
+            while True:
+
+                if path[0] in clss_parent.inner():
+                    sym_lookup = clss_parent.inner()[path[0]]
+                    break
+
+                if clss_parent.parent is None:
+                    sym_lookup = None
+                    break
+
+                assert clss_parent.parent in self.__registry
+                clss_parent = self.__registry[clss_parent.parent]
+
+        if isinstance(sym_outer, EpiClass) and sym_lookup is not None:
+            pass
+        elif isinstance(sym_outer, EpiEnum) and next((e for e in sym_outer.entries if e.name == path[0]), None) is not None:
+            sym_lookup = next(e for e in sym_outer.entries if e.name == path[0])
         elif path[0] in self.__registry:
             sym_lookup = self.__registry[path[0]]
         else:
@@ -134,14 +152,106 @@ class Linker:
                     sym_lookup = entry if i == len(path[1:]) - 1 else None
                     break
 
-                elif isinstance(sym_lookup, EpiClass) and pathnode in sym_lookup.inner:
-                    sym_lookup = sym_lookup.inner[pathnode]
+                elif isinstance(sym_lookup, EpiClass) and pathnode in sym_lookup.inner():
+                    sym_lookup = sym_lookup.inner()[pathnode]
 
                 else:
                     sym_lookup = None
                     break
 
         return sym_lookup
+
+    def _validate_class_properties(self, clss: EpiClass):
+
+        for p in (p for p in clss.properties if p.tokentype.tokentype == TokenType.Identifier):
+
+            if p.typename_basename() == clss.name and not p.is_polymorphic():
+
+                tip = f'The symbol should be a complete type, but not: `{p.tokentype.text}`'
+                self._push_error(p, LinkerErrorCode.IncompleteTypeUsage, tip)
+
+            p.symbol = self.lookup_symbol(p.typename_basename(), clss)
+            if p.symbol is None:
+
+                tip = f'No such symbol exists: `{ p.typename_basename() }`'
+                self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
+
+            if p.value_is_assigned() and p.tokenvalue.tokentype == TokenType.Identifier:
+
+                if self.lookup_symbol(p.tokenvalue.text, clss) is None:
+
+                    tip = f'No such symbol exists: `{ p.tokenvalue.text }`'
+                    self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
+
+                elif p.symbol is not None and p.symbol != self.lookup_symbol(p.tokenvalue_typename(), clss):
+
+                    tip = f"Couldn't assign `{p.tokenvalue_typename()}` to `{p.typename_basename()}` type"
+                    self._push_error(p, LinkerErrorCode.IncorrectValueAssignment, tip)
+
+        for p in (p for p in clss.properties if p.form == EpiProperty.Form.Template):
+
+            for n in p.tokens_nested:
+
+                if n.tokentype != TokenType.Identifier:
+                    continue
+
+                if n.text == clss.name and not p.is_polymorphic():
+
+                    tip = f'Template argument symbol should be a complete type, but not: `{n.text}`'
+                    self._push_error(p, LinkerErrorCode.IncompleteTypeUsage, tip)
+
+                else:
+
+                    sym_lookup = self.lookup_symbol(n.text, clss)
+                    assert not isinstance(sym_lookup, EpiProperty)
+
+                    if sym_lookup is None:
+                        tip = f"Template argument symbol doesn't exist: `{n.text}`"
+                        self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
+
+                    elif isinstance(sym_lookup, EpiEnumEntry):
+                        tip = f"Template argument should be a type: `{sym_lookup.name}`"
+                        self._push_error(p, LinkerErrorCode.BadTemplateArgument, tip)
+
+    def _validate_enum_entries(self, enum: EpiEnum):
+
+        for i, e in enumerate(enum.entries):
+
+            for v in (v for v in e.valuetokens if v.tokentype == TokenType.Identifier):
+
+                sym_lookup = self.lookup_symbol(v.text, enum)
+                if sym_lookup is None:
+                    tip = f'No such symbol exists: `{v.text}`'
+                    self._push_error(e, LinkerErrorCode.NoSuchSymbol, tip)
+
+                elif not isinstance(sym_lookup, EpiEnumEntry):
+                    tip = f"Couldn't assign `{v.text}` to the `enum` type"
+                    self._push_error(e, LinkerErrorCode.IncorrectValueAssignment, tip)
+
+                elif enum.entries.index(sym_lookup) >= i:
+                    tip = f'No such symbol exists: `{v.text}`'
+                    self._push_error(e, LinkerErrorCode.NoSuchSymbol, tip)
+
+    def _resolve_enum_values(self, enum: EpiEnum):
+
+        assert isinstance(enum, EpiEnum)
+
+        attr_flagmask = enum.attr_find(TokenType.FlagMask)
+
+        value = 0
+        for e in enum.entries:
+            e.value = f'(1 << {str(value + 1)})' if attr_flagmask is not None else str(value)
+
+            if len(e.valuetokens) > 1:
+                continue
+
+            if len(e.valuetokens) == 1:
+                if e.valuetokens[0].tokentype != TokenType.IntegerLiteral:
+                    continue
+
+                value = int(e.valuetokens[0].text)
+
+            value += 1
 
     def link(self) -> list:
 
@@ -156,57 +266,23 @@ class Linker:
 
         for sym in self.__registry.values():
 
-            if not isinstance(sym, EpiClass):
-                continue
+            if isinstance(sym, EpiClass):
+                self._validate_class_properties(sym)
 
-            for p in (p for p in sym.properties if p.tokentype.tokentype == TokenType.Identifier):
+                for sym_inner in sym.inner().values():
+                    assert isinstance(sym_inner, EpiEnum)
+                    self._validate_enum_entries(sym_inner)
 
-                if p.typename_basename() == sym.name and not p.is_polymorphic():
+            elif isinstance(sym, EpiEnum):
+                self._validate_enum_entries(sym)
 
-                    tip = f'The symbol should be a complete type, but not: `{p.tokentype.text}`'
-                    self._push_error(p, LinkerErrorCode.IncompleteTypeUsage, tip)
+        for sym in self.__registry.values():
 
-                p.symbol = self._lookup_sym(p.typename_basename(), sym)
-                if p.symbol is None:
+            if isinstance(sym, EpiClass):
+                for enum in (inner for inner in sym.inner().values() if isinstance(inner, EpiEnum)):
+                    self._resolve_enum_values(enum)
 
-                    tip = f'No such symbol exists: `{ p.typename_basename() }`'
-                    self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
-
-                if p.value_is_assigned() and p.tokenvalue.tokentype == TokenType.Identifier:
-
-                    if self._lookup_sym(p.tokenvalue.text, sym) is None:
-
-                        tip = f'No such symbol exists: `{ p.tokenvalue.text }`'
-                        self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
-
-                    elif p.symbol is not None and p.typename_basename() != p.tokenvalue_typename():
-
-                        tip = f"Couldn't assign `{p.tokenvalue_typename()}` to this type"
-                        self._push_error(p, LinkerErrorCode.IncorrectValueAssignment, tip)
-
-            for p in (p for p in sym.properties if p.form == EpiProperty.Form.Template):
-
-                for n in p.tokens_nested:
-
-                    if n.tokentype != TokenType.Identifier:
-                        continue
-
-                    if n.text == sym.name and not p.is_polymorphic():
-
-                        tip = f'Template argument symbol should be a complete type, but not: `{n.text}`'
-                        self._push_error(p, LinkerErrorCode.IncompleteTypeUsage, tip)
-
-                    else:
-
-                        sym_lookup = self._lookup_sym(n.text, sym)
-                        assert not isinstance(sym_lookup, EpiProperty)
-
-                        if sym_lookup is None:
-                            tip = f"Template argument symbol doesn't exist: `{n.text}`"
-                            self._push_error(p, LinkerErrorCode.NoSuchSymbol, tip)
-
-                        elif isinstance(sym_lookup, EpiEnumEntry):
-                            tip = f"Template argument should be a type: `{sym_lookup.name}`"
-                            self._push_error(p, LinkerErrorCode.BadTemplateArgument, tip)
+            elif isinstance(sym, EpiEnum):
+                self._resolve_enum_values(sym)
 
         return self.__linker_errors

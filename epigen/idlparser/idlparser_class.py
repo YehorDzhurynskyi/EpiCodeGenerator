@@ -19,11 +19,8 @@ def __parse_scope(parser: idl.IDLParser, attrs_inherited: list = []) -> list:
     scope = []
     while True:
 
-        t = parser._curr()
         attrs_local = idlattr.parse_attr_list(parser)
-
         attrs_merged = attrs_inherited + attrs_local
-        # TODO: check if property isn't reference
 
         if parser._test(parser._curr(), expected=[TokenType.CloseBrace]):
             break
@@ -96,12 +93,12 @@ def parse_class(parser: idl.IDLParser) -> EpiClass:
 
             elif isinstance(sym, EpiEnum):
 
-                if sym.name in clss.inner:
+                if sym.name in clss.inner():
 
                     tip = f'The symbol `{sym.name}` has already been defined in the {clss.name} `class` type!'
                     parser._push_error(sym.token, idl.IDLSyntaxErrorCode.DuplicatingSymbol, tip, fatal=False)
 
-                clss.inner[sym.name] = sym
+                clss.inner_push(sym)
 
             elif isinstance(sym, list):
                 unpack_scope(sym)

@@ -55,6 +55,12 @@ epiU32 GetBGR24() const { return GetBGR24_Callback(); } \
 void SetBGR24(epiU32 value) { SetBGR24_Callback(value); } \
 const epiVec4f& GetColor() const { return GetColor_Callback(); } \
 void SetColor(const epiVec4f& value) { SetColor_Callback(value); } \
+inline EInnerMask GetEnum0() const { return m_Enum0; } \
+inline void SetEnum0(EInnerMask value) { m_Enum0 = value; } \
+inline EMask GetEnum1() const { return m_Enum1; } \
+inline void SetEnum1(EMask value) { m_Enum1 = value; } \
+inline EInnerMask GetEnum2() const { return m_Enum2; } \
+inline void SetEnum2(EInnerMask value) { m_Enum2 = value; } \
  \
 enum Color_PIDXs \
 { \
@@ -71,7 +77,10 @@ enum Color_PIDXs \
     PIDX_RGB24 = 10, \
     PIDX_BGR24 = 11, \
     PIDX_Color = 12, \
-    PIDX_COUNT = 13 \
+    PIDX_Enum0 = 13, \
+    PIDX_Enum1 = 14, \
+    PIDX_Enum2 = 15, \
+    PIDX_COUNT = 16 \
 }; \
  \
 private: \

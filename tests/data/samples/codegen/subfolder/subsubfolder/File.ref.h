@@ -16,7 +16,10 @@ public:
     EPI_GENREGION_BEGIN(Inner::E)
         Value0 = 0,
         Value1 = 0,
-        Value2 = 1
+        Value2 = 2,
+        Value3 = 5,
+        Value4 = Value2 | Value3,
+        Value5 = 6
     EPI_GENREGION_END(Inner::E)
     };
 
@@ -55,7 +58,7 @@ public:
     enum class E1
     {
     EPI_GENREGION_BEGIN(B::E1)
-        Value0 = -1
+        Value2 = -1
     EPI_GENREGION_END(B::E1)
     };
 
@@ -79,14 +82,15 @@ public:
         PID_Enum0 = 0x29782fe9,
         PID_Enum1 = 0x5e7f1f7f,
         PID_Enum2 = 0xc7764ec5,
+        PID_Enum3 = 0xb0717e53,
         PID_Enums0 = 0xf670e114,
         PID_Enums1 = 0x8177d182,
-        PID_COUNT = 9
+        PID_COUNT = 10
     };
 
 protected:
-    E1 GetEnum2_Callback() const;
-    void SetEnum2_Callback(E1 value);
+    E2 GetEnum3_Callback() const;
+    void SetEnum3_Callback(E2 value);
 
 protected:
     epiPtrArray<B> m_BBs;
@@ -95,6 +99,7 @@ protected:
     epiFloat* m_NonSibling{nullptr};
     Inner::E m_Enum0;
     Inner::E m_Enum1{Inner::E::Value1};
+    E1 m_Enum2{E1::Value2};
     epiArray<Inner::E> m_Enums0;
     epiArray<E0> m_Enums1;
 

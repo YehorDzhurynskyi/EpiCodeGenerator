@@ -70,8 +70,10 @@ inline Inner::E GetEnum0() const { return m_Enum0; } \
 inline void SetEnum0(Inner::E value) { m_Enum0 = value; } \
 inline Inner::E GetEnum1() const { return m_Enum1; } \
 inline void SetEnum1(Inner::E value) { m_Enum1 = value; } \
-E1 GetEnum2() const { return GetEnum2_Callback(); } \
-void SetEnum2(E1 value) { SetEnum2_Callback(value); } \
+inline E1 GetEnum2() const { return m_Enum2; } \
+inline void SetEnum2(E1 value) { m_Enum2 = value; } \
+E2 GetEnum3() const { return GetEnum3_Callback(); } \
+void SetEnum3(E2 value) { SetEnum3_Callback(value); } \
 inline const epiArray<Inner::E>& GetEnums0() const { return m_Enums0; } \
 inline epiArray<Inner::E>& GetEnums0() { return m_Enums0; } \
 inline void SetEnums0(const epiArray<Inner::E>& value) { m_Enums0 = value; } \
@@ -88,12 +90,13 @@ enum B_PIDXs \
     PIDX_Enum0 = 4, \
     PIDX_Enum1 = 5, \
     PIDX_Enum2 = 6, \
-    PIDX_Enums0 = 7, \
-    PIDX_Enums1 = 8, \
-    PIDX_COUNT = 9 \
+    PIDX_Enum3 = 7, \
+    PIDX_Enums0 = 8, \
+    PIDX_Enums1 = 9, \
+    PIDX_COUNT = 10 \
 }; \
  \
 private: \
-E1 (B::*GetEnum2_FuncPtr)() const { &B::GetEnum2 }; \
-void (B::*SetEnum2_FuncPtr)(E1) { &B::SetEnum2 }; \
+E2 (B::*GetEnum3_FuncPtr)() const { &B::GetEnum3 }; \
+void (B::*SetEnum3_FuncPtr)(E2) { &B::SetEnum3 }; \
 

@@ -22,20 +22,27 @@ def __parse_enum_entry(parser: idl.IDLParser) -> EpiEnumEntry:
     if parser._test(parser._curr(), expected=[TokenType.Assing]):
 
         parser._next()
-        if parser._test(parser._curr(),
-                        expected=TokenType.literals(),
-                        err_code=idl.IDLSyntaxErrorCode.IncorrectValueAssignment,
-                        tip="The assigned value isn't a literal",
-                        fatal=False):
 
-            parser._test(parser._curr(),
-                         expected=[TokenType.IntegerLiteral],
-                         err_code=idl.IDLSyntaxErrorCode.IncorrectValueLiteral,
-                         tip="The assigned value isn't an integer literal",
-                         fatal=False)
+        while True:
 
-            t = parser._next()
-            entry.tokenvalue = t
+            if parser._test(parser._curr(),
+                            expected=TokenType.literals(),
+                            err_code=idl.IDLSyntaxErrorCode.IncorrectValueAssignment,
+                            tip="The assigned value isn't a literal",
+                            fatal=False):
+
+                parser._test(parser._curr(),
+                            expected=[TokenType.IntegerLiteral, TokenType.Identifier],
+                            err_code=idl.IDLSyntaxErrorCode.IncorrectValueLiteral,
+                            tip="The assigned value isn't an `enum` literal",
+                            fatal=False)
+
+                entry.valuetokens.append(parser._next())
+
+            if not parser._test(parser._curr(), expected=[TokenType.VSlash]):
+                break
+
+            entry.valuetokens.append(parser._next())
 
     return entry
 

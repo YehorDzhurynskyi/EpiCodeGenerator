@@ -139,9 +139,7 @@ def emit_properties(properties: list, accessor_modifier: str, builder: bld.Build
     builder.tab()
 
     for p in properties:
-
-        value = f'{{{p.tokenvalue.text}}}' if p.tokenvalue is not None else ''
-        builder.line(f'{p.typename()} m_{p.name}{value};')
+        builder.line(f'{p.typename()} m_{p.name}{p.tokenvalue_repr()};')
 
     builder.tab(-1)
     builder.line_empty()
@@ -235,7 +233,7 @@ def emit_class_declaration(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
 
     assert isinstance(clss, EpiClass)
 
-    if len(clss.inner) == 0:
+    if len(clss.inner()) == 0:
         builder.line_empty()
 
     else:
@@ -243,7 +241,7 @@ def emit_class_declaration(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
         builder.line('public:')
         builder.tab()
 
-        for symbol_inner in clss.inner.values():
+        for symbol_inner in clss.inner().values():
 
             assert isinstance(symbol_inner, EpiEnum)
 
@@ -300,17 +298,16 @@ def emit_skeleton_class(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
 def emit_enum_declaration(enum: EpiEnum, builder: bld.Builder) -> bld.Builder:
 
     assert isinstance(enum, EpiEnum)
+    assert len(enum.values()) == len(enum.entries)
 
     builder.tab()
 
-    value = 0
-    for i, e in enumerate(enum.entries):
+    values = enum.values()
+    for i, name in enumerate(values):
 
-        value = value if e.tokenvalue is None else int(e.tokenvalue.text)
+        value = values[name]
         sep = ',' if i != len(enum.entries) - 1 else ''
-        builder.line(f'{e.name} = {value}{sep}')
-
-        value += 1
+        builder.line(f'{name} = {value}{sep}')
 
     builder.tab(-1)
 
@@ -320,9 +317,12 @@ def emit_skeleton_enum(enum: EpiEnum, symfullname: str, builder: bld.Builder) ->
 
     assert isinstance(enum, EpiEnum)
 
-    enum_base = f' : {enum.base.text}' if enum.base is not None else ''
+    attr_flagmask = enum.attr_find(TokenType.FlagMask)
 
-    builder.line(f'enum class {enum.name}{enum_base}')
+    enum_base = f' : {enum.base.text}' if enum.base is not None else ''
+    enum_type = 'enum' if attr_flagmask is not None else 'enum class'
+
+    builder.line(f'{enum_type} {enum.name}{enum_base}')
     builder.line('{')
     builder.anchor_gen_region(symfullname)
     builder.anchor_gen_endregion(symfullname)
@@ -384,7 +384,7 @@ def emit_class_meta(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
         if p.form == EpiProperty.Form.Template:
             p_nested_typeid = f'epiHashCompileTime({p.tokens_nested[0].text})'
 
-        p_typeid = f'epiHashCompileTime({p.typename_basename()})'
+        p_typeid = f'epiHashCompileTime({p.typename_fullname()})'
 
         if p.form == EpiProperty.Form.Pointer:
 

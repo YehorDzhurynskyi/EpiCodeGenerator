@@ -16,9 +16,11 @@ _EPIATTRIBUTE_CONFLICT_TABLE = {
     TokenType.WriteOnly: [TokenType.ReadOnly, TokenType.ReadCallback],
     TokenType.Transient: [],
     TokenType.Min: [TokenType.ReadOnly],
-    TokenType.Max: [TokenType.ReadOnly]
+    TokenType.Max: [TokenType.ReadOnly],
+    TokenType.FlagMask: []
 }
 # NOTE: The number of conflicting attributes should be equal to the number of occurrence of this attribute in other conflict lists
+assert len(TokenType.attributes()) == len(_EPIATTRIBUTE_CONFLICT_TABLE)
 assert all(len(conflicts) == sum([conflicts_.count(a) for conflicts_ in _EPIATTRIBUTE_CONFLICT_TABLE.values()]) for a, conflicts in _EPIATTRIBUTE_CONFLICT_TABLE.items())
 
 class EpiAttribute:
@@ -110,6 +112,20 @@ class EpiSymbol(abc.ABC):
     def name(self):
         return self.token.text
 
+    @property
+    def fullname(self):
+
+        fullname = self.name
+        sym = self
+        while getattr(sym, 'outer', None) is not None:
+
+            outer = getattr(sym, 'outer')
+            fullname = f'{outer.name}::{fullname}'
+            sym = outer
+
+        return fullname
+
+
     def __str__(self):
         return str(self.token)
 
@@ -194,6 +210,9 @@ class EpiProperty(EpiSymbol):
     def typename_basename(self):
         return self.tokentype.text
 
+    def typename_fullname(self):
+        return self.typename_basename() if self.symbol is None else self.symbol.fullname
+
     def typename(self):
 
         nested_len = len(self.tokens_nested)
@@ -224,6 +243,17 @@ class EpiProperty(EpiSymbol):
 
         assert self.tokentype.tokentype == TokenType.Identifier
         return '::'.join(self.tokenvalue.text.split('::')[:-1])
+
+    def tokenvalue_repr(self):
+
+        if self.tokenvalue is None:
+            return ''
+
+        text = self.tokenvalue.text
+        if isinstance(self.symbol, EpiEnum) and self.symbol.attr_find(TokenType.FlagMask) is not None:
+            text = f'{self.symbol.fullname}::{text.split("::")[-1]}'.replace('::', '_')
+
+        return f'{{{text}}}'
 
     def value_is_assigned(self) -> bool:
         return self.__tokenvalue is not None
@@ -296,8 +326,8 @@ class EpiClass(EpiSymbol):
         super().__init__(token)
 
         self.parent = None
-        self.inner = {}
         self.properties = []
+        self.__inner = {}
 
     def __eq__(self, rhs):
 
@@ -307,12 +337,23 @@ class EpiClass(EpiSymbol):
         return \
             super().__eq__(rhs) and \
             self.parent == rhs.parent and \
-            self.inner == rhs.inner and \
-            self.properties == rhs.properties
+            self.properties == rhs.properties and \
+            self.__inner == rhs.__inner
+
+    def inner_push(self, sym: EpiSymbol):
+
+        assert sym.name not in self.__inner
+
+        sym.outer = self
+        self.__inner[sym.name] = sym
+
+    def inner(self):
+        # NOTE: to ensure user won't modify the dict
+        return self.__inner.copy()
 
     def __repr__(self):
 
-        rinner = ', '.join(repr(i) for i in self.inner.values())
+        rinner = ', '.join(repr(i) for i in self.__inner.values())
         rproperties = ', '.join([repr(p) for p in self.properties])
 
         r = f'{super().__repr__()}, parent={self.parent}, inner=({rinner}), properties-len={len(self.properties)}'
@@ -327,7 +368,18 @@ class EpiEnumEntry(EpiSymbol):
 
         super().__init__(token)
 
-        self.tokenvalue = None
+        self.valuetokens = []
+        self.__value = None
+
+    @property
+    def value(self):
+        assert self.__value is not None
+        return self.__value
+
+    @value.setter
+    def value(self, v: str):
+        assert isinstance(v, str)
+        self.__value = v
 
     def __eq__(self, rhs):
 
@@ -336,10 +388,10 @@ class EpiEnumEntry(EpiSymbol):
 
         return \
             super().__eq__(rhs) and \
-            self.tokenvalue == rhs.tokenvalue
+            self.valuetokens == rhs.valuetokens
 
     def __repr__(self):
-        return f'{super().__repr__()}, value={repr(self.tokenvalue)}'
+        return f'{super().__repr__()}, valuetokens={repr(self.valuetokens)}'
 
 
 class EpiEnum(EpiSymbol):
@@ -348,6 +400,7 @@ class EpiEnum(EpiSymbol):
 
         super().__init__(token)
 
+        self.outer = None
         self.__base = None
         self.entries = []
 
@@ -361,6 +414,24 @@ class EpiEnum(EpiSymbol):
         assert TokenType.is_integer(token.tokentype)
 
         self.__base = token
+
+    def values(self) -> dict:
+
+        values = {}
+        attr_flagmask = self.attr_find(TokenType.FlagMask)
+        prefix = f'{self.fullname.replace("::", "_")}_' if attr_flagmask is not None else ''
+
+        for e in self.entries:
+
+            valuetext = e.value
+            if len(e.valuetokens) != 0:
+
+                valuetokens = [f'{prefix}{t.text}' if t.tokentype == TokenType.Identifier else t.text for t in e.valuetokens]
+                valuetext = ' '.join(valuetokens)
+
+            values[f'{prefix}{e.name}'] = valuetext
+
+        return values
 
     def __eq__(self, rhs):
 
@@ -540,7 +611,9 @@ class EpiClassBuilder:
         clss = EpiClass(token)
         clss.parent = self.__parent
         clss.properties = self.__properties
-        clss.inner = self.__inner
+
+        for inner in self.__inner.values():
+            clss.inner_push(inner)
 
         return clss
 
@@ -550,7 +623,7 @@ class EpiEnumEntryBuilder:
     def __init__(self):
 
         self.__name = None
-        self.__tokenvalue = None
+        self.__valuetokens = []
         self.__attrs = []
 
     def name(self, name: str):
@@ -558,9 +631,9 @@ class EpiEnumEntryBuilder:
         self.__name = name
         return self
 
-    def value(self, value: str):
+    def value(self, value: list):
 
-        self.__tokenvalue = Token(TokenType.IntegerLiteral, value)
+        self.__valuetokens = [Token(tokentype, text) for tokentype, text in value]
         return self
 
     def attr(self, attr: EpiAttribute):
@@ -579,7 +652,7 @@ class EpiEnumEntryBuilder:
         for attr in self.__attrs:
             entry.attr_push(attr)
 
-        entry.tokenvalue = self.__tokenvalue
+        entry.valuetokens = self.__valuetokens
 
         return entry
 
@@ -591,6 +664,7 @@ class EpiEnumBuilder:
         self.__name = None
         self.__base = None
         self.__entries = []
+        self.__attrs = []
 
     def name(self, name: str):
 
@@ -607,6 +681,11 @@ class EpiEnumBuilder:
         self.__entries.append(entry)
         return self
 
+    def attr(self, attr: EpiAttribute):
+
+        self.__attrs.append(attr)
+        return self
+
     def build(self) -> EpiEnum:
 
         assert self.__name is not None
@@ -619,5 +698,8 @@ class EpiEnumBuilder:
             enum.base = self.__base
 
         enum.entries = self.__entries
+
+        for attr in self.__attrs:
+            enum.attr_push(attr)
 
         return enum
