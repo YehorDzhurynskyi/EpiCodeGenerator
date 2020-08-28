@@ -197,11 +197,6 @@ def emit_sekeleton_file(module_basename: str, ext: str, builder: bld.Builder) ->
 
     elif ext == 'cpp':
 
-        import pathlib
-        module_name = pathlib.Path(module_basename).parts[0]
-
-        builder.template('cpp/header', module_name=module_name)
-        builder.line_empty()
         builder.anchor_gen_region('include')
         emit_include_section(module_basename, ext, builder)
         builder.anchor_gen_endregion('include')
