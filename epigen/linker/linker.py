@@ -264,6 +264,9 @@ class Linker:
         inheritance_tree.build(self)
         inheritance_tree.validate(self)
 
+        if len(self.__linker_errors) != 0:
+            return self.__linker_errors
+
         for sym in self.__registry.values():
 
             if isinstance(sym, EpiClass):
