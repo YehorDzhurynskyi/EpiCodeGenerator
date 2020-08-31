@@ -69,6 +69,8 @@ class TokenType(Enum):
     Mat2x2FType = auto()
     Mat3x3FType = auto()
     Mat4x4FType = auto()
+    ComplexFType = auto()
+    ComplexDType = auto()
     Rect2FType = auto()
     Rect2DType = auto()
     Rect2SType = auto()
@@ -363,6 +365,8 @@ class Tokenizer:
         'epiMat2x2f': TokenType.Mat2x2FType,
         'epiMat3x3f': TokenType.Mat3x3FType,
         'epiMat4x4f': TokenType.Mat4x4FType,
+        'epiComplexf': TokenType.ComplexFType,
+        'epiComplexd': TokenType.ComplexDType,
         'epiRect2f': TokenType.Rect2FType,
         'epiRect2d': TokenType.Rect2DType,
         'epiRect2s': TokenType.Rect2SType,

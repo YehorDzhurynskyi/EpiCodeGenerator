@@ -1302,9 +1302,55 @@ class TestIDLParser:
         ),
         (
             '''
+            class dSeriesXYComplex : dSeriesBase
+            {
+                epiArray<epiComplexf> XY;
+
+                [Virtual, ReadOnly]
+                {
+                    epiBool IsEmpty;
+                    epiSize_t Size;
+                }
+            };
+            ''',
+            {
+                'dSeriesXYComplex':
+                    EpiClassBuilder()
+                        .name('dSeriesXYComplex')
+                        .parent('dSeriesBase')
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('XY')
+                                .tokentype_type(TokenType.ArrayType)
+                                .form(EpiProperty.Form.Template)
+                                .token_nested(TokenType.ComplexFType)
+                                .build()
+                        )
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('IsEmpty')
+                                .tokentype_type(TokenType.BoolType)
+                                .attr(EpiAttributeBuilder().tokentype(TokenType.Virtual).build())
+                                .attr(EpiAttributeBuilder().tokentype(TokenType.ReadOnly).build())
+                                .build()
+                        )
+                        .property(
+                            EpiPropertyBuilder()
+                                .name('Size')
+                                .tokentype_type(TokenType.SizeTType)
+                                .attr(EpiAttributeBuilder().tokentype(TokenType.Virtual).build())
+                                .attr(EpiAttributeBuilder().tokentype(TokenType.ReadOnly).build())
+                                .build()
+                        )
+                        .build()
+            },
+            []
+        ),
+        (
+            '''
             class A : B
             {
-                epiArray<epiFloat> Name;
+                epiArray<epiComplexf> Name;
             };
             ''',
             {
@@ -1317,7 +1363,7 @@ class TestIDLParser:
                                 .name('Name')
                                 .tokentype_type(TokenType.ArrayType)
                                 .form(EpiProperty.Form.Template)
-                                .token_nested(TokenType.SingleFloatingType)
+                                .token_nested(TokenType.ComplexFType)
                                 .build()
                         )
                         .build()
@@ -2286,10 +2332,12 @@ class TestIDLParser:
                 epiMat2x2f Name32;
                 epiMat3x3f Name33;
                 epiMat4x4f Name34;
-                epiRect2f Name35;
-                epiRect2d Name36;
-                epiRect2s Name37;
-                epiRect2u Name38;
+                epiComplexf Name35;
+                epiComplexd Name36;
+                epiRect2f Name37;
+                epiRect2d Name38;
+                epiRect2s Name39;
+                epiRect2u Name40;
             };
             ''',
             {
@@ -2332,10 +2380,12 @@ class TestIDLParser:
                         .property(EpiPropertyBuilder().name('Name32').tokentype_type(TokenType.Mat2x2FType).build())
                         .property(EpiPropertyBuilder().name('Name33').tokentype_type(TokenType.Mat3x3FType).build())
                         .property(EpiPropertyBuilder().name('Name34').tokentype_type(TokenType.Mat4x4FType).build())
-                        .property(EpiPropertyBuilder().name('Name35').tokentype_type(TokenType.Rect2FType).build())
-                        .property(EpiPropertyBuilder().name('Name36').tokentype_type(TokenType.Rect2DType).build())
-                        .property(EpiPropertyBuilder().name('Name37').tokentype_type(TokenType.Rect2SType).build())
-                        .property(EpiPropertyBuilder().name('Name38').tokentype_type(TokenType.Rect2UType).build())
+                        .property(EpiPropertyBuilder().name('Name35').tokentype_type(TokenType.ComplexFType).build())
+                        .property(EpiPropertyBuilder().name('Name36').tokentype_type(TokenType.ComplexDType).build())
+                        .property(EpiPropertyBuilder().name('Name37').tokentype_type(TokenType.Rect2FType).build())
+                        .property(EpiPropertyBuilder().name('Name38').tokentype_type(TokenType.Rect2DType).build())
+                        .property(EpiPropertyBuilder().name('Name39').tokentype_type(TokenType.Rect2SType).build())
+                        .property(EpiPropertyBuilder().name('Name40').tokentype_type(TokenType.Rect2UType).build())
                         .build()
             },
             []
@@ -2379,10 +2429,12 @@ class TestIDLParser:
                 epiMat2x2f Name32;
                 epiMat3x3f Name33;
                 epiMat4x4f Name34;
-                epiRect2f Name35;
-                epiRect2d Name36;
-                epiRect2s Name37;
-                epiRect2u Name38;
+                epiComplexf Name35;
+                epiComplexd Name36;
+                epiRect2f Name37;
+                epiRect2d Name38;
+                epiRect2s Name39;
+                epiRect2u Name40;
             };
             ''',
             {
@@ -2425,10 +2477,12 @@ class TestIDLParser:
                         .property(EpiPropertyBuilder().name('Name32').tokentype_type(TokenType.Mat2x2FType).build())
                         .property(EpiPropertyBuilder().name('Name33').tokentype_type(TokenType.Mat3x3FType).build())
                         .property(EpiPropertyBuilder().name('Name34').tokentype_type(TokenType.Mat4x4FType).build())
-                        .property(EpiPropertyBuilder().name('Name35').tokentype_type(TokenType.Rect2FType).build())
-                        .property(EpiPropertyBuilder().name('Name36').tokentype_type(TokenType.Rect2DType).build())
-                        .property(EpiPropertyBuilder().name('Name37').tokentype_type(TokenType.Rect2SType).build())
-                        .property(EpiPropertyBuilder().name('Name38').tokentype_type(TokenType.Rect2UType).build())
+                        .property(EpiPropertyBuilder().name('Name35').tokentype_type(TokenType.ComplexFType).build())
+                        .property(EpiPropertyBuilder().name('Name36').tokentype_type(TokenType.ComplexDType).build())
+                        .property(EpiPropertyBuilder().name('Name37').tokentype_type(TokenType.Rect2FType).build())
+                        .property(EpiPropertyBuilder().name('Name38').tokentype_type(TokenType.Rect2DType).build())
+                        .property(EpiPropertyBuilder().name('Name39').tokentype_type(TokenType.Rect2SType).build())
+                        .property(EpiPropertyBuilder().name('Name40').tokentype_type(TokenType.Rect2UType).build())
                         .build()
             },
             []
@@ -2534,16 +2588,19 @@ class TestIDLParser:
                 epiMat2x2f Name32;
                 epiMat3x3f Name33;
                 epiMat4x4f* Name34;
-                epiRect2f Name35;
+                epiComplexf Name35;
+                epiComplexd Name36;
+
+                epiRect2f Name37;
 
                 [WriteOnly]
-                epiRect2d Name36;
+                epiRect2d Name38;
 
                 # comment
                 # comment
 
-                epiRect2s Name37;
-                epiRect2u Name38;
+                epiRect2s Name39;
+                epiRect2u Name40;
             };
             '''
         ),
@@ -2612,14 +2669,18 @@ class TestIDLParser:
                 epiMat2x2f Name32;
                 epiMat3x3f Name33;
                 epiMat4x4f *Name34;
-                epiRect2f Name35;
-                [WriteOnly] epiRect2d Name36;
+
+                epiComplexf Name35; epiComplexd Name36;
+
+                epiRect2f Name37;
+
+                [WriteOnly] epiRect2d Name38;
 
                 # comment
                 # comment
 
-                epiRect2s Name37;
-                epiRect2u Name38;
+                epiRect2s Name39;
+                epiRect2u Name40;
             };
             '''
         ),
@@ -2764,12 +2825,13 @@ class TestIDLParser:
                     .property(EpiPropertyBuilder().name('Name32').tokentype_type(TokenType.Mat2x2FType).build())
                     .property(EpiPropertyBuilder().name('Name33').tokentype_type(TokenType.Mat3x3FType).build())
                     .property(EpiPropertyBuilder().name('Name34').tokentype_type(TokenType.Mat4x4FType).form(EpiProperty.Form.Pointer).attr(EpiAttributeBuilder().tokentype(TokenType.Transient).build()).build())
-                    .property(EpiPropertyBuilder().name('Name35').tokentype_type(TokenType.Rect2FType).build())
-                    .property(EpiPropertyBuilder().name('Name36').tokentype_type(TokenType.Rect2DType).attr(EpiAttributeBuilder().tokentype(TokenType.WriteOnly).build()).build())
-                    .property(EpiPropertyBuilder().name('Name37').tokentype_type(TokenType.Rect2SType).build())
-                    .property(EpiPropertyBuilder().name('Name38').tokentype_type(TokenType.Rect2UType).build())
+                    .property(EpiPropertyBuilder().name('Name35').tokentype_type(TokenType.ComplexFType).build())
+                    .property(EpiPropertyBuilder().name('Name36').tokentype_type(TokenType.ComplexDType).build())
+                    .property(EpiPropertyBuilder().name('Name37').tokentype_type(TokenType.Rect2FType).build())
+                    .property(EpiPropertyBuilder().name('Name38').tokentype_type(TokenType.Rect2DType).attr(EpiAttributeBuilder().tokentype(TokenType.WriteOnly).build()).build())
+                    .property(EpiPropertyBuilder().name('Name39').tokentype_type(TokenType.Rect2SType).build())
+                    .property(EpiPropertyBuilder().name('Name40').tokentype_type(TokenType.Rect2UType).build())
                     .build()
         }
 
         self.test_sequence(tmpdir, content, expected_registry, expected_errors)
-
