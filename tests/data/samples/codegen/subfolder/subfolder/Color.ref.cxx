@@ -42,7 +42,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, SetRu_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiU8),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Ru), std::move(m));
     }
@@ -54,7 +54,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, SetGu_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiU8),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Gu), std::move(m));
     }
@@ -66,7 +66,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, SetBu_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiU8),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Bu), std::move(m));
     }
@@ -78,7 +78,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, SetAu_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiU8),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Au), std::move(m));
     }
@@ -90,7 +90,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, SetRf_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiFloat),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Rf), std::move(m));
     }
@@ -102,7 +102,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, SetGf_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiFloat),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Gf), std::move(m));
     }
@@ -114,7 +114,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, SetBf_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiFloat),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Bf), std::move(m));
     }
@@ -126,7 +126,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, SetAf_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiFloat),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Af), std::move(m));
     }
@@ -138,7 +138,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, SetRGBA32_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiU32),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(RGBA32), std::move(m));
     }
@@ -150,7 +150,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, SetBGRA32_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiU32),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(BGRA32), std::move(m));
     }
@@ -162,7 +162,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, SetRGB24_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiU32),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(RGB24), std::move(m));
     }
@@ -174,7 +174,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, SetBGR24_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiU32),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(BGR24), std::move(m));
     }
@@ -186,7 +186,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, SetColor_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
             /* typeID */ epiHashCompileTime(epiVec4f),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Color), std::move(m));
     }
@@ -198,7 +198,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, m_Enum0),
             /* Flags */ {},
             /* typeID */ epiHashCompileTime(Color::EInnerMask),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Enum0), std::move(m));
     }
@@ -210,7 +210,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, m_Enum1),
             /* Flags */ {},
             /* typeID */ epiHashCompileTime(EMask),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Enum1), std::move(m));
     }
@@ -222,7 +222,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrWrite */ (void*)offsetof(Color, m_Enum2),
             /* Flags */ {},
             /* typeID */ epiHashCompileTime(Color::EInnerMask),
-            /* nestedTypeID */ MetaTypeID_None
+            /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Enum2), std::move(m));
     }

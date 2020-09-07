@@ -38,7 +38,7 @@ public:
 EPI_GENHIDDEN_Color()
 
 public:
-    constexpr static MetaTypeID TypeID{0xa79767ed};
+    constexpr static epiMetaTypeID TypeID{0xa79767ed};
 
     enum Color_PIDs
     {

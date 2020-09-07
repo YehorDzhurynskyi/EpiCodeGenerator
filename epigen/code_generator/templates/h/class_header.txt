@@ -1,4 +1,4 @@
 EPI_GENHIDDEN_${class_name}()
 
 public:
-    constexpr static MetaTypeID TypeID{${class_typeid}};
+    constexpr static epiMetaTypeID TypeID{${class_typeid}};

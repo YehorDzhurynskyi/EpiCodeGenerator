@@ -26,7 +26,7 @@ public:
 EPI_GENHIDDEN_Inner()
 
 public:
-    constexpr static MetaTypeID TypeID{0xacf024cd};
+    constexpr static epiMetaTypeID TypeID{0xacf024cd};
 
     enum Inner_PIDs
     {
@@ -71,7 +71,7 @@ public:
 EPI_GENHIDDEN_B()
 
 public:
-    constexpr static MetaTypeID TypeID{0x4ad0cf31};
+    constexpr static epiMetaTypeID TypeID{0x4ad0cf31};
 
     enum B_PIDs
     {

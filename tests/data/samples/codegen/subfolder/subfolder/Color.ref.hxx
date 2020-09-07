@@ -21,7 +21,7 @@ const MetaClass& GetMetaClass() const override \
     return ClassRegistry_GetMetaClass<Color>(); \
 } \
  \
-epiBool Is(MetaTypeID rhs) const override \
+epiBool Is(epiMetaTypeID rhs) const override \
 { \
     return rhs == Color::TypeID || super::Is(rhs); \
 } \

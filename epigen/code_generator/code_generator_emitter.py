@@ -373,7 +373,7 @@ def emit_class_meta(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
     builder.tab()
     for p in clss.properties:
 
-        p_nested_typeid = 'MetaTypeID_None'
+        p_nested_typeid = 'epiMetaTypeID_None'
 
         # TODO: make it work for >1 template arguments
         if p.form == EpiProperty.Form.Template:
@@ -384,7 +384,7 @@ def emit_class_meta(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
         if p.form == EpiProperty.Form.Pointer:
 
             p_nested_typeid = p_typeid
-            p_typeid = 'MetaTypeID_Ptr'
+            p_typeid = 'epiMetaTypeID_Ptr'
 
         attr_readcallback = p.attr_find(TokenType.ReadCallback)
         attr_writecallback = p.attr_find(TokenType.WriteCallback)

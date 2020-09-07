@@ -13,7 +13,7 @@ EPI_GENREGION_BEGIN(A)
 EPI_GENHIDDEN_A()
 
 public:
-    constexpr static MetaTypeID TypeID{0xd3d99e8b};
+    constexpr static epiMetaTypeID TypeID{0xd3d99e8b};
 
     enum A_PIDs
     {
@@ -59,7 +59,7 @@ EPI_GENREGION_BEGIN(AA)
 EPI_GENHIDDEN_AA()
 
 public:
-    constexpr static MetaTypeID TypeID{0xa9601dbd};
+    constexpr static epiMetaTypeID TypeID{0xa9601dbd};
 
     enum AA_PIDs
     {

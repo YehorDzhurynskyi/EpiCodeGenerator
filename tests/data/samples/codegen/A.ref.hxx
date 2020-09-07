@@ -21,7 +21,7 @@ const MetaClass& GetMetaClass() const override \
     return ClassRegistry_GetMetaClass<A>(); \
 } \
  \
-epiBool Is(MetaTypeID rhs) const override \
+epiBool Is(epiMetaTypeID rhs) const override \
 { \
     return rhs == A::TypeID || super::Is(rhs); \
 } \
@@ -90,7 +90,7 @@ const MetaClass& GetMetaClass() const override \
     return ClassRegistry_GetMetaClass<AA>(); \
 } \
  \
-epiBool Is(MetaTypeID rhs) const override \
+epiBool Is(epiMetaTypeID rhs) const override \
 { \
     return rhs == AA::TypeID || super::Is(rhs); \
 } \
