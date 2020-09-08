@@ -90,7 +90,7 @@ protected:
     void SetColor_Callback(const epiVec4f& value);
 
 protected:
-    epiVec4f m_Color;
+    epiVec4f m_Color{};
     EInnerMask m_Enum0{Color_EInnerMask_Value012};
     EMask m_Enum1{EMask_Value4};
     EInnerMask m_Enum2{Color_EInnerMask_Value012};

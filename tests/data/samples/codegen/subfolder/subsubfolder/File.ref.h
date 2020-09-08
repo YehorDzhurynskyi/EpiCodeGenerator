@@ -93,15 +93,15 @@ protected:
     void SetEnum3_Callback(E2 value);
 
 protected:
-    epiPtrArray<B> m_BBs;
+    epiPtrArray<B> m_BBs{};
     epiSize_t m_Size{13};
     B* m_Sibling{nullptr};
     epiFloat* m_NonSibling{nullptr};
-    Inner::E m_Enum0;
+    Inner::E m_Enum0{};
     Inner::E m_Enum1{Inner::E::Value1};
     E1 m_Enum2{E1::Value2};
-    epiArray<Inner::E> m_Enums0;
-    epiArray<E0> m_Enums1;
+    epiArray<Inner::E> m_Enums0{};
+    epiArray<E0> m_Enums1{};
 
 EPI_GENREGION_END(B)
 };

@@ -247,7 +247,7 @@ class EpiProperty(EpiSymbol):
     def tokenvalue_repr(self):
 
         if self.tokenvalue is None:
-            return ''
+            return '{}'
 
         text = self.tokenvalue.text
         if isinstance(self.symbol, EpiEnum) and self.symbol.attr_find(TokenType.FlagMask) is not None:
