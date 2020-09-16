@@ -6,7 +6,7 @@ EPI_GENREGION_END(include)
 
 EPI_NAMESPACE_BEGIN()
 
-enum EMask
+enum EMask : epiS32
 {
 EPI_GENREGION_BEGIN(EMask)
     EMask_Value0 = (1 << 1),
@@ -23,7 +23,7 @@ class Color : public Object
 EPI_GENREGION_BEGIN(Color)
 
 public:
-    enum EInnerMask
+    enum EInnerMask : epiS32
     {
     EPI_GENREGION_BEGIN(Color::EInnerMask)
         Color_EInnerMask_Value0 = (1 << 1),

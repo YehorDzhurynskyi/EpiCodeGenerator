@@ -36,13 +36,13 @@ public:
 EPI_GENREGION_END(Inner)
 };
 
-enum class E0
+enum class E0 : epiS32
 {
 EPI_GENREGION_BEGIN(E0)
 EPI_GENREGION_END(E0)
 };
 
-enum class E1
+enum class E1 : epiS32
 {
 EPI_GENREGION_BEGIN(E1)
     Value0 = 1,
@@ -55,14 +55,14 @@ class B : public A
 EPI_GENREGION_BEGIN(B)
 
 public:
-    enum class E1
+    enum class E1 : epiS32
     {
     EPI_GENREGION_BEGIN(B::E1)
         Value2 = -1
     EPI_GENREGION_END(B::E1)
     };
 
-    enum class E2
+    enum class E2 : epiS32
     {
     EPI_GENREGION_BEGIN(B::E2)
     EPI_GENREGION_END(B::E2)

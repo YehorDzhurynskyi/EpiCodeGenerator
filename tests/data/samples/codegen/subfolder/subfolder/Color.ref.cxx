@@ -197,7 +197,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrRead */ (void*)offsetof(Color, m_Enum0),
             /* PtrWrite */ (void*)offsetof(Color, m_Enum0),
             /* Flags */ {},
-            /* typeID */ epiHashCompileTime(Color::EInnerMask),
+            /* typeID */ epiHashCompileTime(epiS32),
             /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Enum0), std::move(m));
@@ -209,7 +209,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrRead */ (void*)offsetof(Color, m_Enum1),
             /* PtrWrite */ (void*)offsetof(Color, m_Enum1),
             /* Flags */ {},
-            /* typeID */ epiHashCompileTime(EMask),
+            /* typeID */ epiHashCompileTime(epiS32),
             /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Enum1), std::move(m));
@@ -221,7 +221,7 @@ MetaClass Color::EmitMetaClass()
             /* PtrRead */ (void*)offsetof(Color, m_Enum2),
             /* PtrWrite */ (void*)offsetof(Color, m_Enum2),
             /* Flags */ {},
-            /* typeID */ epiHashCompileTime(Color::EInnerMask),
+            /* typeID */ epiHashCompileTime(epiS32),
             /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Enum2), std::move(m));

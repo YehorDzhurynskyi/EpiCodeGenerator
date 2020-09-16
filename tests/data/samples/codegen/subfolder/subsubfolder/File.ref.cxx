@@ -112,7 +112,7 @@ MetaClass B::EmitMetaClass()
             /* PtrRead */ (void*)offsetof(B, m_Enum0),
             /* PtrWrite */ (void*)offsetof(B, m_Enum0),
             /* Flags */ {},
-            /* typeID */ epiHashCompileTime(Inner::E),
+            /* typeID */ epiHashCompileTime(epiS32),
             /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Enum0), std::move(m));
@@ -124,7 +124,7 @@ MetaClass B::EmitMetaClass()
             /* PtrRead */ (void*)offsetof(B, m_Enum1),
             /* PtrWrite */ (void*)offsetof(B, m_Enum1),
             /* Flags */ {},
-            /* typeID */ epiHashCompileTime(Inner::E),
+            /* typeID */ epiHashCompileTime(epiS32),
             /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Enum1), std::move(m));
@@ -136,7 +136,7 @@ MetaClass B::EmitMetaClass()
             /* PtrRead */ (void*)offsetof(B, m_Enum2),
             /* PtrWrite */ (void*)offsetof(B, m_Enum2),
             /* Flags */ {},
-            /* typeID */ epiHashCompileTime(B::E1),
+            /* typeID */ epiHashCompileTime(epiS32),
             /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Enum2), std::move(m));
@@ -148,7 +148,7 @@ MetaClass B::EmitMetaClass()
             /* PtrRead */ (void*)offsetof(B, GetEnum3_FuncPtr),
             /* PtrWrite */ (void*)offsetof(B, SetEnum3_FuncPtr),
             /* Flags */ {MetaProperty::Flags::MaskReadCallback | MetaProperty::Flags::MaskWriteCallback},
-            /* typeID */ epiHashCompileTime(B::E2),
+            /* typeID */ epiHashCompileTime(epiS32),
             /* nestedTypeID */ epiMetaTypeID_None
         );
         data.AddProperty(epiHashCompileTime(Enum3), std::move(m));

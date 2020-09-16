@@ -314,7 +314,10 @@ def emit_skeleton_enum(enum: EpiEnum, symfullname: str, builder: bld.Builder) ->
 
     attr_flagmask = enum.attr_find(TokenType.FlagMask)
 
-    enum_base = f' : {enum.base.text}' if enum.base is not None else ''
+    # TODO: enum treated by PropertyPointer as `Compound` object
+    # enum_base = f' : {enum.base.text}' if enum.base is not None else ''
+
+    enum_base = f' : epiS32'
     enum_type = 'enum' if attr_flagmask is not None else 'enum class'
 
     builder.line(f'{enum_type} {enum.name}{enum_base}')
@@ -373,18 +376,7 @@ def emit_class_meta(clss: EpiClass, builder: bld.Builder) -> bld.Builder:
     builder.tab()
     for p in clss.properties:
 
-        p_nested_typeid = 'epiMetaTypeID_None'
-
-        # TODO: make it work for >1 template arguments
-        if p.form == EpiProperty.Form.Template:
-            p_nested_typeid = f'epiHashCompileTime({p.tokens_nested[0].text})'
-
-        p_typeid = f'epiHashCompileTime({p.typename_fullname()})'
-
-        if p.form == EpiProperty.Form.Pointer:
-
-            p_nested_typeid = p_typeid
-            p_typeid = 'epiMetaTypeID_Ptr'
+        p_typeid, p_nested_typeid = p.typename_typeids()
 
         attr_readcallback = p.attr_find(TokenType.ReadCallback)
         attr_writecallback = p.attr_find(TokenType.WriteCallback)

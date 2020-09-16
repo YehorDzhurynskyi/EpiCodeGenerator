@@ -213,6 +213,27 @@ class EpiProperty(EpiSymbol):
     def typename_fullname(self):
         return self.typename_basename() if self.symbol is None else self.symbol.fullname
 
+    def typename_typeids(self):
+
+        p_nested_typeid = 'epiMetaTypeID_None'
+
+        if self.symbol is None:
+            p_typeid = f'epiHashCompileTime({self.typename_basename()})'
+
+        else:
+            p_typeid = f'epiHashCompileTime({self.typename_fullname()})' if not isinstance(self.symbol, EpiEnum) else 'epiHashCompileTime(epiS32)'
+
+        # TODO: make it work for >1 template arguments
+        # TODO: make it work for enums
+        if self.form == EpiProperty.Form.Template:
+            p_nested_typeid = f'epiHashCompileTime({self.tokens_nested[0].text})'
+
+        elif self.form == EpiProperty.Form.Pointer:
+            p_nested_typeid = p_typeid
+            p_typeid = 'epiMetaTypeID_Ptr'
+
+        return p_typeid, p_nested_typeid
+
     def typename(self):
 
         nested_len = len(self.tokens_nested)
