@@ -54,18 +54,52 @@ class TokenType(Enum):
     PtrArrayType = auto()
     SingleFloatingType = auto()
     DoubleFloatingType = auto()
+
+    Size2Type = auto(),
+    Size2FType = auto(),
+    Size2DType = auto(),
+    Size2SType = auto(),
+    Size2UType = auto(),
+
     Vec2FType = auto()
     Vec2DType = auto()
     Vec2SType = auto()
     Vec2UType = auto()
+    Vec2S8Type = auto()
+    Vec2S16Type = auto()
+    Vec2S32Type = auto()
+    Vec2S64Type = auto()
+    Vec2U8Type = auto()
+    Vec2U16Type = auto()
+    Vec2U32Type = auto()
+    Vec2U64Type = auto()
+
     Vec3FType = auto()
     Vec3DType = auto()
     Vec3SType = auto()
     Vec3UType = auto()
+    Vec3S8Type = auto()
+    Vec3S16Type = auto()
+    Vec3S32Type = auto()
+    Vec3S64Type = auto()
+    Vec3U8Type = auto()
+    Vec3U16Type = auto()
+    Vec3U32Type = auto()
+    Vec3U64Type = auto()
+
     Vec4FType = auto()
     Vec4DType = auto()
     Vec4SType = auto()
     Vec4UType = auto()
+    Vec4S8Type = auto()
+    Vec4S16Type = auto()
+    Vec4S32Type = auto()
+    Vec4S64Type = auto()
+    Vec4U8Type = auto()
+    Vec4U16Type = auto()
+    Vec4U32Type = auto()
+    Vec4U64Type = auto()
+
     Mat2x2FType = auto()
     Mat3x3FType = auto()
     Mat4x4FType = auto()
@@ -350,18 +384,52 @@ class Tokenizer:
     BUILTIN_COMPOUND_TYPES = {
         'epiString': TokenType.StringType,
         'epiWString': TokenType.WStringType,
+
+        'epiSize2': TokenType.Size2Type,
+        'epiSize2f': TokenType.Size2FType,
+        'epiSize2d': TokenType.Size2DType,
+        'epiSize2s': TokenType.Size2SType,
+        'epiSize2u': TokenType.Size2UType,
+
         'epiVec2f': TokenType.Vec2FType,
         'epiVec2d': TokenType.Vec2DType,
         'epiVec2s': TokenType.Vec2SType,
         'epiVec2u': TokenType.Vec2UType,
+        'epiVec2s8': TokenType.Vec2S8Type,
+        'epiVec2s16': TokenType.Vec2S16Type,
+        'epiVec2s32': TokenType.Vec2S32Type,
+        'epiVec2s64': TokenType.Vec2S64Type,
+        'epiVec2u8': TokenType.Vec2U8Type,
+        'epiVec2u16': TokenType.Vec2U16Type,
+        'epiVec2u32': TokenType.Vec2U32Type,
+        'epiVec2u64': TokenType.Vec2U64Type,
+
         'epiVec3f': TokenType.Vec3FType,
         'epiVec3d': TokenType.Vec3DType,
         'epiVec3s': TokenType.Vec3SType,
         'epiVec3u': TokenType.Vec3UType,
+        'epiVec3s8': TokenType.Vec3S8Type,
+        'epiVec3s16': TokenType.Vec3S16Type,
+        'epiVec3s32': TokenType.Vec3S32Type,
+        'epiVec3s64': TokenType.Vec3S64Type,
+        'epiVec3u8': TokenType.Vec3U8Type,
+        'epiVec3u16': TokenType.Vec3U16Type,
+        'epiVec3u32': TokenType.Vec3U32Type,
+        'epiVec3u64': TokenType.Vec3U64Type,
+
         'epiVec4f': TokenType.Vec4FType,
         'epiVec4d': TokenType.Vec4DType,
         'epiVec4s': TokenType.Vec4SType,
         'epiVec4u': TokenType.Vec4UType,
+        'epiVec4s8': TokenType.Vec4S8Type,
+        'epiVec4s16': TokenType.Vec4S16Type,
+        'epiVec4s32': TokenType.Vec4S32Type,
+        'epiVec4s64': TokenType.Vec4S64Type,
+        'epiVec4u8': TokenType.Vec4U8Type,
+        'epiVec4u16': TokenType.Vec4U16Type,
+        'epiVec4u32': TokenType.Vec4U32Type,
+        'epiVec4u64': TokenType.Vec4U64Type,
+
         'epiMat2x2f': TokenType.Mat2x2FType,
         'epiMat3x3f': TokenType.Mat3x3FType,
         'epiMat4x4f': TokenType.Mat4x4FType,

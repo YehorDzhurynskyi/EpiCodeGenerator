@@ -2317,18 +2317,47 @@ class TestIDLParser:
                 epiWString Name17;
                 epiArray<MyClassName> Name18;
                 epiPtrArray<epiFloat> Name19;
+                epiSize2 Name19_0;
+                epiSize2f Name19_1;
+                epiSize2d Name19_2;
+                epiSize2s Name19_3;
+                epiSize2u Name19_4;
                 epiVec2f Name20;
                 epiVec2d Name21;
                 epiVec2s Name22;
+                epiVec2s8 Name22_0;
+                epiVec2s16 Name22_1;
+                epiVec2s32 Name22_2;
+                epiVec2s64 Name22_3;
                 epiVec2u Name23;
+                epiVec2u8 Name23_0;
+                epiVec2u16 Name23_1;
+                epiVec2u32 Name23_2;
+                epiVec2u64 Name23_3;
                 epiVec3f Name24;
                 epiVec3d Name25;
                 epiVec3s Name26;
+                epiVec3s8 Name26_0;
+                epiVec3s16 Name26_1;
+                epiVec3s32 Name26_2;
+                epiVec3s64 Name26_3;
                 epiVec3u Name27;
+                epiVec3u8 Name27_0;
+                epiVec3u16 Name27_1;
+                epiVec3u32 Name27_2;
+                epiVec3u64 Name27_3;
                 epiVec4f Name28;
                 epiVec4d Name29;
                 epiVec4s Name30;
+                epiVec4s8 Name30_0;
+                epiVec4s16 Name30_1;
+                epiVec4s32 Name30_2;
+                epiVec4s64 Name30_3;
                 epiVec4u Name31;
+                epiVec4u8 Name31_0;
+                epiVec4u16 Name31_1;
+                epiVec4u32 Name31_2;
+                epiVec4u64 Name31_3;
                 epiMat2x2f Name32;
                 epiMat3x3f Name33;
                 epiMat4x4f Name34;
@@ -2365,18 +2394,47 @@ class TestIDLParser:
                         .property(EpiPropertyBuilder().name('Name17').tokentype_type(TokenType.WStringType).build())
                         .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiProperty.Form.Template).token_nested(TokenType.Identifier, 'MyClassName').build())
                         .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiProperty.Form.Template).token_nested(TokenType.SingleFloatingType).build())
+                        .property(EpiPropertyBuilder().name('Name19_0').tokentype_type(TokenType.Size2Type).build())
+                        .property(EpiPropertyBuilder().name('Name19_1').tokentype_type(TokenType.Size2FType).build())
+                        .property(EpiPropertyBuilder().name('Name19_2').tokentype_type(TokenType.Size2DType).build())
+                        .property(EpiPropertyBuilder().name('Name19_3').tokentype_type(TokenType.Size2SType).build())
+                        .property(EpiPropertyBuilder().name('Name19_4').tokentype_type(TokenType.Size2UType).build())
                         .property(EpiPropertyBuilder().name('Name20').tokentype_type(TokenType.Vec2FType).build())
                         .property(EpiPropertyBuilder().name('Name21').tokentype_type(TokenType.Vec2DType).build())
                         .property(EpiPropertyBuilder().name('Name22').tokentype_type(TokenType.Vec2SType).build())
+                        .property(EpiPropertyBuilder().name('Name22_0').tokentype_type(TokenType.Vec2S8Type).build())
+                        .property(EpiPropertyBuilder().name('Name22_1').tokentype_type(TokenType.Vec2S16Type).build())
+                        .property(EpiPropertyBuilder().name('Name22_2').tokentype_type(TokenType.Vec2S32Type).build())
+                        .property(EpiPropertyBuilder().name('Name22_3').tokentype_type(TokenType.Vec2S64Type).build())
                         .property(EpiPropertyBuilder().name('Name23').tokentype_type(TokenType.Vec2UType).build())
+                        .property(EpiPropertyBuilder().name('Name23_0').tokentype_type(TokenType.Vec2U8Type).build())
+                        .property(EpiPropertyBuilder().name('Name23_1').tokentype_type(TokenType.Vec2U16Type).build())
+                        .property(EpiPropertyBuilder().name('Name23_2').tokentype_type(TokenType.Vec2U32Type).build())
+                        .property(EpiPropertyBuilder().name('Name23_3').tokentype_type(TokenType.Vec2U64Type).build())
                         .property(EpiPropertyBuilder().name('Name24').tokentype_type(TokenType.Vec3FType).build())
                         .property(EpiPropertyBuilder().name('Name25').tokentype_type(TokenType.Vec3DType).build())
                         .property(EpiPropertyBuilder().name('Name26').tokentype_type(TokenType.Vec3SType).build())
+                        .property(EpiPropertyBuilder().name('Name26_0').tokentype_type(TokenType.Vec3S8Type).build())
+                        .property(EpiPropertyBuilder().name('Name26_1').tokentype_type(TokenType.Vec3S16Type).build())
+                        .property(EpiPropertyBuilder().name('Name26_2').tokentype_type(TokenType.Vec3S32Type).build())
+                        .property(EpiPropertyBuilder().name('Name26_3').tokentype_type(TokenType.Vec3S64Type).build())
                         .property(EpiPropertyBuilder().name('Name27').tokentype_type(TokenType.Vec3UType).build())
+                        .property(EpiPropertyBuilder().name('Name27_0').tokentype_type(TokenType.Vec3U8Type).build())
+                        .property(EpiPropertyBuilder().name('Name27_1').tokentype_type(TokenType.Vec3U16Type).build())
+                        .property(EpiPropertyBuilder().name('Name27_2').tokentype_type(TokenType.Vec3U32Type).build())
+                        .property(EpiPropertyBuilder().name('Name27_3').tokentype_type(TokenType.Vec3U64Type).build())
                         .property(EpiPropertyBuilder().name('Name28').tokentype_type(TokenType.Vec4FType).build())
                         .property(EpiPropertyBuilder().name('Name29').tokentype_type(TokenType.Vec4DType).build())
                         .property(EpiPropertyBuilder().name('Name30').tokentype_type(TokenType.Vec4SType).build())
+                        .property(EpiPropertyBuilder().name('Name30_0').tokentype_type(TokenType.Vec4S8Type).build())
+                        .property(EpiPropertyBuilder().name('Name30_1').tokentype_type(TokenType.Vec4S16Type).build())
+                        .property(EpiPropertyBuilder().name('Name30_2').tokentype_type(TokenType.Vec4S32Type).build())
+                        .property(EpiPropertyBuilder().name('Name30_3').tokentype_type(TokenType.Vec4S64Type).build())
                         .property(EpiPropertyBuilder().name('Name31').tokentype_type(TokenType.Vec4UType).build())
+                        .property(EpiPropertyBuilder().name('Name31_0').tokentype_type(TokenType.Vec4U8Type).build())
+                        .property(EpiPropertyBuilder().name('Name31_1').tokentype_type(TokenType.Vec4U16Type).build())
+                        .property(EpiPropertyBuilder().name('Name31_2').tokentype_type(TokenType.Vec4U32Type).build())
+                        .property(EpiPropertyBuilder().name('Name31_3').tokentype_type(TokenType.Vec4U64Type).build())
                         .property(EpiPropertyBuilder().name('Name32').tokentype_type(TokenType.Mat2x2FType).build())
                         .property(EpiPropertyBuilder().name('Name33').tokentype_type(TokenType.Mat3x3FType).build())
                         .property(EpiPropertyBuilder().name('Name34').tokentype_type(TokenType.Mat4x4FType).build())
@@ -2414,18 +2472,47 @@ class TestIDLParser:
                 epiWString Name17 = L"QwertY!";
                 epiArray<MyClassName> Name18;
                 epiPtrArray<epiFloat> Name19;
+                epiSize2 Name19_0;
+                epiSize2f Name19_1;
+                epiSize2d Name19_2;
+                epiSize2s Name19_3;
+                epiSize2u Name19_4;
                 epiVec2f Name20;
                 epiVec2d Name21;
                 epiVec2s Name22;
+                epiVec2s8 Name22_0;
+                epiVec2s16 Name22_1;
+                epiVec2s32 Name22_2;
+                epiVec2s64 Name22_3;
                 epiVec2u Name23;
+                epiVec2u8 Name23_0;
+                epiVec2u16 Name23_1;
+                epiVec2u32 Name23_2;
+                epiVec2u64 Name23_3;
                 epiVec3f Name24;
                 epiVec3d Name25;
                 epiVec3s Name26;
+                epiVec3s8 Name26_0;
+                epiVec3s16 Name26_1;
+                epiVec3s32 Name26_2;
+                epiVec3s64 Name26_3;
                 epiVec3u Name27;
+                epiVec3u8 Name27_0;
+                epiVec3u16 Name27_1;
+                epiVec3u32 Name27_2;
+                epiVec3u64 Name27_3;
                 epiVec4f Name28;
                 epiVec4d Name29;
                 epiVec4s Name30;
+                epiVec4s8 Name30_0;
+                epiVec4s16 Name30_1;
+                epiVec4s32 Name30_2;
+                epiVec4s64 Name30_3;
                 epiVec4u Name31;
+                epiVec4u8 Name31_0;
+                epiVec4u16 Name31_1;
+                epiVec4u32 Name31_2;
+                epiVec4u64 Name31_3;
                 epiMat2x2f Name32;
                 epiMat3x3f Name33;
                 epiMat4x4f Name34;
@@ -2462,18 +2549,47 @@ class TestIDLParser:
                         .property(EpiPropertyBuilder().name('Name17').tokentype_type(TokenType.WStringType).value('L"QwertY!"').build())
                         .property(EpiPropertyBuilder().name('Name18').tokentype_type(TokenType.ArrayType).form(EpiProperty.Form.Template).token_nested(TokenType.Identifier, 'MyClassName').build())
                         .property(EpiPropertyBuilder().name('Name19').tokentype_type(TokenType.PtrArrayType).form(EpiProperty.Form.Template).token_nested(TokenType.SingleFloatingType).build())
+                        .property(EpiPropertyBuilder().name('Name19_0').tokentype_type(TokenType.Size2Type).build())
+                        .property(EpiPropertyBuilder().name('Name19_1').tokentype_type(TokenType.Size2FType).build())
+                        .property(EpiPropertyBuilder().name('Name19_2').tokentype_type(TokenType.Size2DType).build())
+                        .property(EpiPropertyBuilder().name('Name19_3').tokentype_type(TokenType.Size2SType).build())
+                        .property(EpiPropertyBuilder().name('Name19_4').tokentype_type(TokenType.Size2UType).build())
                         .property(EpiPropertyBuilder().name('Name20').tokentype_type(TokenType.Vec2FType).build())
                         .property(EpiPropertyBuilder().name('Name21').tokentype_type(TokenType.Vec2DType).build())
                         .property(EpiPropertyBuilder().name('Name22').tokentype_type(TokenType.Vec2SType).build())
+                        .property(EpiPropertyBuilder().name('Name22_0').tokentype_type(TokenType.Vec2S8Type).build())
+                        .property(EpiPropertyBuilder().name('Name22_1').tokentype_type(TokenType.Vec2S16Type).build())
+                        .property(EpiPropertyBuilder().name('Name22_2').tokentype_type(TokenType.Vec2S32Type).build())
+                        .property(EpiPropertyBuilder().name('Name22_3').tokentype_type(TokenType.Vec2S64Type).build())
                         .property(EpiPropertyBuilder().name('Name23').tokentype_type(TokenType.Vec2UType).build())
+                        .property(EpiPropertyBuilder().name('Name23_0').tokentype_type(TokenType.Vec2U8Type).build())
+                        .property(EpiPropertyBuilder().name('Name23_1').tokentype_type(TokenType.Vec2U16Type).build())
+                        .property(EpiPropertyBuilder().name('Name23_2').tokentype_type(TokenType.Vec2U32Type).build())
+                        .property(EpiPropertyBuilder().name('Name23_3').tokentype_type(TokenType.Vec2U64Type).build())
                         .property(EpiPropertyBuilder().name('Name24').tokentype_type(TokenType.Vec3FType).build())
                         .property(EpiPropertyBuilder().name('Name25').tokentype_type(TokenType.Vec3DType).build())
                         .property(EpiPropertyBuilder().name('Name26').tokentype_type(TokenType.Vec3SType).build())
+                        .property(EpiPropertyBuilder().name('Name26_0').tokentype_type(TokenType.Vec3S8Type).build())
+                        .property(EpiPropertyBuilder().name('Name26_1').tokentype_type(TokenType.Vec3S16Type).build())
+                        .property(EpiPropertyBuilder().name('Name26_2').tokentype_type(TokenType.Vec3S32Type).build())
+                        .property(EpiPropertyBuilder().name('Name26_3').tokentype_type(TokenType.Vec3S64Type).build())
                         .property(EpiPropertyBuilder().name('Name27').tokentype_type(TokenType.Vec3UType).build())
+                        .property(EpiPropertyBuilder().name('Name27_0').tokentype_type(TokenType.Vec3U8Type).build())
+                        .property(EpiPropertyBuilder().name('Name27_1').tokentype_type(TokenType.Vec3U16Type).build())
+                        .property(EpiPropertyBuilder().name('Name27_2').tokentype_type(TokenType.Vec3U32Type).build())
+                        .property(EpiPropertyBuilder().name('Name27_3').tokentype_type(TokenType.Vec3U64Type).build())
                         .property(EpiPropertyBuilder().name('Name28').tokentype_type(TokenType.Vec4FType).build())
                         .property(EpiPropertyBuilder().name('Name29').tokentype_type(TokenType.Vec4DType).build())
                         .property(EpiPropertyBuilder().name('Name30').tokentype_type(TokenType.Vec4SType).build())
+                        .property(EpiPropertyBuilder().name('Name30_0').tokentype_type(TokenType.Vec4S8Type).build())
+                        .property(EpiPropertyBuilder().name('Name30_1').tokentype_type(TokenType.Vec4S16Type).build())
+                        .property(EpiPropertyBuilder().name('Name30_2').tokentype_type(TokenType.Vec4S32Type).build())
+                        .property(EpiPropertyBuilder().name('Name30_3').tokentype_type(TokenType.Vec4S64Type).build())
                         .property(EpiPropertyBuilder().name('Name31').tokentype_type(TokenType.Vec4UType).build())
+                        .property(EpiPropertyBuilder().name('Name31_0').tokentype_type(TokenType.Vec4U8Type).build())
+                        .property(EpiPropertyBuilder().name('Name31_1').tokentype_type(TokenType.Vec4U16Type).build())
+                        .property(EpiPropertyBuilder().name('Name31_2').tokentype_type(TokenType.Vec4U32Type).build())
+                        .property(EpiPropertyBuilder().name('Name31_3').tokentype_type(TokenType.Vec4U64Type).build())
                         .property(EpiPropertyBuilder().name('Name32').tokentype_type(TokenType.Mat2x2FType).build())
                         .property(EpiPropertyBuilder().name('Name33').tokentype_type(TokenType.Mat3x3FType).build())
                         .property(EpiPropertyBuilder().name('Name34').tokentype_type(TokenType.Mat4x4FType).build())
