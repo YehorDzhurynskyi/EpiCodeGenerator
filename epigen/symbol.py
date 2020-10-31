@@ -310,10 +310,10 @@ class EpiProperty(EpiSymbol):
             value = "L'\\0'"
             tokentype = TokenType.WCharLiteral
         elif self.tokentype.tokentype == TokenType.StringType:
-            value = 'epiDEBUG_ONLY("Empty")'
+            value = 'EPI_BUILD_DEBUG_ONLY("Empty")'
             tokentype = TokenType.StringLiteral
         elif self.tokentype.tokentype == TokenType.WStringType:
-            value = 'epiDEBUG_ONLY(L"Empty")'
+            value = 'EPI_BUILD_DEBUG_ONLY(L"Empty")'
             tokentype = TokenType.WStringLiteral
         else:
             return None
