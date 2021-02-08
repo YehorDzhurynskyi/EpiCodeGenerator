@@ -240,7 +240,7 @@ class Linker:
 
         value = 0
         for e in enum.entries:
-            e.value = f'(1 << {str(value + 1)})' if attr_flagmask is not None else str(value)
+            e.value = f'(1 << {str(value)})' if attr_flagmask is not None else str(value)
 
             if len(e.valuetokens) > 1:
                 continue

@@ -9,12 +9,12 @@ EPI_NAMESPACE_BEGIN()
 enum EMask : epiS32
 {
 EPI_GENREGION_BEGIN(EMask)
-    EMask_Value0 = (1 << 1),
-    EMask_Value1 = (1 << 2),
-    EMask_Value2 = (1 << 3),
-    EMask_Value3 = (1 << 4),
+    EMask_Value0 = (1 << 0),
+    EMask_Value1 = (1 << 1),
+    EMask_Value2 = (1 << 2),
+    EMask_Value3 = (1 << 3),
     EMask_Value012 = EMask_Value0 | EMask_Value1 | EMask_Value2,
-    EMask_Value4 = (1 << 5)
+    EMask_Value4 = (1 << 4)
 EPI_GENREGION_END(EMask)
 };
 
@@ -26,12 +26,12 @@ public:
     enum EInnerMask : epiS32
     {
     EPI_GENREGION_BEGIN(Color::EInnerMask)
-        Color_EInnerMask_Value0 = (1 << 1),
-        Color_EInnerMask_Value1 = (1 << 2),
-        Color_EInnerMask_Value2 = (1 << 3),
-        Color_EInnerMask_Value3 = (1 << 4),
+        Color_EInnerMask_Value0 = (1 << 0),
+        Color_EInnerMask_Value1 = (1 << 1),
+        Color_EInnerMask_Value2 = (1 << 2),
+        Color_EInnerMask_Value3 = (1 << 3),
         Color_EInnerMask_Value012 = Color_EInnerMask_Value0 | Color_EInnerMask_Value1 | Color_EInnerMask_Value2,
-        Color_EInnerMask_Value4 = (1 << 5)
+        Color_EInnerMask_Value4 = (1 << 4)
     EPI_GENREGION_END(Color::EInnerMask)
     };
 
