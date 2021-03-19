@@ -80,6 +80,7 @@ def _property_setter(prty: EpiProperty, **kwargs) -> str:
         signature = 'inline '
 
     signature = f'{signature}void Set{prty.name}{suffix}('
+    assignvalue = 'value'
     if prty.form not in [EpiProperty.Form.Pointer] and \
        prty.typename_basename() not in Tokenizer.fundamentals() and \
        not isinstance(prty.symbol, EpiEnum):
@@ -87,6 +88,9 @@ def _property_setter(prty: EpiProperty, **kwargs) -> str:
         attr_writecallback = prty.attr_find(TokenType.WriteCallback)
         if attr_writecallback is not None and attr_writecallback.param_named_of('SuppressRef') is not None:
             signature = f'{signature}{prty.typename()} '
+        elif attr_writecallback is not None and attr_writecallback.param_named_of('RValueRef') is not None:
+            signature = f'{signature}{prty.typename()}&& '
+            assignvalue = f'std::move({assignvalue})'
         else:
             signature = f'{signature}const {prty.typename()}& '
 
@@ -121,9 +125,9 @@ def _property_setter(prty: EpiProperty, **kwargs) -> str:
             signature = f'{signature}epiExpected(value <= {value_max.value()}); '
 
     if prty.attr_find(TokenType.WriteCallback) is not None:
-        signature = f'{signature}Set{prty.name}_Callback(value)'
+        signature = f'{signature}Set{prty.name}_Callback({assignvalue})'
     else:
-        signature = f'{signature}m_{prty.name} = value'
+        signature = f'{signature}m_{prty.name} = {assignvalue}'
 
     signature = f'{signature}; }}'
 
@@ -495,9 +499,13 @@ def emit_class_declaration_hidden(clss: EpiClass, builder: bld.Builder) -> bld.B
 
                 if p.typename_basename() not in Tokenizer.fundamentals() and \
                    not isinstance(p.symbol, EpiEnum) and \
-                   p.form != EpiProperty.Form.Pointer and \
-                   attr_writecallback.param_named_of('SuppressRef') is None:
-                    builder.line(f'void ({clss.name}::*Set{p.name}_FuncPtr)(const {p.typename()}&) {{ &{clss.name}::Set{p.name} }}; \\')
+                   p.form != EpiProperty.Form.Pointer:
+                    if attr_writecallback.param_named_of('SuppressRef') is not None:
+                        builder.line(f'void ({clss.name}::*Set{p.name}_FuncPtr)({p.typename()}) {{ &{clss.name}::Set{p.name} }}; \\')
+                    elif attr_writecallback.param_named_of('RValueRef') is not None:
+                        builder.line(f'void ({clss.name}::*Set{p.name}_FuncPtr)({p.typename()}&&) {{ &{clss.name}::Set{p.name} }}; \\')
+                    else:
+                        builder.line(f'void ({clss.name}::*Set{p.name}_FuncPtr)(const {p.typename()}&) {{ &{clss.name}::Set{p.name} }}; \\')
 
                 else:
                     builder.line(f'void ({clss.name}::*Set{p.name}_FuncPtr)({p.typename()}) {{ &{clss.name}::Set{p.name} }}; \\')

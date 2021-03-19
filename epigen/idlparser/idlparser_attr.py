@@ -160,14 +160,16 @@ def introduce_WriteCallback(attr: EpiAttribute, target: EpiSymbol):
     __validate_target_unassigned(attr, target)
     __validate_parameters_positional(attr, [])
     __validate_parameters_named(attr, {
-        'SuppressRef': [TokenType.TrueLiteral, TokenType.FalseLiteral]
+        'SuppressRef': [TokenType.TrueLiteral, TokenType.FalseLiteral],
+        'RValueRef': [TokenType.TrueLiteral, TokenType.FalseLiteral]
     })
 
-    types = [TokenType.Identifier]
+    types = [TokenType.Identifier, TokenType.ArrayType, TokenType.PtrArrayType]
     types.extend(TokenType.compounds())
 
     __validate_parameters_named_target_type(attr, target, {
-        'SuppressRef': types
+        'SuppressRef': types,
+        'RValueRef': types
     })
 
 
@@ -180,7 +182,7 @@ def introduce_ReadCallback(attr: EpiAttribute, target: EpiSymbol):
         'SuppressRef': [TokenType.TrueLiteral, TokenType.FalseLiteral]
     })
 
-    types = [TokenType.Identifier]
+    types = [TokenType.Identifier, TokenType.ArrayType, TokenType.PtrArrayType]
     types.extend(TokenType.compounds())
 
     __validate_parameters_named_target_type(attr, target, {
